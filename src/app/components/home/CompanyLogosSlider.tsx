@@ -1,0 +1,188 @@
+import type { CSSProperties } from 'react';
+import aachiLogo from '@/assets/aachi-logo.png';
+import arcLogo from '@/assets/arc-logo.avif';
+import brightLightSocietyLogo from '@/assets/bright-light-society-logo.png';
+import dbsLogo from '@/assets/dbs-logo-fixed.png';
+import fratelliLogo from '@/assets/fratelli-logo.jpg';
+import honeyLogo from 'figma:asset/8c2fe7ab481f5f0c43b276208d40db63dfe3a146.png';
+import hpLogo from '@/assets/hp-logo.jpeg';
+import identityLogo from '@/assets/identity-logo.png';
+import lrkLogo from '@/assets/lrk-logo.jpg';
+import muthootFinanceLogo from '@/assets/muthoot-finance-logo.webp';
+import newIndiaLogo from '@/assets/new-india-logo.jpg';
+import royalEnfieldLogo from '@/assets/royal-enfield-logo.webp';
+import saintGobainLogo from '@/assets/saint-gobain-source.jpg';
+import tvsLogo from '@/assets/tvs-logo-clean.png';
+
+export function CompanyLogosSlider() {
+  type LogoItem = {
+    id: number;
+    name: string;
+    image: string;
+    isMainLogo?: boolean;
+    imageClassName?: string;
+    imageStyle?: CSSProperties;
+  };
+
+  // Professional company logos with different colors and styles
+  const createLogoSVG = (companyName: string, color: string, bgColor: string = '#ffffff') => {
+    const svg = `
+      <svg width="280" height="80" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="${bgColor}"/>
+        <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="${color}" text-anchor="middle" dy=".35em">${companyName}</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  };
+
+  const createIconLogoSVG = (companyName: string, color: string, hasIcon: boolean = true) => {
+    const initial = companyName.charAt(0);
+    const svg = `
+      <svg width="280" height="80" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#ffffff"/>
+        ${hasIcon ? `<circle cx="60" cy="40" r="22" fill="${color}"/>
+        <text x="60" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#ffffff" text-anchor="middle" dy=".35em">${initial}</text>` : ''}
+        <text x="${hasIcon ? '100' : '50%'}" y="40" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="${color}" ${hasIcon ? '' : 'text-anchor="middle"'} dy=".35em">${companyName}</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  };
+  
+  const logos: LogoItem[] = [
+    { id: 0, name: 'Honey Translation Services', image: honeyLogo, isMainLogo: true },
+    {
+      id: 1,
+      name: 'Fratelli',
+      image: fratelliLogo,
+      imageClassName: 'w-full max-w-[230px] h-auto object-contain',
+    },
+    {
+      id: 2,
+      name: 'TVS',
+      image: tvsLogo,
+      imageClassName: 'w-full max-w-[170px] h-auto object-contain',
+    },
+    {
+      id: 3,
+      name: 'HP Valves',
+      image: hpLogo,
+      imageClassName: 'w-full max-w-[220px] h-auto object-contain',
+    },
+    {
+      id: 4,
+      name: 'Aachi',
+      image: aachiLogo,
+      imageClassName: 'w-full max-w-[280px] h-auto object-contain',
+    },
+    {
+      id: 5,
+      name: 'ARC International',
+      image: arcLogo,
+      imageClassName: 'w-full max-w-[220px] h-auto object-contain',
+    },
+    {
+      id: 6,
+      name: 'Bright Light',
+      image: brightLightSocietyLogo,
+      imageClassName: 'w-full max-w-[180px] h-auto object-contain',
+    },
+    {
+      id: 7,
+      name: 'DBS',
+      image: dbsLogo,
+      imageClassName: 'w-full max-w-[220px] h-auto object-contain px-2',
+    },
+    {
+      id: 8,
+      name: 'Identity',
+      image: identityLogo,
+      imageClassName: 'w-full max-w-[170px] h-auto object-contain',
+    },
+    {
+      id: 9,
+      name: 'LRK',
+      image: lrkLogo,
+      imageClassName: 'w-full max-w-[180px] h-auto object-contain',
+    },
+    {
+      id: 10,
+      name: 'Muthoot Finance',
+      image: muthootFinanceLogo,
+      imageClassName: 'w-full max-w-[250px] h-auto object-contain',
+      imageStyle: { mixBlendMode: 'multiply' as const },
+    },
+    {
+      id: 11,
+      name: 'New India Assurance',
+      image: newIndiaLogo,
+      imageClassName: 'w-full max-w-[220px] h-auto object-contain',
+    },
+    {
+      id: 12,
+      name: 'Royal Enfield',
+      image: royalEnfieldLogo,
+      imageClassName: 'w-full max-w-[240px] h-auto object-contain',
+      imageStyle: { mixBlendMode: 'multiply' as const },
+    },
+    {
+      id: 13,
+      name: 'Saint-Gobain',
+      image: saintGobainLogo,
+      imageClassName: 'w-full max-w-[260px] h-auto object-contain',
+    },
+  ];
+
+  // Duplicate logos for seamless infinite scroll
+  const duplicatedLogos = [...logos, ...logos];
+
+  return (
+    <section className="py-16 bg-gray-50 overflow-hidden">
+      <div className="max-w-full mx-auto px-6">
+        <h3 className="text-center text-2xl font-semibold text-gray-700 mb-8">
+          Trusted by Leading Companies
+        </h3>
+        
+        {/* Continuous scrolling container */}
+        <div className="relative w-full overflow-hidden">
+          <div className="flex animate-scroll-logos w-max">
+            {duplicatedLogos.map((logo, index) => (
+              <div 
+                key={`${logo.id}-${index}`} 
+                className="flex-shrink-0 mx-4"
+                style={{ width: '350px' }}
+              >
+                <div className="bg-white rounded-lg p-8 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-48">
+                  <img 
+                    src={logo.image} 
+                    alt={logo.name} 
+                    className={logo.imageClassName ?? 'max-w-full max-h-full object-contain'}
+                    style={logo.imageStyle ?? { mixBlendMode: 'darken' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes scroll-logos {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(calc(-350px * 14 - 14 * 32px));
+          }
+        }
+
+        .animate-scroll-logos {
+          animation: scroll-logos 45s linear infinite;
+        }
+
+        .animate-scroll-logos:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+    </section>
+  );
+}

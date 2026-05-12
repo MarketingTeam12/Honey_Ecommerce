@@ -1,0 +1,1366 @@
+import { useState, useEffect, useRef, MouseEvent } from 'react';
+import { useNavigate, useLocation } from 'react-router';
+import { useCurrency } from '@/app/context/CurrencyContext';
+import { useCart } from '@/app/context/CartContext';
+import { useWishlist } from '@/app/context/WishlistContext';
+import { useAuth } from '@/app/context/AuthContext';
+import { useProductConfig } from '@/app/hooks/useProductConfig';
+import { PDFDocument } from 'pdf-lib';
+import { ProductReviews } from '@/app/components/product/ProductReviews';
+import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
+import { Label } from '@/app/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { Checkbox } from '@/app/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { Check, Heart, ChevronLeft, ChevronRight, Upload, Minus, Plus, MessageCircle } from 'lucide-react';
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { toast } from 'sonner';
+import googlePayIcon from 'figma:asset/02347af70453dbcedcb242f3af1712a1a954b2f1.png';
+import mastercardIcon from 'figma:asset/23e6e86ee8f55bfcbc0611bfe54a4aa7beca2f55.png';
+import paypalIcon from 'figma:asset/44e11688213a30c41ad3fe8aae7def63b605380d.png';
+import rupayIcon from 'figma:asset/81733917598b7aad94b96ac30b5e2f8a5f8dab91.png';
+import visaIcon from 'figma:asset/6f49b2a01cfe14370d80bfa5aa6e2cb4c045e327.png';
+import whatsappIcon from 'figma:asset/a7133ddeef3c5e583ad7afec517e13c693256fa0.png';
+import { Trash2 } from 'lucide-react';
+import { getFirstValidImage, normalizeProductImages } from '@/app/utils/imageUtils';
+
+// ==================== PRICING DATA STRUCTURES ====================
+
+// 1. STANDARD TRANSLATION PRICING (Original: ₹2,000)
+const STANDARD_TRANSLATION_ORIGINAL = 2000;
+
+// English → Foreign Language
+const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
+  'dutch': 900,
+  'arabic': 900,
+  'italian': 800,
+  'japanese': 1400,
+  'french': 800,
+  'russian': 800,
+  'polish': 800,
+  'chinese': 1000,
+  'spanish': 800,
+  'portuguese': 800,
+  'korean': 1800,
+  'greek': 1050,
+  'indonesian': 800,
+};
+
+// Foreign Language → English
+const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
+  'dutch': 900,
+  'arabic': 900,
+  'italian': 800,
+  'japanese': 1050,
+  'french': 800,
+  'russian': 800,
+  'polish': 900,
+  'chinese': 1000,
+  'spanish': 800,
+  'czech': 900,
+  'portuguese': 800,
+  'korean': 1050,
+  'greek': 900,
+  'indonesian': 900,
+};
+
+// English → Indian Language (Most are ₹600, with exceptions)
+const ENGLISH_TO_INDIAN: { [key: string]: number } = {
+  'assamese': 600,
+  'bengali': 600,
+  'konkani': 600,
+  'hindi': 600,
+  'gujarati': 600,
+  'rajasthani': 600,
+  'marathi': 600,
+  'malayalam': 600,
+  'odia': 700,
+  'telugu': 600,
+  'punjabi': 600,
+  'urdu': 1100,
+  'kannada': 600,
+  'tamil': 600,
+  'sanskrit': 600,
+};
+
+// Indian Language → English (Same prices as above)
+const INDIAN_TO_ENGLISH: { [key: string]: number } = {
+  'assamese': 600,
+  'bengali': 600,
+  'konkani': 600,
+  'hindi': 600,
+  'gujarati': 600,
+  'rajasthani': 600,
+  'marathi': 600,
+  'malayalam': 600,
+  'odia': 700,
+  'telugu': 600,
+  'punjabi': 600,
+  'urdu': 1100,
+  'kannada': 600,
+  'tamil': 600,
+  'sanskrit': 600,
+};
+
+// 2. SWORN TRANSLATION PRICING (Original: ₹5,000)
+const SWORN_TRANSLATION_ORIGINAL = 5000;
+const SWORN_TRANSLATION_PRICING: { [key: string]: number } = {
+  'english-spanish': 3299,
+  'english-italian': 1499,
+  'english-german': 4299,
+  'english-french': 3300,
+};
+
+// 3. APOSTILLE SERVICES PRICING (Original: ₹3,500, Offer: ₹2,500 for all)
+const APOSTILLE_ORIGINAL = 3500;
+const APOSTILLE_OFFER = 2500;
+
+// 4. ATTESTATION SERVICES PRICING (Varies by country)
+const ATTESTATION_PRICING: { [key: string]: { original: number; offer: number } } = {
+  'china': { original: 18000, offer: 16000 },
+  'qatar': { original: 12000, offer: 9500 },
+  'kuwait': { original: 19000, offer: 16000 },
+  'uae': { original: 13000, offer: 9500 },
+  'hrd': { original: 5000, offer: 2500 },
+};
+
+// 5. STARTUP PACKAGE PRICING (Varies by package type)
+const STARTUP_PACKAGE_PRICING: { 
+  [key: string]: { 
+    'full-package': { original: number; offer: number };
+    '1-year': { original: number; offer: number };
+    '2-year': { original: number; offer: number };
+  }
+} = {
+  'basic': {
+    'full-package': { original: 25999, offer: 17999 },
+    '1-year': { original: 25999, offer: 12999 },
+    '2-year': { original: 25999, offer: 22999 },
+  },
+  'standard': {
+    'full-package': { original: 38999, offer: 32999 },
+    '1-year': { original: 38999, offer: 18999 },
+    '2-year': { original: 38999, offer: 36999 },
+  },
+  'premium': {
+    'full-package': { original: 73999, offer: 65999 },
+    '1-year': { original: 73999, offer: 38999 },
+    '2-year': { original: 73999, offer: 73999 },
+  },
+};
+
+export interface ProductImage {
+  url: string;
+  alt: string;
+}
+
+export interface ProductHighlight {
+  text: string;
+  bold?: boolean;
+  large?: boolean;
+  medium?: boolean;
+}
+
+export interface DocumentTypeOption {
+  id: string;
+  label: string;
+}
+
+export interface ProcessStep {
+  step: number;
+  title: string;
+  description: string;
+}
+
+export interface RelatedProduct {
+  id: string;
+  title: string;
+  imageUrl: string;
+  price: number;
+  originalPrice: number;
+  link: string;
+}
+
+export interface ProductData {
+  type: 'translation' | 'apostille' | 'attestation' | 'startup';
+  title: string;
+  images: ProductImage[];
+  price: number;
+  originalPrice: number;
+  highlights: ProductHighlight[];
+  documentTypes: DocumentTypeOption[];
+  // Translation specific
+  sourceLanguages?: { value: string; label: string }[]  ;
+  targetLanguages?: { value: string; label: string }[];
+  // Product details sections - can be string[] or styled objects
+  productDetails: (string | { text: string; style?: string })[];
+  whatYouReceive: string[];
+  processSteps: ProcessStep[];
+  deliveryTimeline: {
+    softCopy: string;
+    hardCopy: string;
+  };
+  whyChoose: string[];
+  relatedProducts: RelatedProduct[];
+  sku?: string; // Optional SKU field for consistent product identification
+}
+
+interface ProductTemplateProps {
+  data: ProductData;
+  productKey?: string; // Optional product key from route params
+}
+
+export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
+  const { convertPrice, currency } = useCurrency();
+  const { addToCart } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // State for dynamic images from database
+  const [productImages, setProductImages] = useState<ProductImage[]>(normalizeProductImages(data.images, data.title));
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  
+  // Filter out empty image URLs
+  const validImages = normalizeProductImages(productImages, data.title);
+  
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const [isZoomed, setIsZoomed] = useState(false);
+  const imageRef = useRef<HTMLDivElement>(null);
+  
+  // Use productKey if provided, otherwise generate from title (for backward compatibility)
+  const productId = productKey || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  
+  console.log('🔑 ProductTemplate - productKey:', productKey, 'productId:', productId);
+  
+  // Check if product is in wishlist
+  const inWishlist = isInWishlist(productId);
+
+  // Form state for product configuration
+  const [sourceLanguage, setSourceLanguage] = useState('');
+  const [targetLanguage, setTargetLanguage] = useState('');
+  const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [pageCount, setPageCount] = useState(1);
+  const [packageDuration, setPackageDuration] = useState<'full-package' | '1-year' | '2-year'>('full-package');
+
+  // Check if we're in edit mode (editing an existing cart item)
+  const editCartItem = location.state?.editCartItem;
+  const isEditMode = !!editCartItem;
+
+  // Pre-fill form if in edit mode
+  useEffect(() => {
+    if (isEditMode && editCartItem) {
+      console.log('📝 Edit mode detected, pre-filling form with:', editCartItem);
+      
+      if (editCartItem.sourceLanguage) setSourceLanguage(editCartItem.sourceLanguage);
+      if (editCartItem.targetLanguage) setTargetLanguage(editCartItem.targetLanguage);
+      if (editCartItem.certificateType) {
+        const docTypes = editCartItem.certificateType.split(', ');
+        setSelectedDocTypes(docTypes);
+      }
+      if (editCartItem.uploadedDocuments?.length) {
+        setUploadedFiles(editCartItem.uploadedDocuments);
+      } else if (editCartItem.uploadedDocument) {
+        setUploadedFiles([editCartItem.uploadedDocument]);
+      }
+      if (editCartItem.pageCount) setPageCount(editCartItem.pageCount);
+    }
+  }, [isEditMode]);
+
+  // Reset images to default when productId or data.images changes
+  useEffect(() => {
+    console.log('🔄 Product changed, resetting images to default:', productId);
+    setProductImages(normalizeProductImages(data.images, data.title));
+    setSelectedImage(0);
+    setImagesLoaded(false);
+  }, [productId, data.images, data.title]);
+
+  // Reset all form fields when product changes
+  useEffect(() => {
+    console.log('🔄 Product changed, resetting all form fields:', productId);
+    setSourceLanguage('');
+    setTargetLanguage('');
+    setSelectedDocTypes([]);
+    setUploadedFiles([]);
+    setPageCount(1);
+    setPackageDuration('full-package');
+    setIsZoomed(false);
+  }, [productId]);
+
+  // Fetch product images from database on component mount
+  useEffect(() => {
+    const fetchProductImages = async () => {
+      try {
+        // Normalize productId to lowercase for consistency
+        const normalizedProductId = productId.toLowerCase();
+        
+        console.log('📸 Fetching images for product:', normalizedProductId);
+        
+        // Add cache-busting parameter to force fresh data
+        const cacheBuster = Date.now();
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/products/${normalizedProductId}/images?t=${cacheBuster}`,
+          {
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📦 Received images data:', data);
+          
+          if (data.images && Array.isArray(data.images)) {
+            const validDbImages = normalizeProductImages(data.images, data.title);
+            console.log('✅ Valid images found:', validDbImages.length);
+            
+            if (validDbImages.length > 0) {
+              console.log('🔄 Updating product images from database');
+              setProductImages(validDbImages);
+            } else {
+              console.log('⚠️ No valid images in database, using default images');
+            }
+          }
+        } else {
+          console.error('❌ Failed to fetch images, status:', response.status);
+        }
+      } catch (error) {
+        console.log('⚠️ Using default product images:', error);
+        // Keep using the default images from data.images
+      } finally {
+        setImagesLoaded(true);
+      }
+    };
+
+    fetchProductImages();
+  }, [productId]);
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = () => {
+    if (inWishlist) {
+      removeFromWishlist(productId);
+    } else {
+      addToWishlist({
+        id: productId,
+        name: data.title,
+        price: currentPrice,
+        originalPrice: currentOriginalPrice,
+        image: getFirstValidImage(productImages, getFirstValidImage(data.images)),
+        category: data.type,
+        url: window.location.pathname,
+      });
+    }
+  };
+
+  // Calculate dynamic price based on product type, source and target languages
+  const getDynamicPrice = () => {
+    const source = sourceLanguage.toLowerCase();
+    const target = targetLanguage.toLowerCase();
+    
+    // 1. TRANSLATION SERVICES
+    if (data.type === 'translation' && source && target) {
+      // Check if this is sworn translation (title contains "sworn")
+      const isSwornTranslation = data.title.toLowerCase().includes('sworn');
+      
+      if (isSwornTranslation) {
+        // Sworn translation pricing
+        const pairKey = `${source}-${target}`;
+        const swornPrice = SWORN_TRANSLATION_PRICING[pairKey];
+        if (swornPrice) {
+          return swornPrice;
+        }
+      } else {
+        // Standard translation pricing
+        const indianLanguages = Object.keys(INDIAN_TO_ENGLISH);
+        const foreignLanguages = Object.keys(FOREIGN_TO_ENGLISH);
+        
+        // Check if source is Indian language going to English
+        if (indianLanguages.includes(source) && target === 'english') {
+          return INDIAN_TO_ENGLISH[source];
+        }
+        
+        // Check if source is English going to Indian language
+        if (source === 'english' && indianLanguages.includes(target)) {
+          return ENGLISH_TO_INDIAN[target];
+        }
+        
+        // Check if source is foreign language going to English
+        if (foreignLanguages.includes(source) && target === 'english') {
+          return FOREIGN_TO_ENGLISH[source];
+        }
+        
+        // Check if source is English going to foreign language
+        if (source === 'english' && foreignLanguages.includes(target)) {
+          return ENGLISH_TO_FOREIGN[target];
+        }
+      }
+    }
+    
+    // 2. APOSTILLE SERVICES
+    if (data.type === 'apostille') {
+      return APOSTILLE_OFFER;
+    }
+    
+    // 3. ATTESTATION SERVICES
+    if (data.type === 'attestation') {
+      // Extract country from title or selected doc types
+      const titleLower = data.title.toLowerCase();
+      
+      for (const country in ATTESTATION_PRICING) {
+        if (titleLower.includes(country)) {
+          return ATTESTATION_PRICING[country].offer;
+        }
+      }
+    }
+    
+    // 4. STARTUP PACKAGE
+    if (data.type === 'startup') {
+      const packageType = data.title.toLowerCase().split(' ')[0];
+      
+      if (STARTUP_PACKAGE_PRICING[packageType]) {
+        return STARTUP_PACKAGE_PRICING[packageType][packageDuration].offer;
+      }
+    }
+    
+    // Fallback to default product price
+    return data.price;
+  };
+
+  const getDynamicOriginalPrice = () => {
+    const source = sourceLanguage.toLowerCase();
+    const target = targetLanguage.toLowerCase();
+    
+    // 1. TRANSLATION SERVICES
+    if (data.type === 'translation' && source && target) {
+      const isSwornTranslation = data.title.toLowerCase().includes('sworn');
+      
+      if (isSwornTranslation) {
+        return SWORN_TRANSLATION_ORIGINAL;
+      } else {
+        return STANDARD_TRANSLATION_ORIGINAL;
+      }
+    }
+    
+    // 2. APOSTILLE SERVICES
+    if (data.type === 'apostille') {
+      return APOSTILLE_ORIGINAL;
+    }
+    
+    // 3. ATTESTATION SERVICES
+    if (data.type === 'attestation') {
+      const titleLower = data.title.toLowerCase();
+      
+      for (const country in ATTESTATION_PRICING) {
+        if (titleLower.includes(country)) {
+          return ATTESTATION_PRICING[country].original;
+        }
+      }
+    }
+    
+    // 4. STARTUP PACKAGE
+    if (data.type === 'startup') {
+      const packageType = data.title.toLowerCase().split(' ')[0];
+      
+      if (STARTUP_PACKAGE_PRICING[packageType]) {
+        return STARTUP_PACKAGE_PRICING[packageType][packageDuration].original;
+      }
+    }
+    
+    // Fallback to default original price
+    return data.originalPrice;
+  };
+
+  const currentPrice = getDynamicPrice();
+  const currentOriginalPrice = getDynamicOriginalPrice();
+
+  // Don't set default language values automatically - let user select them
+  // This ensures validation works properly
+  // useEffect(() => {
+  //   if (data.type === 'translation' && data.sourceLanguages && data.targetLanguages) {
+  //     if (data.sourceLanguages.length > 0 && !sourceLanguage) {
+  //       setSourceLanguage(data.sourceLanguages[0].value);
+  //     }
+  //     if (data.targetLanguages.length > 0 && !targetLanguage) {
+  //       setTargetLanguage(data.targetLanguages[0].value);
+  //     }
+  //   }
+  // }, [data, sourceLanguage, targetLanguage]);
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPosition({ x, y });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => file.size <= 7 * 1024 * 1024); // 7MB max
+    setUploadedFiles(prev => {
+      const newFiles = [...prev, ...validFiles];
+      updatePageCountFromFiles(newFiles);
+      return newFiles;
+    });
+    e.target.value = '';
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = files.filter(file => file.size <= 7 * 1024 * 1024); // 7MB max
+    setUploadedFiles(prev => {
+      const newFiles = [...prev, ...validFiles];
+      updatePageCountFromFiles(newFiles);
+      return newFiles;
+    });
+  };
+
+  const handleDocTypeToggle = (docTypeId: string) => {
+    setSelectedDocTypes(prev =>
+      prev.includes(docTypeId)
+        ? prev.filter(id => id !== docTypeId)
+        : [...prev, docTypeId]
+    );
+  };
+
+  const incrementPages = () => setPageCount(prev => prev + 1);
+  const decrementPages = () => setPageCount(prev => Math.max(1, prev - 1));
+
+  const calculatePageCountFromFiles = async (files: File[]) => {
+    let totalPages = 0;
+    for (const file of files) {
+      if (file.type === 'application/pdf') {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdfDoc = await PDFDocument.load(arrayBuffer);
+          totalPages += pdfDoc.getPageCount();
+        } catch (error) {
+          console.error('Error reading PDF:', error);
+          // If can't read PDF, assume 1 page
+          totalPages += 1;
+        }
+      } else {
+        // For non-PDF files, assume 1 page
+        totalPages += 1;
+      }
+    }
+    return totalPages;
+  };
+
+  const updatePageCountFromFiles = async (files: File[]) => {
+    const totalPages = await calculatePageCountFromFiles(files);
+    setPageCount(totalPages);
+  };
+
+  // Debug logging for startup packages
+  console.log('📦 ProductTemplate Debug:', {
+    title: data.title,
+    type: data.type,
+    isStartup: data.type === 'startup',
+    documentTypes: data.documentTypes,
+    documentTypesLength: data.documentTypes?.length,
+    shouldShowDocTypes: data.type !== 'startup' && data.documentTypes && data.documentTypes.length > 0
+  });
+
+  // CRITICAL: Force hide document types for startup packages, but always show for others
+  const shouldShowDocumentTypes = data.type !== 'startup';
+  
+  // Provide fallback document types if none are provided
+  const documentTypesToShow = (data.documentTypes && data.documentTypes.length > 0) 
+    ? data.documentTypes 
+    : [
+        { id: 'birth-certificate', label: 'Birth Certificate' },
+        { id: 'marriage-certificate', label: 'Marriage Certificate' },
+        { id: 'academic-certificate', label: 'Academic Certificate' },
+        { id: 'academic-marksheet', label: 'Academic Marksheet' },
+        { id: 'pcc', label: 'Police Clearance Certificate (PCC)' },
+        { id: 'divorce-decree', label: 'Divorce Decree' },
+        { id: 'passport', label: 'Passport' },
+        { id: 'ration-card', label: 'Ration Card' },
+        { id: 'court-papers', label: 'Court Papers' },
+        { id: 'medical-certificate', label: 'Medical Certificate' },
+        { id: 'driving-license', label: 'Driving License' },
+      ];
+  
+  console.log('🔍 Document Type Visibility Check:', {
+    productType: data.type,
+    isNotStartup: data.type !== 'startup',
+    hasDocTypes: !!data.documentTypes,
+    docTypesLength: data.documentTypes?.length,
+    finalDecision: shouldShowDocumentTypes,
+    usingFallback: !data.documentTypes || data.documentTypes.length === 0
+  });
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
+        {/* Main 2-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+          
+          {/* LEFT COLUMN - Product Images */}
+          <div className="space-y-4">
+            {/* Main Product Image with Zoom */}
+            <div
+              ref={imageRef}
+              className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200"
+              onMouseEnter={() => setIsZoomed(true)}
+              onMouseLeave={() => setIsZoomed(false)}
+              onMouseMove={handleMouseMove}
+            >
+              {validImages.length > 0 ? (
+                <>
+                  <img
+                    src={validImages[selectedImage].url}
+                    alt={validImages[selectedImage].alt}
+                    className="w-full h-full object-contain bg-white p-4"
+                    width="600"
+                    height="600"
+                    loading="eager"
+                    style={{ aspectRatio: '1/1' }}
+                  />
+                  
+                  {/* Zoom Lens */}
+                  {isZoomed && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        backgroundImage: `url(${validImages[selectedImage].url})`,
+                        backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                        backgroundSize: '250%',
+                        backgroundRepeat: 'no-repeat',
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                  <div className="text-center p-8">
+                    <svg className="w-32 h-32 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <p className="text-lg text-gray-400 font-medium">No Image Available</p>
+                    <p className="text-sm text-gray-400 mt-2">Service details available below</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail Images */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-2 md:gap-3">
+              {validImages.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImage === index
+                      ? 'border-blue-600 ring-2 ring-blue-200'
+                      : 'border-gray-200 hover:border-gray-400'
+                  }`}
+                >
+                  
+                  <img
+                    src={image.url}
+                    alt={image.alt}
+                    className="w-full h-full object-contain bg-white p-2"
+                    width="120"
+                    height="120"
+                    loading="lazy"
+                    style={{ aspectRatio: '1/1' }}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Mobile Image Slider */}
+            <div className="lg:hidden flex items-center gap-2">
+              <button
+                onClick={() => setSelectedImage(prev => Math.max(0, prev - 1))}
+                disabled={selectedImage === 0}
+                className="p-2 rounded-full bg-gray-200 disabled:opacity-50"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="flex-1 text-center text-sm text-gray-600">
+                {selectedImage + 1} / {validImages.length}
+              </div>
+              <button
+                onClick={() => setSelectedImage(prev => Math.min(validImages.length - 1, prev + 1))}
+                disabled={selectedImage === validImages.length - 1}
+                className="p-2 rounded-full bg-gray-200 disabled:opacity-50"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN - Product Details Panel */}
+          <div className="space-y-6">
+            {/* Product Title with Wishlist Button */}
+            <div>
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 flex-1">
+                  {data.title}
+                </h1>
+                
+                {/* Wishlist Heart Button */}
+                <button
+                  onClick={handleWishlistToggle}
+                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md hover:shadow-lg ${
+                    inWishlist
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-red-500 hover:text-white hover:border-red-500'
+                  }`}
+                  aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <Heart
+                    className="w-6 h-6"
+                    fill={inWishlist ? 'currentColor' : 'none'}
+                  />
+                </button>
+              </div>
+              
+              {/* Non-Returnable Badge */}
+              <Badge variant="destructive" className="mb-4">
+                NON-RETURNABLE
+              </Badge>
+            </div>
+
+            {/* Price Section */}
+            <div className="space-y-2">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <span className="text-3xl font-bold text-red-600">
+                  {convertPrice(currentPrice)}
+                </span>
+                <span className="text-xl text-gray-500 line-through">
+                  {convertPrice(currentOriginalPrice)}
+                </span>
+              </div>
+              {/* Show dynamic pricing message for translation services */}
+              {data.type === 'translation' && !data.title.toLowerCase().includes('sworn') && (
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">💡 Price varies by language selection</span> - Select source and target languages to see the exact price
+                </p>
+              )}
+              <Badge className="bg-red-600 hover:bg-red-700 text-white">
+                BEST OFFER
+              </Badge>
+            </div>
+
+            {/* Product Highlights */}
+            <div className="space-y-2 border-t pt-4">
+              {(data.highlights || []).map((highlight, index) => {
+                // Skip rendering green check for startup packages
+                const showCheck = data.type !== 'startup';
+                
+                // Determine text size class
+                let sizeClass = '';
+                if (highlight.large) {
+                  sizeClass = 'text-xl';
+                } else if (highlight.medium) {
+                  sizeClass = 'text-lg';
+                }
+                
+                // Determine font weight
+                const fontWeight = highlight.bold ? 'font-bold' : '';
+                
+                return (
+                  <div key={index} className="flex items-start gap-2">
+                    {showCheck && <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />}
+                    {!showCheck && highlight.text && <div className="w-5" />}
+                    <span className={`text-gray-700 ${fontWeight} ${sizeClass}`}>
+                      {highlight.text}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Quick Support */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-gray-700 mb-2">
+                For quick assistance or queries, feel free to contact us on WhatsApp anytime.
+              </p>
+              <a
+                href="https://wa.me/919842696601"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Chat on WhatsApp
+              </a>
+            </div>
+
+            {/* Secure Checkout Info */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600 mb-3">
+                Secure checkout with your preferred payment option.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold">Zoho Pay</span>
+                <span className="text-gray-400">•</span>
+                <img src={googlePayIcon} alt="Google Pay" className="h-10" />
+                <span className="text-gray-400">•</span>
+                <img src={mastercardIcon} alt="Mastercard" className="h-10" />
+                <span className="text-gray-400">•</span>
+                <img src={paypalIcon} alt="PayPal" className="h-10" />
+                <span className="text-gray-400">•</span>
+                <img src={rupayIcon} alt="RuPay" className="h-10" />
+                <span className="text-gray-400">•</span>
+                <img src={visaIcon} alt="Visa" className="h-10" />
+              </div>
+            </div>
+
+            {/* Social Share Section */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Share this product</h3>
+              <div className="flex items-center gap-3">
+                {/* Facebook */}
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-colors"
+                  aria-label="Share on Facebook"
+                >
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </a>
+
+                {/* Twitter/X */}
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(data.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center transition-colors"
+                  aria-label="Share on Twitter"
+                >
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                </a>
+
+                {/* LinkedIn */}
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition-colors"
+                  aria-label="Share on LinkedIn"
+                >
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </a>
+
+                {/* Pinterest */}
+                <a
+                  href={`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(window.location.href)}&description=${encodeURIComponent(data.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors"
+                  aria-label="Share on Pinterest"
+                >
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
+                  </svg>
+                </a>
+
+                {/* WhatsApp */}
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(data.title + ' - ' + window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0"
+                  aria-label="Share on WhatsApp"
+                >
+                  <img src={whatsappIcon} alt="WhatsApp" className="w-10 h-10 hover:opacity-80 transition-opacity" />
+                </a>
+              </div>
+            </div>
+
+            {/* Configurable Options */}
+            <div className="border-t pt-6 space-y-4">
+              <h3 className="font-bold text-lg text-gray-900">Configure Your Order</h3>
+
+              {/* Source & Target Language (ALWAYS shown for Translation, but NOT for Sworn Translation) */}
+              {data.type === 'translation' && !data.title.toLowerCase().includes('sworn') && (
+                <>
+                  <div>
+                    <Label htmlFor="source-lang">
+                      Source Language <span className="text-red-600">*</span>
+                    </Label>
+                    <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                      <SelectTrigger id="source-lang" className="w-full mt-1">
+                        <SelectValue placeholder="Select source language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(data.sourceLanguages && data.sourceLanguages.length > 0
+                          ? data.sourceLanguages
+                          : [
+                              { value: 'english', label: 'English' },
+                              { value: 'spanish', label: 'Spanish' },
+                              { value: 'french', label: 'French' },
+                              { value: 'german', label: 'German' },
+                              { value: 'italian', label: 'Italian' },
+                              { value: 'portuguese', label: 'Portuguese' },
+                              { value: 'dutch', label: 'Dutch' },
+                              { value: 'russian', label: 'Russian' },
+                              { value: 'chinese', label: 'Chinese' },
+                              { value: 'japanese', label: 'Japanese' },
+                              { value: 'korean', label: 'Korean' },
+                              { value: 'arabic', label: 'Arabic' },
+                              { value: 'hindi', label: 'Hindi' },
+                              { value: 'bengali', label: 'Bengali' },
+                              { value: 'tamil', label: 'Tamil' },
+                              { value: 'telugu', label: 'Telugu' },
+                              { value: 'marathi', label: 'Marathi' },
+                              { value: 'gujarati', label: 'Gujarati' },
+                              { value: 'kannada', label: 'Kannada' },
+                              { value: 'malayalam', label: 'Malayalam' },
+                              { value: 'punjabi', label: 'Punjabi' },
+                              { value: 'urdu', label: 'Urdu' },
+                            ]
+                        )
+                          .filter(lang => lang && lang.value && lang.label)
+                          .map(lang => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="target-lang">
+                      Target Language <span className="text-red-600">*</span>
+                    </Label>
+                    <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                      <SelectTrigger id="target-lang" className="w-full mt-1">
+                        <SelectValue placeholder="Select target language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(data.targetLanguages && data.targetLanguages.length > 0
+                          ? data.targetLanguages
+                          : [
+                              { value: 'english', label: 'English' },
+                              { value: 'spanish', label: 'Spanish' },
+                              { value: 'french', label: 'French' },
+                              { value: 'german', label: 'German' },
+                              { value: 'italian', label: 'Italian' },
+                              { value: 'portuguese', label: 'Portuguese' },
+                              { value: 'dutch', label: 'Dutch' },
+                              { value: 'russian', label: 'Russian' },
+                              { value: 'chinese', label: 'Chinese' },
+                              { value: 'japanese', label: 'Japanese' },
+                              { value: 'korean', label: 'Korean' },
+                              { value: 'arabic', label: 'Arabic' },
+                              { value: 'hindi', label: 'Hindi' },
+                              { value: 'bengali', label: 'Bengali' },
+                              { value: 'tamil', label: 'Tamil' },
+                              { value: 'telugu', label: 'Telugu' },
+                              { value: 'marathi', label: 'Marathi' },
+                              { value: 'gujarati', label: 'Gujarati' },
+                              { value: 'kannada', label: 'Kannada' },
+                              { value: 'malayalam', label: 'Malayalam' },
+                              { value: 'punjabi', label: 'Punjabi' },
+                              { value: 'urdu', label: 'Urdu' },
+                            ]
+                        )
+                          .filter(lang => lang && lang.value && lang.label)
+                          .map(lang => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Dynamic Pricing Indicator */}
+                  {sourceLanguage && targetLanguage && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-semibold text-blue-900">Selected Language Pricing</span>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-blue-800">Original Price:</span>
+                          <span className="text-sm text-blue-800 line-through">{convertPrice(currentOriginalPrice)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-blue-900">Offer Price:</span>
+                          <span className="text-lg font-bold text-red-600">{convertPrice(currentPrice)}</span>
+                        </div>
+                        <div className="pt-2 border-t border-blue-200">
+                          <p className="text-xs text-blue-700">
+                            ✨ Pricing automatically updated based on your language selection
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Package Duration Selector (Only for Startup Packages) */}
+              {data.type === 'startup' && (
+                <div>
+                  <Label htmlFor="package-duration">
+                    Package <span className="text-red-600">*</span>
+                  </Label>
+                  <Select value={packageDuration} onValueChange={(value: 'full-package' | '1-year' | '2-year') => setPackageDuration(value)}>
+                    <SelectTrigger id="package-duration" className="w-full mt-1">
+                      <SelectValue placeholder="Select package" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full-package">Full Premium Corporate Package</SelectItem>
+                      <SelectItem value="1-year">1 Year Renewal Package</SelectItem>
+                      <SelectItem value="2-year">2 Year Renewal Package</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Document Type Checkboxes - Now shown for ALL product types EXCEPT Startup packages */}
+              {shouldShowDocumentTypes && (
+                <div>
+                  <Label className="mb-3 block">
+                    Document Type <span className="text-red-600">*</span>
+                  </Label>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {documentTypesToShow.map(docType => (
+                      <div key={docType.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={docType.id}
+                          checked={selectedDocTypes.includes(docType.id)}
+                          onCheckedChange={() => handleDocTypeToggle(docType.id)}
+                        />
+                        <label
+                          htmlFor={docType.id}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {docType.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Document - Hide for startup packages */}
+              {data.type !== 'startup' && (
+                <div>
+                  <Label htmlFor="file-upload" className="mb-2 block">
+                    Upload Document (Max 7 MB, Multiple Files Allowed) <span className="text-red-600">*</span>
+                  </Label>
+                  <div 
+                    className="relative"
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      id="file-upload"
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="flex flex-col items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-lg appearance-none cursor-pointer hover:border-blue-400 focus:outline-none"
+                    >
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                        <p className="mb-2 text-sm text-gray-500"> or drag and drop<span className="font-semibold">Click to upload</span></p>
+                        <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG (MAX. 7MB)</p>
+                      </div>
+                    </label>
+                  </div>
+                  {uploadedFiles.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {uploadedFiles.map((file, idx) => (
+                        <div key={idx} className="text-sm text-gray-600 flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Check className="w-4 h-4 text-green-600" />
+                            <span>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newFiles = uploadedFiles.filter((_, i) => i !== idx);
+                              setUploadedFiles(newFiles);
+                              updatePageCountFromFiles(newFiles);
+                            }}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Remove file"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Total No. of Pages - Hide for startup packages */}
+              {data.type !== 'startup' && (
+                <div>
+                  <Label htmlFor="page-count" className="mb-2 block">
+                    Total No. of Pages
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={decrementPages}
+                      disabled={pageCount <= 1}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <input
+                      id="page-count"
+                      type="number"
+                      min="1"
+                      value={pageCount}
+                      onChange={(e) => setPageCount(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 text-center px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={incrementPages}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <span className="text-sm text-gray-600">pages</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Add to Cart Button */}
+              <Button
+                className="w-full bg-black hover:bg-gray-800 text-white h-12 text-lg lg:sticky lg:bottom-4 z-10 shadow-lg"
+                size="lg"
+                onClick={() => {
+                  // Check authentication first
+                  if (!user) {
+                    toast.error('Please log in to add items to your cart.');
+                    return;
+                  }
+
+                  // Validation for mandatory fields
+                  const errors: string[] = [];
+
+                  // Check for translation services (but NOT for sworn translations)
+                  if (data.type === 'translation' && !data.title.toLowerCase().includes('sworn')) {
+                    if (!sourceLanguage) {
+                      errors.push('Please select a source language');
+                    }
+                    if (!targetLanguage) {
+                      errors.push('Please select a target language');
+                    }
+                  }
+
+                  // Check document type selection - skip for startup packages
+                  if (data.type !== 'startup' && selectedDocTypes.length === 0) {
+                    errors.push('Please select at least one document type');
+                  }
+
+                  // Check file upload - skip for startup packages
+                  if (data.type !== 'startup' && uploadedFiles.length === 0) {
+                    errors.push('Please upload at least one document');
+                  }
+
+                  // Show errors if any
+                  if (errors.length > 0) {
+                    const errorMessage = 'Please complete the following:\\n\\n' + errors.join('\\n');
+                    toast.error(errorMessage);
+                    return;
+                  }
+
+                  // Use existing cart item ID if in edit mode, otherwise generate new ID
+                  const cartItemId = isEditMode && editCartItem ? editCartItem.id : `${data.type}-${Date.now()}`;
+                  
+                  addToCart({
+                    id: cartItemId,
+                    name: data.title,
+                    basePrice: currentPrice,
+                    category: data.type,
+                    url: window.location.pathname,
+                    image: getFirstValidImage(productImages, getFirstValidImage(data.images)),
+                    sourceLanguage: sourceLanguage || undefined,
+                    targetLanguage: targetLanguage || undefined,
+                    certificateType: selectedDocTypes.join(', ') || undefined,
+                    uploadedDocument: uploadedFiles[0] || null,
+                    uploadedDocuments: uploadedFiles.length > 0 ? uploadedFiles : undefined,
+                    documentPreview: undefined,
+                    pageCount: pageCount,
+                    totalPrice: currentPrice * pageCount,
+                  });
+                  toast.success('Item added to cart!');
+                  navigate('/cart');
+                }}
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                Add to Cart
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* BELOW SECTION - Tabs/Accordion Style */}
+        <div className="mt-12">
+          {data.type === 'startup' ? (
+            // For startup packages, show only Product Details without tabs
+            <div className="prose max-w-none">
+              <div className="space-y-3">
+                {(data.productDetails || []).map((detail, idx) => {
+                  if (typeof detail === 'string') {
+                    return <p key={idx} className="text-gray-700">{detail}</p>;
+                  } else {
+                    // Apply styling based on style property
+                    let className = 'text-gray-700';
+                    if (detail.style === 'title-orange') {
+                      className = 'text-2xl font-bold text-[#0a1247]';
+                    } else if (detail.style === 'subtitle') {
+                      className = 'text-xl font-bold text-gray-900';
+                    } else if (detail.style === 'section-bold') {
+                      className = 'font-bold text-gray-900';
+                    } else if (detail.style === 'subsection-bold') {
+                      className = 'font-bold text-gray-800';
+                    }
+                    
+                    return detail.text ? <p key={idx} className={className} dangerouslySetInnerHTML={{ __html: detail.text }} /> : <div key={idx} className="h-2" />;
+                  }
+                })}
+              </div>
+            </div>
+          ) : (
+            // For other products, show full tabs
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+                <TabsTrigger value="details">Product Details</TabsTrigger>
+                <TabsTrigger value="receive">What You'll Receive</TabsTrigger>
+                <TabsTrigger value="process">Process</TabsTrigger>
+                <TabsTrigger value="timeline">Delivery Timeline</TabsTrigger>
+                <TabsTrigger value="why">Why Choose Us</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="details" className="mt-6">
+                <div className="prose max-w-none">
+                  <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">Product Details</h3>
+                  <ul className="space-y-2">
+                    {(data.productDetails || []).map((detail, idx) => {
+                      if (typeof detail === 'string') {
+                        return <li key={idx} className="text-gray-700">{detail}</li>;
+                      } else {
+                        return <li key={idx} className="text-gray-700">{detail.text}</li>;
+                      }
+                    })}
+                  </ul>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="receive" className="mt-6">
+                <div className="prose max-w-none">
+                  <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">What You Will Receive</h3>
+                  <ol className="space-y-2 list-decimal list-inside">
+                    {(data.whatYouReceive || []).map((item, idx) => (
+                      <li key={idx} className="text-gray-700">{item}</li>
+                    ))}
+                  </ol>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="process" className="mt-6">
+                <div className="prose max-w-none">
+                  <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">How the Process Works</h3>
+                  <div className="space-y-4">
+                    {(data.processSteps || []).map((step) => (
+                      <div key={step.step} className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                          {step.step}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900">{step.title}</h4>
+                          <p className="text-gray-600">{step.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="timeline" className="mt-6">
+                <div className="prose max-w-none">
+                  <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">Delivery Timeline</h3>
+                  <div className="space-y-3">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="font-bold text-gray-900 mb-2">Soft Copy (Email)</h4>
+                      <p className="text-gray-700">{data.deliveryTimeline?.softCopy || '3-5 business days'}</p>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <h4 className="font-bold text-gray-900 mb-2">Hard Copy (Physical Delivery)</h4>
+                      <p className="text-gray-700">{data.deliveryTimeline?.hardCopy || '7-10 business days'}</p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="why" className="mt-6">
+                <div className="prose max-w-none">
+                  <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">Why Choose Honey Translations</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(data.whyChoose || []).map((reason, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-gray-50 rounded-lg p-4">
+                        <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-700">{reason}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </div>
+
+        {/* Ratings & Reviews Section */}
+        <ProductReviews productId={productId} productName={data.title} />
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,32 @@
+
+> @figma/my-make-file@0.0.1 dev
+> vite --host 0.0.0.0
+
+
+  [32m[1mVITE[22m v6.3.5[39m  [2mready in [0m[1m1277[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.47:[1m5173[22m/[39m
+[2m3:19:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/ProductPage.tsx, /src/styles/index.css[22m
+[2m3:19:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/product/ProductTemplate.tsx, /src/styles/index.css[22m
+[2m3:19:46 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/product/ProductTemplate.tsx, /src/styles/index.css[22m
+[2m3:19:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/product/ProductTemplate.tsx, /src/styles/index.css[22m
+[2m3:19:53 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/product/ProductTemplate.tsx, /src/styles/index.css[22m
+[2m3:19:56 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/product/ProductTemplate.tsx, /src/styles/index.css[22m
+[2m3:19:59 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/product/ProductTemplate.tsx, /src/styles/index.css[22m
+[2m3:20:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllTranslationProductsPage.tsx, /src/styles/index.css[22m
+[2m3:20:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllLanguageProductsPage.tsx, /src/styles/index.css[22m
+[2m3:20:28 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllLanguageProductsPage.tsx, /src/styles/index.css[22m
+[2m3:20:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllAttestationProductsPage.tsx, /src/styles/index.css[22m
+[2m3:20:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllAttestationProductsPage.tsx, /src/styles/index.css[22m
+[2m3:20:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllApostilleProductsPage.tsx, /src/styles/index.css[22m
+[2m3:20:53 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllApostilleProductsPage.tsx, /src/styles/index.css[22m
+[2m3:20:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/home/PickYourLanguage.tsx, /src/styles/index.css[22m
+[2m3:21:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/home/ChooseSwornTranslation.tsx, /src/styles/index.css[22m
+[2m3:21:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllStartupProductsPage.tsx, /src/styles/index.css[22m
+[2m3:21:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/layout/HeaderNew.tsx, /src/styles/index.css[22m
+[2m3:21:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/components/ProductPopup.tsx, /src/styles/index.css[22m
+[2m3:21:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/AllApostilleProductsPage.tsx, /src/styles/index.css[22m
+[2m3:21:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/SwornTranslationsListingPage.tsx, /src/styles/index.css[22m
+[2m4:54:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/admin/DeploymentGuidePage.tsx, /src/styles/index.css[22m
+[2m4:55:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/pages/admin/DeploymentGuidePage.tsx, /src/styles/index.css[22m
