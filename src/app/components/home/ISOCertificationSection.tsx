@@ -15,7 +15,7 @@ export function ISOCertificationSection() {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <section className="py-12 md:py-14 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
           {/* Left: ISO Certificate Image with Amazon-style zoom */}

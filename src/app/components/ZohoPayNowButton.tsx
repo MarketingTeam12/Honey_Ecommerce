@@ -37,7 +37,7 @@ interface ZohoPayNowButtonProps {
 }
 
 /**
- * Secure Pay Now button that redirects to Zoho Payments
+ * Secure Pay Now button that redirects to Razorpay
  * Opens in a new tab with security best practices
  */
 export function ZohoPayNowButton({
@@ -66,7 +66,7 @@ export function ZohoPayNowButton({
         await onBeforeOpen();
       }
 
-      // Open Zoho Payments in new tab with security parameters
+      // Open Razorpay in new tab with security parameters
       const paymentWindow = window.open(
         ZOHO_PAYMENTS_URL,
         '_blank',
@@ -85,9 +85,9 @@ export function ZohoPayNowButton({
         onAfterOpen();
       }
 
-      console.log('✅ Zoho Payments page opened successfully');
+      console.log('✅ Razorpay page opened successfully');
     } catch (error) {
-      console.error('❌ Error opening Zoho Payments:', error);
+      console.error('❌ Error opening Razorpay:', error);
       alert('Unable to open payment page. Please try again.');
     } finally {
       setIsOpening(false);
@@ -130,8 +130,8 @@ export function ZohoPayNowButton({
         ${className}
       `}
       type="button"
-      aria-label={`${text} - Opens Zoho Payments in new tab`}
-      title="Secure payment via Zoho Payments"
+      aria-label={`${text} - Opens Razorpay in new tab`}
+      title="Secure payment via Razorpay"
     >
       {/* Shine effect on hover */}
       <span className="absolute inset-0 rounded-xl overflow-hidden">
@@ -206,9 +206,9 @@ export function ZohoPayNowButtonMinimal({
         onAfterOpen();
       }
 
-      console.log('✅ Zoho Payments page opened successfully');
+      console.log('✅ Razorpay page opened successfully');
     } catch (error) {
-      console.error('❌ Error opening Zoho Payments:', error);
+      console.error('❌ Error opening Razorpay:', error);
       alert('Unable to open payment page. Please try again.');
     } finally {
       setIsOpening(false);
@@ -234,7 +234,7 @@ export function ZohoPayNowButtonMinimal({
         ${className}
       `}
       type="button"
-      aria-label={`${text} - Opens Zoho Payments in new tab`}
+      aria-label={`${text} - Opens Razorpay in new tab`}
     >
       <CreditCard size={20} aria-hidden="true" />
       <span>{isOpening ? 'Opening...' : text}</span>
@@ -283,9 +283,9 @@ export function ZohoPayNowIconButton({
         onAfterOpen();
       }
 
-      console.log('✅ Zoho Payments page opened successfully');
+      console.log('✅ Razorpay page opened successfully');
     } catch (error) {
-      console.error('❌ Error opening Zoho Payments:', error);
+      console.error('❌ Error opening Razorpay:', error);
       alert('Unable to open payment page. Please try again.');
     } finally {
       setIsOpening(false);
@@ -312,7 +312,7 @@ export function ZohoPayNowIconButton({
         ${className}
       `}
       type="button"
-      aria-label="Pay Now - Opens Zoho Payments in new tab"
+      aria-label="Pay Now - Opens Razorpay in new tab"
       title="Secure payment via Zoho"
     >
       <Lock size={20} className={isOpening ? 'animate-pulse' : ''} aria-hidden="true" />

@@ -56,6 +56,10 @@ interface Order {
   currency: string;
   items: OrderItem[];
   shipping_address?: any;
+  shipping_details?: {
+    email?: string;
+    address?: string;
+  };
   shipping_method?: string; // Add shipping method field
   notes?: string; // Add notes field
   tracking_number?: string;
@@ -131,16 +135,33 @@ export function OrderDetailPage() {
         const fetchedOrder = data.order;
         
         console.log('✅ [OrderDetailPage] Order loaded from backend');
-        setOrder(fetchedOrder);
-        setNewStatus(fetchedOrder.status);
-        setTrackingNumber(fetchedOrder.tracking_number || '');
-        setShippingCarrier(fetchedOrder.shipping_carrier || '');
-        setNotes(fetchedOrder.notes || '');
+        const localStorageOrder = loadOrderFromLocalStorage(orderId || '');
+        const mergedOrder = localStorageOrder
+          ? {
+              ...fetchedOrder,
+              shipping_details: {
+                ...((fetchedOrder.shipping_details || {})),
+                ...((localStorageOrder.shipping_details || {})),
+              },
+              shipping_method: fetchedOrder.shipping_method || localStorageOrder.shipping_method,
+              shipping_address: fetchedOrder.shipping_address || localStorageOrder.shipping_address,
+            }
+          : fetchedOrder;
+
+        if (localStorageOrder) {
+          console.log('ℹ️ [OrderDetailPage] Merged backend order with local storage shipping details');
+        }
+
+        setOrder(mergedOrder);
+        setNewStatus(mergedOrder.status);
+        setTrackingNumber(mergedOrder.tracking_number || '');
+        setShippingCarrier(mergedOrder.shipping_carrier || '');
+        setNotes(mergedOrder.notes || '');
       } else {
         console.log('⚠️ [OrderDetailPage] Backend unavailable, checking localStorage...');
         
         // FALLBACK: Try to load from localStorage
-        const localStorageOrder = loadOrderFromLocalStorage(orderId);
+        const localStorageOrder = orderId ? loadOrderFromLocalStorage(orderId) : null;
         
         if (localStorageOrder) {
           console.log('✅ [OrderDetailPage] Order loaded from localStorage');
@@ -164,7 +185,7 @@ export function OrderDetailPage() {
       console.error('❌ [OrderDetailPage] Error loading order:', error);
       
       // FALLBACK: Try to load from localStorage on error
-      const localStorageOrder = loadOrderFromLocalStorage(orderId);
+      const localStorageOrder = orderId ? loadOrderFromLocalStorage(orderId) : null;
       
       if (localStorageOrder) {
         console.log('✅ [OrderDetailPage] Order loaded from localStorage (after error)');
@@ -1228,17 +1249,55 @@ export function OrderDetailPage() {
                     </div>
                   </div>
                   
-                  {order.shipping_address && (
+                  {order.shipping_method && (
+                    <div className="flex items-start gap-3">
+                      <Truck className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-gray-500">Shipping Method</p>
+                        <p className="text-sm text-gray-900">
+                          {order.shipping_method === 'email'
+                            ? 'Email Delivery'
+                            : 'Physical Delivery'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {order.shipping_method === 'email' ? (
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-gray-500">Delivery Address</p>
+                        <p className="text-sm text-gray-900">
+                          {order.shipping_details?.email || order.customer_email || 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
                     <div className="flex items-start gap-3">
                       <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div>
-                        <p className="text-xs text-gray-500">Shipping Address</p>
-                        <p className="text-sm text-gray-900">
-                          {order.shipping_address.address1}<br />
-                          {order.shipping_address.city}, {order.shipping_address.state}<br />
-                          {order.shipping_address.postalCode}<br />
-                          {order.shipping_address.country}
-                        </p>
+                        <p className="text-xs text-gray-500">Delivery Address</p>
+                        {order.shipping_details?.address ? (
+                          <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                            {order.shipping_details.address}
+                          </p>
+                        ) : order.shipping_address ? (
+                          <p className="text-sm text-gray-900">
+                            {typeof order.shipping_address === 'string'
+                              ? order.shipping_address
+                              : (
+                                <>
+                                  {order.shipping_address.address1 && <>{order.shipping_address.address1}<br /></>}
+                                  {order.shipping_address.city ? `${order.shipping_address.city}, ` : ''}{order.shipping_address.state ? `${order.shipping_address.state}<br />` : ''}
+                                  {order.shipping_address.postalCode && <>{order.shipping_address.postalCode}<br /></>}
+                                  {order.shipping_address.country}
+                                </>
+                              )}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-gray-900">N/A</p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1273,8 +1332,8 @@ export function OrderDetailPage() {
                       <p className="text-xs text-gray-500">Shipping Method</p>
                       <p className="text-sm text-gray-900">
                         {order.shipping_method === 'email' 
-                          ? 'Email Delivery Only (Digital)' 
-                          : 'Digital + Physical Delivery (Courier)'}
+                          ? 'Email Delivery (Digital)' 
+                          : 'Physical Delivery (Courier)'}
                       </p>
                     </div>
                   )}

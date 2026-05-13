@@ -12,19 +12,19 @@ export function TestPayNowPage() {
           Test Payment Button
         </h1>
         <p className="text-gray-600 mb-8 text-center">
-          Click the button below to open Zoho Payments
+          Click the button below to open Razorpay
         </p>
         
         <ZohoPayNowButton
           size="lg"
           fullWidth
-          text="Open Zoho Payments"
+          text="Open Razorpay"
           onBeforeOpen={() => {
-            console.log('🔐 Opening Zoho Payments...');
+            console.log('🔐 Opening Razorpay...');
           }}
           onAfterOpen={() => {
-            console.log('✅ Zoho Payments opened successfully!');
-            alert('Success! Check the new tab for Zoho Payments.');
+            console.log('✅ Razorpay opened successfully!');
+            alert('Success! Check the new tab for Razorpay.');
           }}
         />
 

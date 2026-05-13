@@ -246,6 +246,11 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [pageCount, setPageCount] = useState(1);
   const [packageDuration, setPackageDuration] = useState<'full-package' | '1-year' | '2-year'>('full-package');
+  const startupVideosByPath: Record<string, { title: string; videoId: string }> = {
+    '/basic-startup-package': { title: 'Basic Startup Package', videoId: 'nVrSsvjJ1lg' },
+    '/standard-startup-package': { title: 'Standard Startup Package', videoId: '48XaA1Rglu0' },
+    '/premium-startup-package': { title: 'Premium Startup Package', videoId: 'KoLFSkn2UIc' },
+  };
 
   // Check if we're in edit mode (editing an existing cart item)
   const editCartItem = location.state?.editCartItem;
@@ -576,6 +581,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // CRITICAL: Force hide document types for startup packages, but always show for others
   const shouldShowDocumentTypes = data.type !== 'startup';
+  const currentStartupVideo = startupVideosByPath[location.pathname];
   
   // Provide fallback document types if none are provided
   const documentTypesToShow = (data.documentTypes && data.documentTypes.length > 0) 
@@ -614,7 +620,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
             {/* Main Product Image with Zoom */}
             <div
               ref={imageRef}
-              className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200"
+              className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 cursor-pointer"
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
@@ -624,7 +630,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   <img
                     src={validImages[selectedImage].url}
                     alt={validImages[selectedImage].alt}
-                    className="w-full h-full object-contain bg-white p-4"
+                    className="w-full h-full object-contain bg-white p-4 cursor-pointer"
                     width="600"
                     height="600"
                     loading="eager"
@@ -663,7 +669,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                     selectedImage === index
                       ? 'border-blue-600 ring-2 ring-blue-200'
                       : 'border-gray-200 hover:border-gray-400'
@@ -673,7 +679,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   <img
                     src={image.url}
                     alt={image.alt}
-                    className="w-full h-full object-contain bg-white p-2"
+                    className="w-full h-full object-contain bg-white p-2 cursor-pointer"
                     width="120"
                     height="120"
                     loading="lazy"
@@ -703,6 +709,25 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
+
+            {data.type === 'startup' && currentStartupVideo && (
+              <div className="space-y-2 pt-2">
+                <h4 className="text-base font-semibold text-[#0a1247]">Startup Package Video</h4>
+                <div className="aspect-video rounded-lg overflow-hidden shadow-lg border bg-white">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={`https://www.youtube.com/embed/${currentStartupVideo.videoId}`}
+                    title={currentStartupVideo.title}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+                <p className="text-center font-medium text-gray-900">{currentStartupVideo.title}</p>
+              </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN - Product Details Panel */}
@@ -809,7 +834,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                 Secure checkout with your preferred payment option.
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <span className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold">Zoho Pay</span>
+                <span className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold">Razorpay</span>
                 <span className="text-gray-400">•</span>
                 <img src={googlePayIcon} alt="Google Pay" className="h-10" />
                 <span className="text-gray-400">•</span>

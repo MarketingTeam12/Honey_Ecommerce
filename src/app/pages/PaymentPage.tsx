@@ -64,19 +64,19 @@ export function PaymentPage() {
           {/* Payment Info */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl mb-6">Zoho Payments - Secure Checkout</h2>
+              <h2 className="text-xl mb-6">Razorpay - Secure Checkout</h2>
 
-              {/* Zoho Payment Banner */}
+              {/* Razorpayment Banner */}
               <div className="mb-6 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl p-6">
                 <div className="flex items-center gap-4 mb-3">
                   <Shield className="w-10 h-10" />
                   <div>
-                    <h3 className="text-xl font-bold">Zoho Payments</h3>
+                    <h3 className="text-xl font-bold">Razorpay</h3>
                     <p className="text-white/80 text-sm">Enterprise-grade payment processing</p>
                   </div>
                 </div>
                 <p className="text-white/90 text-sm">
-                  You will be securely redirected to Zoho's checkout page to complete your payment.
+                  You will be securely redirected to Razorpay\'s checkout page to complete your payment.
                 </p>
               </div>
 
@@ -143,7 +143,7 @@ export function PaymentPage() {
                 ) : (
                   <>
                     <Lock className="w-5 h-5" />
-                    Pay {formatPrice(total)} with Zoho
+                    Pay {formatPrice(total)} with Razorpay
                   </>
                 )}
               </button>
@@ -152,7 +152,7 @@ export function PaymentPage() {
               <div className="mt-6 pt-6 border-t">
                 <p className="text-sm font-medium mb-3">Powered by</p>
                 <div className="flex flex-wrap gap-3 mb-4">
-                  <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded text-xs font-semibold">Zoho Payments</div>
+                  <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-2 rounded text-xs font-semibold">Razorpay</div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs text-gray-600">

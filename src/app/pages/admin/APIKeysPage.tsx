@@ -42,7 +42,7 @@ export function APIKeysPage() {
   const [razorpayKeyId, setRazorpayKeyId] = useState('');
   const [razorpayKeySecret, setRazorpayKeySecret] = useState('');
 
-  // Zoho Payments
+  // Razorpay
   const [zohoPaymentsClientId, setZohoPaymentsClientId] = useState('');
   const [zohoPaymentsClientSecret, setZohoPaymentsClientSecret] = useState('');
   const [zohoPaymentsTestMode, setZohoPaymentsTestMode] = useState(true);
@@ -100,7 +100,7 @@ export function APIKeysPage() {
         setRazorpayKeySecret(data.razorpay.key_secret || '');
       }
 
-      // Load Zoho Payments
+      // Load Razorpay
       if (data.zoho_payments) {
         setZohoPaymentsClientId(data.zoho_payments.client_id || '');
         setZohoPaymentsClientSecret(data.zoho_payments.client_secret || '');
@@ -313,15 +313,15 @@ export function APIKeysPage() {
             </button>
           </div>
 
-          {/* Zoho Payments Section */}
+          {/* Razorpay Section */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-start justify-between mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  Zoho Payments
+                  Razorpay
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Configure Zoho Payments gateway for processing transactions
+                  Configure Razorpay gateway for processing transactions
                 </p>
               </div>
               {saveSuccess === 'zoho_payments' && (
@@ -337,7 +337,7 @@ export function APIKeysPage() {
                 label="Client ID"
                 value={zohoPaymentsClientId}
                 onChange={setZohoPaymentsClientId}
-                placeholder="Enter Zoho Payments Client ID"
+                placeholder="Enter Razorpay Client ID"
                 fieldName="zoho_payments_client_id"
                 isSecret={true}
               />
@@ -345,7 +345,7 @@ export function APIKeysPage() {
                 label="Client Secret"
                 value={zohoPaymentsClientSecret}
                 onChange={setZohoPaymentsClientSecret}
-                placeholder="Enter Zoho Payments Client Secret"
+                placeholder="Enter Razorpay Client Secret"
                 fieldName="zoho_payments_client_secret"
                 isSecret={true}
               />
@@ -363,7 +363,7 @@ export function APIKeysPage() {
                 <div>
                   <p className="font-medium text-gray-900">Enable Test Mode</p>
                   <p className="text-sm text-gray-600">
-                    Use Zoho's test environment for development and testing. Disable for live transactions.
+                    Use Razorpay\'s test environment for development and testing. Disable for live transactions.
                   </p>
                 </div>
               </label>
@@ -386,7 +386,7 @@ export function APIKeysPage() {
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Save Zoho Payments Keys
+                  Save Razorpay Keys
                 </>
               )}
             </button>

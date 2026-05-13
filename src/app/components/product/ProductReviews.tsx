@@ -39,6 +39,23 @@ interface ProductReviewsProps {
   productName: string;
 }
 
+const getStaticStatsForProduct = (id: string): ReviewStats => {
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const staticRating = hash % 2 === 0 ? 5 : 4;
+
+  return staticRating === 5
+    ? {
+        totalReviews: 100,
+        averageRating: 5,
+        ratingDistribution: { 5: 100, 4: 0, 3: 0, 2: 0, 1: 0 }
+      }
+    : {
+        totalReviews: 100,
+        averageRating: 4,
+        ratingDistribution: { 5: 0, 4: 100, 3: 0, 2: 0, 1: 0 }
+      };
+};
+
 export function ProductReviews({ productId, productName }: ProductReviewsProps) {
   const { user, accessToken } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -583,9 +600,11 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
   };
 
   const getRatingPercentage = (stars: number) => {
-    if (stats.totalReviews === 0) return 0;
-    return Math.round((stats.ratingDistribution[stars as keyof typeof stats.ratingDistribution] / stats.totalReviews) * 100);
+    const sourceStats = stats.totalReviews === 0 ? getStaticStatsForProduct(productId) : stats;
+    return Math.round((sourceStats.ratingDistribution[stars as keyof typeof sourceStats.ratingDistribution] / sourceStats.totalReviews) * 100);
   };
+
+  const displayStats = stats.totalReviews === 0 ? getStaticStatsForProduct(productId) : stats;
 
   const handleVote = async (reviewId: string, voteType: 'helpful' | 'notHelpful') => {
     console.log('👍 Vote Debug Info:', {
@@ -894,11 +913,11 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
               {/* Average Rating */}
               <div className="text-center md:text-left">
                 <div className="text-5xl font-bold text-gray-900 mb-2">
-                  {stats.averageRating.toFixed(1)} / 5
+                  {displayStats.averageRating.toFixed(1)} / 5
                 </div>
-                {renderStars(Math.round(stats.averageRating))}
+                {renderStars(Math.round(displayStats.averageRating))}
                 <p className="text-gray-600 mt-2">
-                  Based on {stats.totalReviews} {stats.totalReviews === 1 ? 'review' : 'reviews'}
+                  Based on {displayStats.totalReviews} {displayStats.totalReviews === 1 ? 'review' : 'reviews'}
                 </p>
               </div>
 

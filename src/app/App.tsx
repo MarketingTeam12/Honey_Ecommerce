@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import AdminUpload from "@/app/components/AdminUpload";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { Toaster } from "sonner";
 import { initializeStorageBucket } from "@/app/utils/supabaseStorage";
@@ -89,6 +90,7 @@ import TermsOfServicePage from "@/app/pages/TermsOfServicePage";
 import SwornTranslationsListingPage from "@/app/pages/SwornTranslationsListingPage";
 import SwornTranslationPage from "@/app/pages/SwornTranslationPage";
 import ContentPage from "@/app/pages/ContentPage";
+import ServicesPage from "@/app/pages/ServicesPage";
 import DirectProductPage from "@/app/pages/DirectProductPage";
 import ContactUsPage from "@/app/pages/ContactUsPage";
 import PricingPlanPage from "@/app/pages/PricingPlanPage";
@@ -247,6 +249,10 @@ function App() {
                   <ProductPopup />
                   <Toaster position="top-right" richColors />
                   <Routes>
+                    <Route
+                      path="/admin-upload"
+                      element={<AdminUpload />}
+                    />
                     <Route
                       path="/signin"
                       element={<SignInPage />}
@@ -740,6 +746,14 @@ function App() {
                       element={
                         <PublicLayout>
                           <BlogPage />
+                        </PublicLayout>
+                      }
+                    />
+                    <Route
+                      path="/services"
+                      element={
+                        <PublicLayout>
+                          <ServicesPage />
                         </PublicLayout>
                       }
                     />

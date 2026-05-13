@@ -308,14 +308,7 @@ export function ContactPage() {
                   <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <MapPin className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="font-bold mb-2">Head Office</h4>
-                    <p className="text-blue-100 leading-relaxed">
-                      184/3, 2nd Floor, Chandamama Building,<br />
-                      Arcot Rd, Vadapalani,<br />
-                      Chennai – 600026
-                    </p>
-                  </div>
+                  
                 </div>
 
                 <div className="flex items-start gap-4">

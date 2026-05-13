@@ -55,6 +55,11 @@ interface Order {
   currency: string;
   items: OrderItem[];
   shipping_address?: any;
+  shipping_details?: {
+    email?: string;
+    address?: string;
+  };
+  shipping_method?: string;
   tracking_number?: string;
   shipping_carrier?: string;
   estimated_delivery?: string;

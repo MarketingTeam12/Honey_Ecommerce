@@ -15,7 +15,7 @@ export function PaymentSettingsPage() {
   const [showSecrets, setShowSecrets] = useState(false);
   const [testMode, setTestMode] = useState(true);
 
-  // Zoho Payments credentials
+  // Razorpay credentials
   const [zohoPayments, setZohoPayments] = useState({
     client_id: '',
     client_secret: '',
@@ -88,7 +88,7 @@ export function PaymentSettingsPage() {
     try {
       setSaving(true);
 
-      // Save Zoho Payments
+      // Save Razorpay
       const paymentsResponse = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/api-keys`,
         {
@@ -105,7 +105,7 @@ export function PaymentSettingsPage() {
       );
 
       if (!paymentsResponse.ok) {
-        throw new Error('Failed to save Zoho Payments credentials');
+        throw new Error('Failed to save Razorpay credentials');
       }
 
       // Save Zoho Books if configured
@@ -138,12 +138,12 @@ export function PaymentSettingsPage() {
 
   const testConnection = async () => {
     if (!zohoPayments.client_id || !zohoPayments.client_secret) {
-      toast.error('Please enter Zoho Payments credentials first');
+      toast.error('Please enter Razorpay credentials first');
       return;
     }
 
     try {
-      toast.info('Testing Zoho Payments connection...');
+      toast.info('Testing Razorpay connection...');
       
       // Create a test payment to verify credentials
       const response = await fetch(
@@ -174,11 +174,11 @@ export function PaymentSettingsPage() {
       const data = await response.json();
 
       if (data.success && data.paymentUrl && !data.demo) {
-        toast.success('✅ Zoho Payments connection successful!');
+        toast.success('✅ Razorpay connection successful!');
       } else if (data.demo) {
         toast.warning('⚠️ Running in demo mode - Please check credentials');
       } else {
-        toast.error('❌ Failed to connect to Zoho Payments');
+        toast.error('❌ Failed to connect to Razorpay');
       }
     } catch (error) {
       console.error('Test error:', error);
@@ -207,7 +207,7 @@ export function PaymentSettingsPage() {
             <CreditCard className="w-8 h-8 text-blue-600" />
             Payment Gateway Settings
           </h1>
-          <p className="text-gray-600 mt-2">Configure Zoho Payments integration for real payment processing</p>
+          <p className="text-gray-600 mt-2">Configure Razorpay integration for real payment processing</p>
         </div>
 
         {/* Info Banner */}
@@ -215,25 +215,25 @@ export function PaymentSettingsPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-blue-900 mb-2">How to Get Zoho Payments Credentials</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">How to Get Razorpay Credentials</h3>
               <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                <li>Go to <a href="https://payments.zoho.in" target="_blank" rel="noopener noreferrer" className="underline font-medium">Zoho Payments Dashboard</a></li>
+                <li>Go to <a href="https://payments.zoho.in" target="_blank" rel="noopener noreferrer" className="underline font-medium">Razorpay Dashboard</a></li>
                 <li>Navigate to Settings → API Keys</li>
                 <li>Create a new API key or use existing credentials</li>
                 <li>Copy your Client ID and Client Secret</li>
                 <li>For testing, use Test Mode. For production, disable Test Mode</li>
               </ol>
               <p className="mt-3 text-sm text-blue-700 font-medium">
-                📖 <a href="https://www.zoho.com/in/payments/api/" target="_blank" rel="noopener noreferrer" className="underline">View Zoho Payments API Documentation</a>
+                📖 <a href="https://www.zoho.com/in/payments/api/" target="_blank" rel="noopener noreferrer" className="underline">View Razorpay API Documentation</a>
               </p>
             </div>
           </div>
         </div>
 
-        {/* Zoho Payments Configuration */}
+        {/* Razorpay Configuration */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Zoho Payments (Exclusive Gateway)</h2>
+            <h2 className="text-xl font-bold text-gray-900">Razorpay (Exclusive Gateway)</h2>
             <div className="flex items-center gap-2">
               <Label htmlFor="test-mode" className="text-sm font-medium text-gray-700">Test Mode</Label>
               <input
@@ -260,7 +260,7 @@ export function PaymentSettingsPage() {
                 type={showSecrets ? 'text' : 'password'}
                 value={zohoPayments.client_id}
                 onChange={(e) => setZohoPayments({ ...zohoPayments, client_id: e.target.value })}
-                placeholder="Enter your Zoho Payments Client ID"
+                placeholder="Enter your Razorpay Client ID"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -276,7 +276,7 @@ export function PaymentSettingsPage() {
                   type={showSecrets ? 'text' : 'password'}
                   value={zohoPayments.client_secret}
                   onChange={(e) => setZohoPayments({ ...zohoPayments, client_secret: e.target.value })}
-                  placeholder="Enter your Zoho Payments Client Secret"
+                  placeholder="Enter your Razorpay Client Secret"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
                 />
                 <button
@@ -402,7 +402,7 @@ export function PaymentSettingsPage() {
             <div className="flex items-center gap-2">
               <div className={`w-2 h-2 rounded-full ${zohoPayments.client_id && zohoPayments.client_secret ? 'bg-green-500' : 'bg-yellow-500'}`} />
               <span className="text-gray-700">
-                Zoho Payments: {zohoPayments.client_id && zohoPayments.client_secret ? 'Configured' : 'Not configured (Demo mode)'}
+                Razorpay: {zohoPayments.client_id && zohoPayments.client_secret ? 'Configured' : 'Not configured (Demo mode)'}
               </span>
             </div>
             <div className="flex items-center gap-2">

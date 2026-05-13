@@ -140,11 +140,11 @@ export function FAQPage() {
       faqs: [
         {
           question: 'Which payment options can I use on store.honeyuniversal.com?',
-          answer: 'Currently, we accept Zoho Payments only for all transactions on our website. You can safely complete your order using Zoho\'s secure payment gateway.'
+          answer: 'Currently, we accept Razorpay only for all transactions on our website. You can safely complete your order using Zoho\'s secure payment gateway.'
         },
         {
           question: 'Is my payment information safe when I pay online?',
-          answer: 'Yes. All payments are processed through Zoho Payments, which uses secure encryption and industry-standard security protocols. Your card or banking details are never stored on our website.'
+          answer: 'Yes. All payments are processed through Razorpay, which uses secure encryption and industry-standard security protocols. Your card or banking details are never stored on our website.'
         },
         {
           question: 'Can I get my money back if I am not satisfied with the service?',
@@ -152,11 +152,11 @@ export function FAQPage() {
         },
         {
           question: 'Do you accept international payments?',
-          answer: 'Yes. Zoho Payments supports multiple currencies, allowing international customers to pay securely through the same platform.'
+          answer: 'Yes. Razorpay supports multiple currencies, allowing international customers to pay securely through the same platform.'
         },
         {
           question: 'Can I pay in installments or partial payments?',
-          answer: 'No. At the moment, full payment is required upfront via Zoho Payments to process your order.'
+          answer: 'No. At the moment, full payment is required upfront via Razorpay to process your order.'
         }
       ]
     },
@@ -178,7 +178,7 @@ export function FAQPage() {
         },
         {
           question: 'Can I place an order completely through WhatsApp?',
-          answer: 'Yes, you can start your order via WhatsApp, but payment and final confirmation will still be completed securely through store.honeyuniversal.com using Zoho Payments.'
+          answer: 'Yes, you can start your order via WhatsApp, but payment and final confirmation will still be completed securely through store.honeyuniversal.com using Razorpay.'
         },
         {
           question: 'Will I receive updates about my order on WhatsApp?',

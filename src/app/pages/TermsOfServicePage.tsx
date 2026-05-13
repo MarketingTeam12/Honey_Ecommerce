@@ -31,7 +31,7 @@ export function TermsOfServicePage() {
       <section className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Modes of Payment</h2>
         <p className="text-gray-700 mb-4">
-          We accept payments via credit/debit cards, UPI, bank transfer, and online payment gateways powered by Zoho Payments. Payment terms are typically 50% advance and 50% upon project completion, unless otherwise agreed. For long-term clients, customized payment plans may be available.
+          We accept payments via credit/debit cards, UPI, bank transfer, and online payment gateways powered by Razorpay. Payment terms are typically 50% advance and 50% upon project completion, unless otherwise agreed. For long-term clients, customized payment plans may be available.
         </p>
       </section>
 

@@ -32,6 +32,9 @@ export function NewCheckoutReviewPage() {
   const [notes, setNotes] = useState('');
   const [billingAddress, setBillingAddress] = useState<BillingAddress | null>(null);
   const [shippingMethod, setShippingMethod] = useState<'email' | 'physical'>('email');
+  const [deliveryEmail, setDeliveryEmail] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [shippingError, setShippingError] = useState('');
   
   // Coupon states
   const [couponCode, setCouponCode] = useState('');
@@ -129,10 +132,46 @@ export function NewCheckoutReviewPage() {
     setCouponError('');
   };
 
-  const handleMakePayment = () => {
-    // Store notes and shipping method in localStorage before navigating to payment
-    localStorage.setItem('orderNotes', notes);
+  const handleSaveDeliveryDetails = () => {
+    setShippingError('');
+
+    if (shippingMethod === 'email') {
+      const email = deliveryEmail.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!email) {
+        setShippingError('Please enter your email address for delivery.');
+        return false;
+      }
+
+      if (!emailRegex.test(email)) {
+        setShippingError('Please enter a valid email address.');
+        return false;
+      }
+    } else {
+      if (!deliveryAddress.trim()) {
+        setShippingError('Please enter your full delivery address for courier delivery.');
+        return false;
+      }
+    }
+
+    const savedDetails = {
+      email: shippingMethod === 'email' ? deliveryEmail.trim() : '',
+      address: shippingMethod === 'physical' ? deliveryAddress.trim() : '',
+    };
+
     localStorage.setItem('shippingMethod', shippingMethod);
+    localStorage.setItem('shippingDetails', JSON.stringify(savedDetails));
+    toast.success('Delivery details submitted successfully.');
+    return true;
+  };
+
+  const handleMakePayment = () => {
+    if (!handleSaveDeliveryDetails()) {
+      return;
+    }
+
+    localStorage.setItem('orderNotes', notes);
     navigate('/checkout/payment?autopay=1');
   };
 
@@ -211,12 +250,15 @@ export function NewCheckoutReviewPage() {
                     name="shippingMethod"
                     value="email"
                     checked={shippingMethod === 'email'}
-                    onChange={(e) => setShippingMethod(e.target.value as 'email')}
+                    onChange={(e) => {
+                      setShippingMethod(e.target.value as 'email');
+                      setShippingError('');
+                    }}
                     className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-gray-900">Email Delivery Only</span>
+                      <span className="font-semibold text-gray-900">Email Delivery</span>
                       <span className="text-green-600 font-semibold">FREE</span>
                     </div>
                     <p className="text-sm text-gray-600">
@@ -238,12 +280,15 @@ export function NewCheckoutReviewPage() {
                     name="shippingMethod"
                     value="physical"
                     checked={shippingMethod === 'physical'}
-                    onChange={(e) => setShippingMethod(e.target.value as 'physical')}
+                    onChange={(e) => {
+                      setShippingMethod(e.target.value as 'physical');
+                      setShippingError('');
+                    }}
                     className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-gray-900">Digital + Physical Delivery</span>
+                      <span className="font-semibold text-gray-900">Physical Delivery</span>
                       <span className="text-green-600 font-semibold">FREE</span>
                     </div>
                     <p className="text-sm text-gray-600">
@@ -251,6 +296,58 @@ export function NewCheckoutReviewPage() {
                     </p>
                   </div>
                 </label>
+              </div>
+
+              <div className="mt-4">
+                {shippingMethod === 'email' ? (
+                  <div className="space-y-3 p-4 border border-blue-200 rounded-xl bg-blue-50">
+                    <label className="block text-sm font-semibold text-gray-900">Email Address</label>
+                    <input
+                      type="email"
+                      value={deliveryEmail}
+                      onChange={(e) => {
+                        setDeliveryEmail(e.target.value);
+                        setShippingError('');
+                      }}
+                      placeholder="Enter your email address"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                    <p className="text-sm text-gray-600">
+                      Documents will be sent directly to this email address.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 p-4 border border-blue-200 rounded-xl bg-blue-50">
+                    <label className="block text-sm font-semibold text-gray-900">Delivery Address</label>
+                    <textarea
+                      value={deliveryAddress}
+                      onChange={(e) => {
+                        setDeliveryAddress(e.target.value);
+                        setShippingError('');
+                      }}
+                      placeholder="Enter your full delivery address, including house number, street, city, state, pincode, and country"
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
+                    />
+                    <p className="text-sm text-gray-600">
+                      This address will be used for courier delivery of your documents.
+                    </p>
+                  </div>
+                )}
+                <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <button
+                    onClick={handleSaveDeliveryDetails}
+                    className="px-5 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    Submit
+                  </button>
+                  <p className="text-sm text-gray-500">
+                    Click submit to save the chosen delivery option and entered email/address before payment.
+                  </p>
+                </div>
+                {shippingError && (
+                  <p className="mt-3 text-sm text-red-600 font-medium">{shippingError}</p>
+                )}
               </div>
             </div>
 

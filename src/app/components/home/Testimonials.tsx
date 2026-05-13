@@ -1,89 +1,110 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
-import { useProducts } from '@/app/context/ProductContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
-
-// Import testimonial images
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
+import fratelliTestimonialLogo from '@/assets/fratelli-testimonial.jpg';
+import tvsLogoClean from '@/assets/tvs-logo-clean.png';
+import hpTestimonialLogo from '@/assets/hp-testimonial.jpeg';
+import aachiTestimonialLogo from '@/assets/aachi-testimonial.png';
+import arcTestimonialLogo from '@/assets/arc-testimonial.png';
+import royalEnfieldTestimonialLogo from '@/assets/royal-enfield-testimonial.webp';
+import brightLightSocietyLogo from '@/assets/bright-light-society-logo.png';
+import dbsLogo from '@/assets/dbs-logo-fixed.png';
+import identityLogo from '@/assets/identity-logo.png';
+import lrkLogo from '@/assets/lrk-logo.jpg';
+import muthootFinanceLogo from '@/assets/muthoot-finance-logo.webp';
+import newIndiaLogo from '@/assets/new-india-logo.jpg';
+import saintGobainLogo from '@/assets/saint-gobain-source.jpg';
 
 export function Testimonials() {
   const testimonials = [
     { 
       company: 'Fratelli', 
       text: 'Honey Universal Digital\'s localization services helped us expand our reach in the Indian market. Their attention to detail and cultural sensitivity in translating our product documentation and marketing materials made a significant difference in customer engagement.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EFratelli%3C/text%3E%3C/svg%3E'
+      logoSrc: fratelliTestimonialLogo
     },
     { 
       company: 'TVS Motor Company Ltd', 
       text: 'Despite strong advertising efforts, we struggled to connect with rural customers. Honey Universal Digital helped us bridge this gap by localizing our campaigns in regional languages, significantly increasing our market impact and brand recognition across India.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3ETVS Motor%3C/text%3E%3C/svg%3E'
+      logoSrc: tvsLogoClean
     },
     { 
       company: 'HP Valves & Fittings', 
       text: 'Our technical documentation required precise translation to maintain safety standards and accuracy. Honey Universal Digital delivered exceptional quality, ensuring our engineering specifications were perfectly communicated across different languages and markets.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EHP Valves%3C/text%3E%3C/svg%3E'
+      logoSrc: hpTestimonialLogo
     },
     { 
       company: 'Aachi Masala Foods Pvt. Ltd', 
       text: 'With Honey Universal Digital\'s localization expertise, we successfully connected with spice lovers across regions, increasing sales and expanding our exports. Their strategic approach also helped us resolve controversies and reinforce our brand\'s credibility.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EAachi Masala%3C/text%3E%3C/svg%3E'
+      logoSrc: aachiTestimonialLogo
     },
     { 
       company: 'ARC International Fertility', 
       text: 'Communicating sensitive medical information requires utmost care and precision. Honey Universal Digital provided expert translation services that helped us reach diverse communities with empathy and accuracy, making our fertility services more accessible to everyone.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EARC International%3C/text%3E%3C/svg%3E'
+      logoSrc: arcTestimonialLogo
     },
     { 
       company: 'Bright Light Society', 
       text: 'As a non-profit organization, clear communication is vital to our mission. Honey Universal Digital helped us translate our educational materials and outreach programs into multiple languages, significantly expanding our impact in underserved communities.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EBright Light Society%3C/text%3E%3C/svg%3E'
+      logoSrc: brightLightSocietyLogo
     },
     { 
       company: 'DBS', 
       text: 'Entering the Indian market required us to localize our banking services and communications. Honey Universal Digital\'s expertise in financial terminology and regulatory compliance made our expansion smooth and helped us build trust with local customers.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EDBS%3C/text%3E%3C/svg%3E'
+      logoSrc: dbsLogo
     },
     { 
       company: 'Identity', 
       text: 'Our brand messaging needed to resonate across different cultural contexts. Honey Universal Digital delivered creative localization that maintained our brand identity while adapting perfectly to regional markets, helping us establish a strong presence across India.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EIdentity%3C/text%3E%3C/svg%3E'
+      logoSrc: identityLogo
     },
     { 
       company: 'LRK', 
       text: 'Precision in translation is critical for our industry. Honey Universal Digital provided accurate and timely translation services that helped us maintain quality standards and expand our business operations into new regions with confidence.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3ELRK%3C/text%3E%3C/svg%3E'
+      logoSrc: lrkLogo
     },
     { 
       company: 'Muthoot Finance', 
       text: 'Reaching customers in their native language is key to financial inclusion. Honey Universal Digital helped us translate our loan products and financial education materials, making our services more accessible and building stronger relationships with customers across India.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3EMuthoot Finance%3C/text%3E%3C/svg%3E'
+      logoSrc: muthootFinanceLogo
     },
     { 
       company: 'The New India Assurance', 
       text: 'Honey Universal Digital helped us enhance customer confidence through expert translation and localization. Their work significantly boosted our sales and strengthened our reputation across India, making our services more accessible and trustworthy.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="40%25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="%232563eb" text-anchor="middle"%3EThe New India%3C/text%3E%3Ctext x="50%25" y="65%25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="%232563eb" text-anchor="middle"%3EAssurance%3C/text%3E%3C/svg%3E'
+      logoSrc: newIndiaLogo
     },
     { 
       company: 'Royal Enfield', 
       text: 'Honey Universal Digital played a crucial role in strengthening our market presence. Their strategic localization efforts helped transform Royal Enfield into a household name while preserving the brand\'s rich heritage and legacy.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3ERoyal Enfield%3C/text%3E%3C/svg%3E'
+      logoSrc: royalEnfieldTestimonialLogo
     },
     { 
       company: 'Saint-Gobain', 
       text: 'As a global construction materials leader, we needed localization that maintained technical accuracy across languages. Honey Universal Digital delivered exceptional quality, helping us communicate complex building solutions to architects, contractors, and distributors throughout India.',
-      logoSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="80"%3E%3Ctext x="50%25" y="50%25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="%232563eb" text-anchor="middle" dominant-baseline="middle"%3ESaint-Gobain%3C/text%3E%3C/svg%3E'
+      logoSrc: saintGobainLogo
     },
   ];
 
-  // Duplicate testimonials for seamless infinite scroll
-  const duplicatedTestimonials = [...testimonials, ...testimonials, ...testimonials];
+  // Duplicate testimonials for seamless infinite scroll loop
+  const duplicatedTestimonials = [...testimonials, ...testimonials];
+  const logoOnlyCompanies = new Set(testimonials.map((testimonial) => testimonial.company));
+  const compactLogoCompanies = new Set([
+    'Fratelli',
+    'TVS Motor Company Ltd',
+    'HP Valves & Fittings',
+    'Aachi Masala Foods Pvt. Ltd',
+    'ARC International Fertility',
+    'Royal Enfield',
+    'DBS',
+    'Identity',
+    'LRK',
+    'Bright Light Society',
+  ]);
+  const blendLogoCompanies = new Set(testimonials.map((testimonial) => testimonial.company));
 
   return (
-    <section className="py-20 bg-white overflow-hidden">
+    <section className="py-8 md:py-10 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
-          className="text-center mb-12"
+          className="text-center mb-6"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -97,7 +118,7 @@ export function Testimonials() {
 
         {/* Continuous scrolling container */}
         <div className="relative">
-          <div className="flex animate-scroll-testimonials">
+          <div className="flex w-max animate-scroll-testimonials">
             {duplicatedTestimonials.map((testimonial, index) => (
               <div 
                 key={`${testimonial.company}-${index}`}
@@ -109,10 +130,12 @@ export function Testimonials() {
                     <ImageWithFallback
                       src={testimonial.logoSrc}
                       alt={testimonial.company}
-                      className="max-w-full max-h-full object-contain"
+                      className={`${compactLogoCompanies.has(testimonial.company) ? 'w-28 h-auto' : 'max-w-full max-h-full'} ${blendLogoCompanies.has(testimonial.company) ? 'mix-blend-multiply' : ''} object-contain mx-auto`}
                     />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 text-center mb-4">{testimonial.company}</h3>
+                  {!logoOnlyCompanies.has(testimonial.company) && (
+                    <h3 className="text-2xl font-bold text-gray-900 text-center mb-4">{testimonial.company}</h3>
+                  )}
                   <p className="text-gray-700 text-center italic leading-relaxed text-sm">"{testimonial.text}"</p>
                   <div className="flex justify-center gap-1 mt-6">
                     {[...Array(5)].map((_, i) => (
@@ -129,15 +152,16 @@ export function Testimonials() {
       <style>{`
         @keyframes scroll-testimonials {
           0% {
-            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
           }
           100% {
-            transform: translateX(calc(-100% / 3));
+            transform: translate3d(-50%, 0, 0);
           }
         }
 
         .animate-scroll-testimonials {
-          animation: scroll-testimonials 60s linear infinite;
+          animation: scroll-testimonials 42s linear infinite;
+          will-change: transform;
         }
 
         .animate-scroll-testimonials:hover {

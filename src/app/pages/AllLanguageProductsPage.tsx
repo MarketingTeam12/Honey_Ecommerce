@@ -124,19 +124,19 @@ export function AllLanguageProductsPage() {
             {adminLanguageProducts.map((product) => (
               <div
                 key={product.id}
-                className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-white"
+                className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-white flex flex-col lg:flex-row"
               >
                 {/* Image Container */}
-                <Link to={product.url} className="block relative overflow-hidden bg-gray-100">
+                <Link to={product.url} className="block relative overflow-hidden bg-gray-100 lg:w-2/5">
                   {product.image ? (
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-64 object-contain bg-white p-4 group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-64 lg:h-full object-contain bg-white p-3 group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-64 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-                      <div className="text-center p-6">
+                    <div className="w-full h-64 lg:h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                      <div className="text-center">
                         <svg className="w-20 h-20 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                         </svg>
@@ -172,7 +172,7 @@ export function AllLanguageProductsPage() {
                 </Link>
 
                 {/* Product Info */}
-                <div className="p-4">
+                <div className="p-4 lg:w-3/5 flex flex-col justify-between">
                   <Link to={product.url}>
                     <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
                       {product.name}

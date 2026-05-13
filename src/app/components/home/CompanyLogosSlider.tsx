@@ -136,9 +136,9 @@ export function CompanyLogosSlider() {
   const duplicatedLogos = [...logos, ...logos];
 
   return (
-    <section className="py-16 bg-gray-50 overflow-hidden">
+    <section className="py-8 md:py-10 bg-gray-50 overflow-hidden">
       <div className="max-w-full mx-auto px-6">
-        <h3 className="text-center text-2xl font-semibold text-gray-700 mb-8">
+        <h3 className="text-center text-2xl font-semibold text-gray-700 mb-6">
           Trusted by Leading Companies
         </h3>
         

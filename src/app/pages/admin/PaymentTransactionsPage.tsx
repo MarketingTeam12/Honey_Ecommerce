@@ -225,7 +225,7 @@ export function PaymentTransactionsPage() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Gateways</option>
-              <option value="zoho_payments">Zoho Payments</option>
+              <option value="zoho_payments">Razorpay</option>
               <option value="card">Card</option>
               <option value="upi">UPI</option>
               <option value="netbanking">Net Banking</option>

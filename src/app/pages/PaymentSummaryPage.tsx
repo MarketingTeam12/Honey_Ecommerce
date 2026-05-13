@@ -60,7 +60,7 @@ export function PaymentSummaryPage() {
     setProcessing(true);
 
     try {
-      // Create Zoho payment link
+      // Create Razorpayment link
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/zoho/create`,
         {
@@ -92,8 +92,8 @@ export function PaymentSummaryPage() {
       const data = await response.json();
 
       if (data.success && data.paymentUrl) {
-        // Redirect to Zoho's hosted checkout page
-        console.log('🔗 Redirecting to Zoho Payment URL:', data.paymentUrl);
+        // Redirect to Razorpay\'s hosted checkout page
+        console.log('🔗 Redirecting to Razorpayment URL:', data.paymentUrl);
         window.location.href = data.paymentUrl;
       } else {
         throw new Error(data.error || 'Failed to create payment link');
@@ -224,7 +224,7 @@ export function PaymentSummaryPage() {
         {/* Security Badge */}
         <div className="flex items-center justify-center gap-2 mb-6 text-sm text-gray-600">
           <ShieldCheck className="w-5 h-5 text-green-600" />
-          <span>Secured by Zoho Payments</span>
+          <span>Secured by Razorpay</span>
         </div>
 
         {/* Pay Now Button */}
@@ -250,7 +250,7 @@ export function PaymentSummaryPage() {
         {/* Information Text */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            You will be redirected to Zoho Payments secure checkout page to complete your payment.
+            You will be redirected to Razorpay secure checkout page to complete your payment.
             <br />
             No card details are stored on our servers.
           </p>

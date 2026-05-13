@@ -44,7 +44,7 @@ export function OrderSuccessPage() {
   useEffect(() => {
     if (orderId) {
       fetchOrderDetails();
-      // If redirected from Zoho Payments, verify the payment
+      // If redirected from Razorpay, verify the payment
       if (hostedpageId || searchParams.get('gateway') === 'zoho') {
         verifyZohoPayment();
       }
@@ -55,7 +55,7 @@ export function OrderSuccessPage() {
 
   const verifyZohoPayment = async () => {
     try {
-      console.log('🔍 Verifying Zoho payment...');
+      console.log('🔍 Verifying Razorpayment...');
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/zoho/verify`,
         {
@@ -70,14 +70,14 @@ export function OrderSuccessPage() {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Zoho payment verified:', data);
+        console.log('✅ Razorpayment verified:', data);
         if (data.verified) {
           // Refresh order details to get updated payment status
           fetchOrderDetails();
         }
       }
     } catch (error) {
-      console.error('Zoho payment verification error:', error);
+      console.error('Razorpayment verification error:', error);
     }
   };
 
@@ -146,7 +146,7 @@ export function OrderSuccessPage() {
     gateway === 'razorpay' || order?.payment_method === 'razorpay'
       ? 'Razorpay'
       : gateway === 'zoho' || order?.payment_method === 'zoho_payments'
-        ? 'Zoho Payments'
+        ? 'Razorpay'
         : order?.payment_method || 'Online Payment';
 
   return (

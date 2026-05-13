@@ -11,12 +11,14 @@ import { getFirstValidImage } from '@/app/utils/imageUtils';
 export function PickYourLanguage() {
   const { convertPrice } = useCurrency();
   const { products: adminProducts } = useProducts();
+  const blockedHomeProductName = 'any language to any language';
 
   // Get Translation category products from admin (exclude sworn translations)
   const translationProducts = adminProducts.filter(
     product => product.category === 'Translation' && 
                product.status === 'active' &&
-               !product.name.toLowerCase().includes('sworn')
+               !product.name.toLowerCase().includes('sworn') &&
+               product.name.toLowerCase() !== blockedHomeProductName
   );
 
   // Debug logging
@@ -75,13 +77,15 @@ export function PickYourLanguage() {
         image: getFirstValidImage(product.images),
         icon: '📄'
       }))
-    : fallbackProducts;
+    : fallbackProducts.filter(
+        product => product.title.toLowerCase() !== blockedHomeProductName
+      );
 
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-12 bg-white">
+      <div className="max-w-7xl mx-auto px-6 lg:px-12">
         <motion.h2
-          className="text-4xl lg:text-5xl font-bold text-center text-gray-900 mb-12"
+          className="text-4xl lg:text-5xl font-bold text-center text-gray-900 mb-8"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -89,7 +93,7 @@ export function PickYourLanguage() {
           Pick Your Language
         </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
           {products.map((product, index) => (
             <motion.div
               key={product.id}
@@ -101,42 +105,42 @@ export function PickYourLanguage() {
               {/* Image Box - Only contains image */}
               <Link
                 to={product.route}
-                className="group block"
+                className="group block h-full"
               >
-                <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-blue-600 hover:shadow-2xl transition-all mb-4">
-                  <div className="relative w-full h-72 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+                <div className="bg-white border-2 border-gray-300 rounded-3xl overflow-hidden shadow-md transition-all hover:border-blue-500 hover:shadow-2xl">
+                  <div className="relative w-full aspect-[3/4] bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 overflow-hidden">
                     {product.image ? (
                       <img
                         src={product.image}
                         alt={product.title}
-                        className="w-full h-full object-contain object-top transform group-hover:scale-105 transition-transform duration-300"
+                        className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center">
                         <span className="text-7xl">{product.icon}</span>
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Content Below Box */}
-                <div className="space-y-3">
-                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
-                    {product.title}
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <p className="text-2xl font-bold text-red-600">
-                      {convertPrice(product.offerPrice)}
-                    </p>
-                    <p className="text-sm text-gray-500 line-through">
-                      {convertPrice(product.originalPrice)}
-                    </p>
+                  {/* Content Below Box */}
+                  <div className="px-5 py-6 space-y-4">
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-3">
+                      {product.title}
+                    </h3>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <p className="text-2xl font-bold text-red-600">
+                        {convertPrice(product.offerPrice)}
+                      </p>
+                      <p className="text-sm text-gray-500 line-through">
+                        {convertPrice(product.originalPrice)}
+                      </p>
+                    </div>
+                    {product.tag && (
+                      <Badge className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white">
+                        {product.tag}
+                      </Badge>
+                    )}
                   </div>
-                  {product.tag && (
-                    <Badge className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white">
-                      {product.tag}
-                    </Badge>
-                  )}
                 </div>
               </Link>
             </motion.div>

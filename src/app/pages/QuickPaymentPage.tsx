@@ -48,7 +48,7 @@ export function QuickPaymentPage() {
 
     try {
       setStatus('creating');
-      setMessage('Creating your Zoho payment session...');
+      setMessage('Creating your Razorpayment session...');
       setPaymentId('');
 
       const referenceNumber = `QP-${Date.now()}`;
@@ -86,7 +86,7 @@ export function QuickPaymentPage() {
       }
 
       setStatus('verifying');
-      setMessage('Verifying payment with Zoho...');
+      setMessage('Verifying payment with Razorpay...');
 
       const verification = await verifyZohoWidgetPayment({
         paymentId: resolvedPaymentId,
@@ -117,7 +117,7 @@ export function QuickPaymentPage() {
           </div>
           <h1 className="mb-3 text-4xl font-bold text-stone-900">Zoho Quick Payment</h1>
           <p className="mx-auto max-w-2xl text-lg text-stone-600">
-            Pay directly through your Zoho Payments integration without leaving this checkout flow.
+            Pay directly through your Razorpay integration without leaving this checkout flow.
           </p>
         </div>
 
@@ -199,7 +199,7 @@ export function QuickPaymentPage() {
               <Lock className="h-5 w-5" />
               {status === 'creating' || status === 'processing' || status === 'verifying'
                 ? 'Processing Payment...'
-                : 'Pay with Zoho'}
+                : 'Pay with Razorpay'}
             </button>
           </section>
 
@@ -237,7 +237,7 @@ export function QuickPaymentPage() {
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="mt-0.5 h-5 w-5 text-orange-300" />
-                <p className="text-sm text-orange-50">Card details stay inside Zoho's payment widget.</p>
+                <p className="text-sm text-orange-50">Card details stay inside Razorpay\'s payment widget.</p>
               </div>
               <div className="flex items-start gap-3">
                 {status === 'error' ? (

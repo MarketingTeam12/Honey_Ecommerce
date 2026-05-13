@@ -288,9 +288,22 @@ export function NewPaymentPage() {
     try {
       const shippingAddress = localStorage.getItem('shipping_address');
       const parsedShippingAddress = shippingAddress ? JSON.parse(shippingAddress) : null;
+      const rawShippingDetails = localStorage.getItem('shippingDetails');
+      const parsedShippingDetails = rawShippingDetails ? JSON.parse(rawShippingDetails) : {};
       const orderNotes = localStorage.getItem('orderNotes') || '';
       const orderTip = localStorage.getItem('orderTip') || '0';
-      const shippingMethod = localStorage.getItem('shippingMethod') || 'email';
+      const shippingMethod = (localStorage.getItem('shippingMethod') || 'email') as 'email' | 'physical';
+
+      const deliveryEmail = (parsedShippingDetails?.email || '').trim();
+      const deliveryAddressText = (parsedShippingDetails?.address || '').trim();
+      const finalDeliveryEmail = shippingMethod === 'email' ? (deliveryEmail || user.email || '') : '';
+      const finalShippingAddress = shippingMethod === 'physical'
+        ? (deliveryAddressText ? { address1: deliveryAddressText } : parsedShippingAddress)
+        : parsedShippingAddress;
+      const shippingDetails = {
+        email: shippingMethod === 'email' ? finalDeliveryEmail : undefined,
+        address: shippingMethod === 'physical' ? (deliveryAddressText || undefined) : undefined,
+      };
 
       const orderId = `ORD-${Date.now()}`;
       const orderNumber = `HT${Date.now().toString().slice(-8)}`;
@@ -361,7 +374,8 @@ export function NewPaymentPage() {
         payment_status: 'pending',
         payment_method: 'razorpay',
         payment_gateway: 'razorpay',
-        shipping_address: parsedShippingAddress,
+        shipping_address: finalShippingAddress,
+        shipping_details: shippingDetails,
         shipping_carrier: 'BlueDart',
         estimated_delivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         created_at: new Date().toISOString(),
@@ -430,7 +444,8 @@ export function NewPaymentPage() {
             subtotal,
             discount,
             tax,
-            shippingAddress: parsedShippingAddress,
+            shippingAddress: finalShippingAddress,
+            shippingDetails,
             notes: orderNotes,
             tip: parseFloat(orderTip),
             shippingMethod,

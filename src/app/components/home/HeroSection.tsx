@@ -13,7 +13,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative bg-gradient-to-br from-[#b8d4e8] via-[#c5ddf0] to-[#a8c9e0] overflow-hidden py-20 lg:py-32">
+    <section className="relative bg-gradient-to-br from-[#b8d4e8] via-[#c5ddf0] to-[#a8c9e0] overflow-hidden pt-6 pb-16 lg:pt-10 lg:pb-24">
       {/* Animated Background Text */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
         {/* First row moving right */}

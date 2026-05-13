@@ -10,9 +10,9 @@ export function WhyChooseUs() {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-indigo-50 to-blue-50">
+    <section className="py-12 bg-gradient-to-br from-indigo-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+        <h2 className="text-4xl font-bold text-center text-gray-900 mb-10">
           Why Choose Our Translation Services
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

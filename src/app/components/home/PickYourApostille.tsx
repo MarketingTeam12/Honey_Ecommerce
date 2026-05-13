@@ -4,10 +4,10 @@ import apostilleImage from 'figma:asset/a87130555bc7eab59ec95ad82c3a105db88bf0c1
 
 export function PickYourApostille() {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
-          className="text-center mb-12"
+          className="text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}

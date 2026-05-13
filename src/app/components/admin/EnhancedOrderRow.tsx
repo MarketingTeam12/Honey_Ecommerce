@@ -40,8 +40,13 @@ interface Order {
   currency: string;
   items: OrderItem[];
   shipping_address?: any;
+  shipping_details?: {
+    email?: string;
+    address?: string;
+  };
   tracking_number?: string;
   shipping_carrier?: string;
+  shipping_method?: string;
   estimated_delivery?: string;
   shipped_at?: string;
   delivered_at?: string;

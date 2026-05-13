@@ -105,14 +105,14 @@ export function AllStartupProductsPage() {
           {displayProducts.map((product) => (
             <div
               key={product.id}
-              className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-white"
+              className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-white flex flex-col lg:flex-row"
             >
               {/* Image Container */}
-              <Link to={product.url} className="block relative overflow-hidden bg-gray-100">
+              <Link to={product.url} className="block relative overflow-hidden bg-gray-100 lg:w-2/5">
                 <ImageWithFallback
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-64 object-contain bg-white p-4 group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-64 lg:h-full object-contain bg-white p-3 group-hover:scale-105 transition-transform duration-300"
                 />
                 
                 {/* Wishlist Button */}
@@ -135,7 +135,7 @@ export function AllStartupProductsPage() {
               </Link>
 
               {/* Product Info */}
-              <div className="p-4">
+              <div className="p-4 lg:w-3/5 flex flex-col justify-between">
                 <Link to={product.url}>
                   <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
                     {product.name}

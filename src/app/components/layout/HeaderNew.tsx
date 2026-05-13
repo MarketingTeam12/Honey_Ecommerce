@@ -102,14 +102,6 @@ export function HeaderNew() {
               <a href="tel:+917299005577" className="hover:text-gray-300 transition-colors">
                 📞 +91 72990 05577
               </a>
-              <button
-                onClick={() => setQueryModalOpen(true)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full transition-all text-[14px] font-semibold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 animate-pulse hover:animate-none"
-                title="Submit your query"
-              >
-                <MessageSquare className="w-4 h-4" />
-                Query
-              </button>
             </div>
           </div>
           
@@ -117,6 +109,15 @@ export function HeaderNew() {
           <div className="flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setQueryModalOpen(true)}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full transition-all text-[14px] font-semibold shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                  title="Submit your query"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Query
+                </button>
+
                 {/* Notification Bell */}
                 <CustomerNotificationBell />
                 
@@ -303,11 +304,13 @@ export function HeaderNew() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  {startupProducts.map(product => (
-                    <DropdownMenuItem key={product.id} asChild>
-                      <Link to={product.url}>{product.name}</Link>
-                    </DropdownMenuItem>
-                  ))}
+                  {startupProducts.map(product => {
+                    return (
+                      <DropdownMenuItem key={product.id} asChild>
+                        <Link to={product.url}>{product.name}</Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -318,13 +321,14 @@ export function HeaderNew() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem asChild>
+                    <Link to="/services">Services</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/contact-us">Contact Us</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/track-order">Track Your Order</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/terms-and-conditions">Terms and Conditions</Link>
                   </DropdownMenuItem>
@@ -537,6 +541,13 @@ export function HeaderNew() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Startup Packages
+              </Link>
+              <Link
+                to="/services"
+                className="block px-4 py-2 hover:bg-gray-100 rounded-lg"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Services
               </Link>
               <Link
                 to="/contact"

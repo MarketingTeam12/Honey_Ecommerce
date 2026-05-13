@@ -143,10 +143,10 @@ export function GoogleReviewsSection() {
   );
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-2 md:py-3 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header with Rating */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-4">
           <h3 className="text-4xl font-bold text-gray-900 mb-4">EXCELLENT</h3>
           <div className="flex items-center justify-center gap-1 mb-6">
             {[...Array(5)].map((_, i) => (

@@ -317,7 +317,7 @@ export function OrdersSetupChecklistPage() {
                     <div>
                       <p className="font-medium text-gray-900">Payment Method</p>
                       <p className="text-sm text-gray-600">How the customer paid</p>
-                      <p className="text-xs text-gray-500 mt-1">Zoho Payments, Net Banking, or Wallet</p>
+                      <p className="text-xs text-gray-500 mt-1">Razorpay, Net Banking, or Wallet</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">

@@ -31,9 +31,9 @@ export function TranslatorExperience() {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-8 md:py-10 bg-white">
       <div className="max-w-7xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center text-gray-900 mb-12">
+        <h2 className="text-4xl font-bold text-center text-gray-900 mb-8">
           Translator Experience
         </h2>
 

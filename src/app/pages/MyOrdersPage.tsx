@@ -37,6 +37,7 @@ interface Order {
   payment_method: string;
   tracking_number?: string;
   shipping_carrier?: string;
+  shipping_method?: string;
   estimated_delivery?: string;
   customer_file_name?: string;
   completed_file_url?: string;
@@ -55,6 +56,10 @@ interface Order {
     pincode: string;
     country: string;
     phone: string;
+  };
+  shipping_details?: {
+    email?: string;
+    address?: string;
   };
 }
 

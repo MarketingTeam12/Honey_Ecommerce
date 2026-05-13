@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Youtube } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, Youtube } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -63,13 +63,13 @@ export function FooterNew() {
   };
 
   return (
-    <footer className="bg-gray-900 text-white pt-16 pb-8">
+    <footer className="bg-gray-900 text-white pt-8 pb-4">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-6">
           {/* Company Info */}
           <div>
-            <h3 className="text-xl font-bold mb-6">Company Info</h3>
-            <ul className="space-y-3">
+            <h3 className="text-xl font-bold mb-3">Company Info</h3>
+            <ul className="space-y-2">
               <li>
                 <button 
                   onClick={() => handleLinkClick('/#about-company')} 
@@ -131,8 +131,8 @@ export function FooterNew() {
 
           {/* Services */}
           <div>
-            <h3 className="text-xl font-bold mb-6">Services</h3>
-            <ul className="space-y-3">
+            <h3 className="text-xl font-bold mb-3">Services</h3>
+            <ul className="space-y-2">
               <li>
                 <button 
                   onClick={() => handleLinkClick('/apostille')} 
@@ -178,17 +178,8 @@ export function FooterNew() {
 
           {/* Get in Touch */}
           <div>
-            <h3 className="text-xl font-bold mb-6">Get in Touch</h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" />
-                <div className="text-gray-400">
-                  <strong className="text-white block mb-1">Head Office:</strong>
-                  184/3, 2nd Floor, Chandamama Building,<br />
-                  Arcot Rd, Vadapalani,<br />
-                  Chennai – 600026
-                </div>
-              </li>
+            <h3 className="text-xl font-bold mb-3">Get in Touch</h3>
+            <ul className="space-y-3">
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-green-400" />
                 <a href="tel:+917299005577" className="text-gray-400 hover:text-white transition-colors">
@@ -203,7 +194,7 @@ export function FooterNew() {
               </li>
             </ul>
 
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-3 mt-4">
               <a
                 href="https://www.facebook.com/honeytranslationservices"
                 target="_blank"
@@ -254,11 +245,11 @@ export function FooterNew() {
 
           {/* Newsletter */}
           <div>
-            <h3 className="text-xl font-bold mb-6">Subscribe & Stay Informed</h3>
-            <p className="text-gray-400 mb-4">
+            <h3 className="text-xl font-bold mb-3">Subscribe & Stay Informed</h3>
+            <p className="text-gray-400 mb-2">
               Get updates on our latest services and special offers.
             </p>
-            <form className="space-y-3" onSubmit={handleSubscribe}>
+            <form className="space-y-2" onSubmit={handleSubscribe}>
               <input
                 type="email"
                 placeholder="Your email address"
@@ -278,7 +269,7 @@ export function FooterNew() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 pt-8 text-center">
+        <div className="border-t border-gray-800 pt-4 text-center">
           <p className="text-gray-400">
             &copy; {new Date().getFullYear()} Honey Universal Digital Private Limited. All rights reserved.
           </p>

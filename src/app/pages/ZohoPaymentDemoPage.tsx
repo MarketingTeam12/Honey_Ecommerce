@@ -28,7 +28,7 @@ export function ZohoPaymentDemoPage() {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            Zoho Payment Integration
+            Razorpayment Integration
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Secure, production-ready payment buttons with modern UI design
@@ -144,7 +144,7 @@ export function ZohoPaymentDemoPage() {
                 </label>
                 <ZohoPayNowButtonMinimal
                   className="w-full"
-                  text="Continue to Zoho Payments"
+                  text="Continue to Razorpay"
                   onBeforeOpen={handleBeforeOpen}
                   onAfterOpen={handleAfterOpen}
                 />
@@ -224,7 +224,7 @@ export function ZohoPaymentDemoPage() {
                     await new Promise(resolve => setTimeout(resolve, 800));
                   }}
                   onAfterOpen={() => {
-                    setLastAction('Redirected to secure Zoho payment gateway');
+                    setLastAction('Redirected to secure Razorpayment gateway');
                   }}
                 />
               </div>
