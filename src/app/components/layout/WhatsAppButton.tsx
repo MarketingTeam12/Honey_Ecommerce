@@ -14,10 +14,11 @@ export function WhatsAppButton() {
   return (
     <button
       onClick={handleClick}
-      className="fixed bottom-24 right-4 w-14 h-14 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors flex items-center justify-center z-50"
+      className="fixed bottom-4 right-20 h-12 px-4 bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 transition-colors flex items-center gap-1.5 z-50"
       aria-label="Contact on WhatsApp"
     >
-      <MessageCircle className="w-6 h-6" />
+      <MessageCircle className="w-4 h-4" />
+      <span className="text-xs font-semibold leading-none">WhatsApp</span>
     </button>
   );
 }

@@ -28,7 +28,7 @@ export function BrandMessage() {
               Just like honey is pure and refined, our translations are crafted with precision and authenticity.
             </p>
             <button 
-              onClick={() => handleNavigate('/all-startup-products')}
+              onClick={() => handleNavigate('/services')}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-full font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 animate-blink"
             >
               Explore Our Services

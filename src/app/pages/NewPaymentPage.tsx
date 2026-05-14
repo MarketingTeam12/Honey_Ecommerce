@@ -501,12 +501,12 @@ export function NewPaymentPage() {
           console.log(razorpayResponse);
 
           try {
-            const verifyResponse = await fetch('http://localhost:3000/api/verify-payment', {
+            const verifyResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/verify`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: buildPublicFunctionHeaders(),
               body: JSON.stringify({
+                orderId,
+                paymentId: razorpayResponse.razorpay_payment_id,
                 razorpay_payment_id: razorpayResponse.razorpay_payment_id,
                 razorpay_order_id: razorpayResponse.razorpay_order_id,
                 razorpay_signature: razorpayResponse.razorpay_signature,

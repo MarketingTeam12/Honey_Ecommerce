@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, MouseEvent } from 'react';
+﻿import { useState, useEffect, useRef, MouseEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -7,13 +7,14 @@ import { useAuth } from '@/app/context/AuthContext';
 import { useProductConfig } from '@/app/hooks/useProductConfig';
 import { PDFDocument } from 'pdf-lib';
 import { ProductReviews } from '@/app/components/product/ProductReviews';
+import { GoogleReviewsSection } from '@/app/components/home/GoogleReviewsSection';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { Check, Heart, ChevronLeft, ChevronRight, Upload, Minus, Plus, MessageCircle } from 'lucide-react';
+import { Check, Heart, ChevronLeft, ChevronRight, Upload, Minus, Plus, MessageCircle, Share2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { toast } from 'sonner';
 import googlePayIcon from 'figma:asset/02347af70453dbcedcb242f3af1712a1a954b2f1.png';
@@ -21,16 +22,15 @@ import mastercardIcon from 'figma:asset/23e6e86ee8f55bfcbc0611bfe54a4aa7beca2f55
 import paypalIcon from 'figma:asset/44e11688213a30c41ad3fe8aae7def63b605380d.png';
 import rupayIcon from 'figma:asset/81733917598b7aad94b96ac30b5e2f8a5f8dab91.png';
 import visaIcon from 'figma:asset/6f49b2a01cfe14370d80bfa5aa6e2cb4c045e327.png';
-import whatsappIcon from 'figma:asset/a7133ddeef3c5e583ad7afec517e13c693256fa0.png';
 import { Trash2 } from 'lucide-react';
 import { getFirstValidImage, normalizeProductImages } from '@/app/utils/imageUtils';
 
 // ==================== PRICING DATA STRUCTURES ====================
 
-// 1. STANDARD TRANSLATION PRICING (Original: ₹2,000)
+// 1. STANDARD TRANSLATION PRICING (Original: â‚¹2,000)
 const STANDARD_TRANSLATION_ORIGINAL = 2000;
 
-// English → Foreign Language
+// English â†’ Foreign Language
 const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -47,7 +47,7 @@ const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'indonesian': 800,
 };
 
-// Foreign Language → English
+// Foreign Language â†’ English
 const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -65,7 +65,7 @@ const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'indonesian': 900,
 };
 
-// English → Indian Language (Most are ₹600, with exceptions)
+// English â†’ Indian Language (Most are â‚¹600, with exceptions)
 const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -84,7 +84,7 @@ const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'sanskrit': 600,
 };
 
-// Indian Language → English (Same prices as above)
+// Indian Language â†’ English (Same prices as above)
 const INDIAN_TO_ENGLISH: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -103,7 +103,7 @@ const INDIAN_TO_ENGLISH: { [key: string]: number } = {
   'sanskrit': 600,
 };
 
-// 2. SWORN TRANSLATION PRICING (Original: ₹5,000)
+// 2. SWORN TRANSLATION PRICING (Original: â‚¹5,000)
 const SWORN_TRANSLATION_ORIGINAL = 5000;
 const SWORN_TRANSLATION_PRICING: { [key: string]: number } = {
   'english-spanish': 3299,
@@ -112,7 +112,7 @@ const SWORN_TRANSLATION_PRICING: { [key: string]: number } = {
   'english-french': 3300,
 };
 
-// 3. APOSTILLE SERVICES PRICING (Original: ₹3,500, Offer: ₹2,500 for all)
+// 3. APOSTILLE SERVICES PRICING (Original: â‚¹3,500, Offer: â‚¹2,500 for all)
 const APOSTILLE_ORIGINAL = 3500;
 const APOSTILLE_OFFER = 2500;
 
@@ -234,7 +234,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Use productKey if provided, otherwise generate from title (for backward compatibility)
   const productId = productKey || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   
-  console.log('🔑 ProductTemplate - productKey:', productKey, 'productId:', productId);
+  console.log('ðŸ”‘ ProductTemplate - productKey:', productKey, 'productId:', productId);
   
   // Check if product is in wishlist
   const inWishlist = isInWishlist(productId);
@@ -259,7 +259,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Pre-fill form if in edit mode
   useEffect(() => {
     if (isEditMode && editCartItem) {
-      console.log('📝 Edit mode detected, pre-filling form with:', editCartItem);
+      console.log('ðŸ“ Edit mode detected, pre-filling form with:', editCartItem);
       
       if (editCartItem.sourceLanguage) setSourceLanguage(editCartItem.sourceLanguage);
       if (editCartItem.targetLanguage) setTargetLanguage(editCartItem.targetLanguage);
@@ -278,7 +278,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset images to default when productId or data.images changes
   useEffect(() => {
-    console.log('🔄 Product changed, resetting images to default:', productId);
+    console.log('ðŸ”„ Product changed, resetting images to default:', productId);
     setProductImages(normalizeProductImages(data.images, data.title));
     setSelectedImage(0);
     setImagesLoaded(false);
@@ -286,7 +286,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset all form fields when product changes
   useEffect(() => {
-    console.log('🔄 Product changed, resetting all form fields:', productId);
+    console.log('ðŸ”„ Product changed, resetting all form fields:', productId);
     setSourceLanguage('');
     setTargetLanguage('');
     setSelectedDocTypes([]);
@@ -303,7 +303,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         // Normalize productId to lowercase for consistency
         const normalizedProductId = productId.toLowerCase();
         
-        console.log('📸 Fetching images for product:', normalizedProductId);
+        console.log('ðŸ“¸ Fetching images for product:', normalizedProductId);
         
         // Add cache-busting parameter to force fresh data
         const cacheBuster = Date.now();
@@ -318,24 +318,24 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('📦 Received images data:', data);
+          console.log('ðŸ“¦ Received images data:', data);
           
           if (data.images && Array.isArray(data.images)) {
             const validDbImages = normalizeProductImages(data.images, data.title);
-            console.log('✅ Valid images found:', validDbImages.length);
+            console.log('âœ… Valid images found:', validDbImages.length);
             
             if (validDbImages.length > 0) {
-              console.log('🔄 Updating product images from database');
+              console.log('ðŸ”„ Updating product images from database');
               setProductImages(validDbImages);
             } else {
-              console.log('⚠️ No valid images in database, using default images');
+              console.log('âš ï¸ No valid images in database, using default images');
             }
           }
         } else {
-          console.error('❌ Failed to fetch images, status:', response.status);
+          console.error('âŒ Failed to fetch images, status:', response.status);
         }
       } catch (error) {
-        console.log('⚠️ Using default product images:', error);
+        console.log('âš ï¸ Using default product images:', error);
         // Keep using the default images from data.images
       } finally {
         setImagesLoaded(true);
@@ -359,6 +359,30 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         category: data.type,
         url: window.location.pathname,
       });
+    }
+  };
+
+  const handleShareProduct = async () => {
+    const shareData = {
+      title: data.title,
+      text: `Check out this product: ${data.title}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        // User cancelled or browser blocked share; fallback to copy link
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Product link copied. You can share it now.');
+    } catch {
+      toast.error('Unable to share right now. Please copy the URL manually.');
     }
   };
 
@@ -570,7 +594,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   };
 
   // Debug logging for startup packages
-  console.log('📦 ProductTemplate Debug:', {
+  console.log('ðŸ“¦ ProductTemplate Debug:', {
     title: data.title,
     type: data.type,
     isStartup: data.type === 'startup',
@@ -600,7 +624,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         { id: 'driving-license', label: 'Driving License' },
       ];
   
-  console.log('🔍 Document Type Visibility Check:', {
+  console.log('ðŸ” Document Type Visibility Check:', {
     productType: data.type,
     isNotStartup: data.type !== 'startup',
     hasDocTypes: !!data.documentTypes,
@@ -620,7 +644,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
             {/* Main Product Image with Zoom */}
             <div
               ref={imageRef}
-              className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 cursor-pointer"
+              className="relative w-full max-w-[520px] mx-auto aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 cursor-pointer"
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
@@ -739,21 +763,31 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   {data.title}
                 </h1>
                 
-                {/* Wishlist Heart Button */}
-                <button
-                  onClick={handleWishlistToggle}
-                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md hover:shadow-lg ${
-                    inWishlist
-                      ? 'bg-red-500 text-white hover:bg-red-600'
-                      : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-red-500 hover:text-white hover:border-red-500'
-                  }`}
-                  aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                >
-                  <Heart
-                    className="w-6 h-6"
-                    fill={inWishlist ? 'currentColor' : 'none'}
-                  />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleShareProduct}
+                    className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md hover:shadow-lg bg-white text-gray-600 border-2 border-gray-300 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                    aria-label="Share product"
+                  >
+                    <Share2 className="w-6 h-6" />
+                  </button>
+
+                  {/* Wishlist Heart Button */}
+                  <button
+                    onClick={handleWishlistToggle}
+                    className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md hover:shadow-lg ${
+                      inWishlist
+                        ? 'bg-red-500 text-white hover:bg-red-600'
+                        : 'bg-white text-gray-600 border-2 border-gray-300 hover:bg-red-500 hover:text-white hover:border-red-500'
+                    }`}
+                    aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                  >
+                    <Heart
+                      className="w-6 h-6"
+                      fill={inWishlist ? 'currentColor' : 'none'}
+                    />
+                  </button>
+                </div>
               </div>
               
               {/* Non-Returnable Badge */}
@@ -775,7 +809,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               {/* Show dynamic pricing message for translation services */}
               {data.type === 'translation' && !data.title.toLowerCase().includes('sworn') && (
                 <p className="text-sm text-gray-600">
-                  <span className="font-semibold">💡 Price varies by language selection</span> - Select source and target languages to see the exact price
+                  <span className="font-semibold">Price varies by language selection</span> - Select source and target languages to see the exact price
                 </p>
               )}
               <Badge className="bg-red-600 hover:bg-red-700 text-white">
@@ -828,108 +862,56 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               </a>
             </div>
 
-            {/* Secure Checkout Info */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-3">
-                Secure checkout with your preferred payment option.
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold">Razorpay</span>
-                <span className="text-gray-400">•</span>
-                <img src={googlePayIcon} alt="Google Pay" className="h-10" />
-                <span className="text-gray-400">•</span>
-                <img src={mastercardIcon} alt="Mastercard" className="h-10" />
-                <span className="text-gray-400">•</span>
-                <img src={paypalIcon} alt="PayPal" className="h-10" />
-                <span className="text-gray-400">•</span>
-                <img src={rupayIcon} alt="RuPay" className="h-10" />
-                <span className="text-gray-400">•</span>
-                <img src={visaIcon} alt="Visa" className="h-10" />
+                        {/* Total No. of Pages - Above Configure Your Order */}
+            {data.type !== 'startup' && (
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <Label htmlFor="page-count-top" className="mb-2 block">
+                  Total No. of Pages
+                </Label>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={decrementPages}
+                    disabled={pageCount <= 1}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </Button>
+                  <input
+                    id="page-count-top"
+                    type="number"
+                    min="1"
+                    value={pageCount}
+                    onChange={(e) => setPageCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-20 text-center px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={incrementPages}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm text-gray-600">pages</span>
+                </div>
               </div>
-            </div>
-
-            {/* Social Share Section */}
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Share this product</h3>
-              <div className="flex items-center gap-3">
-                {/* Facebook */}
-                <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-colors"
-                  aria-label="Share on Facebook"
-                >
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-
-                {/* Twitter/X */}
-                <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(data.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-black hover:bg-gray-800 flex items-center justify-center transition-colors"
-                  aria-label="Share on Twitter"
-                >
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </a>
-
-                {/* LinkedIn */}
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-blue-700 hover:bg-blue-800 flex items-center justify-center transition-colors"
-                  aria-label="Share on LinkedIn"
-                >
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </a>
-
-                {/* Pinterest */}
-                <a
-                  href={`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(window.location.href)}&description=${encodeURIComponent(data.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center transition-colors"
-                  aria-label="Share on Pinterest"
-                >
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738.098.119.112.224.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/>
-                  </svg>
-                </a>
-
-                {/* WhatsApp */}
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(data.title + ' - ' + window.location.href)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0"
-                  aria-label="Share on WhatsApp"
-                >
-                  <img src={whatsappIcon} alt="WhatsApp" className="w-10 h-10 hover:opacity-80 transition-opacity" />
-                </a>
-              </div>
-            </div>
+            )}
 
             {/* Configurable Options */}
-            <div className="border-t pt-6 space-y-4">
-              <h3 className="font-bold text-lg text-gray-900">Configure Your Order</h3>
+            <div className="border-t pt-2 space-y-4">
+              <h3 className="font-bold text-xl md:text-2xl text-gray-900">Configure Your Order</h3>
 
               {/* Source & Target Language (ALWAYS shown for Translation, but NOT for Sworn Translation) */}
               {data.type === 'translation' && !data.title.toLowerCase().includes('sworn') && (
                 <>
                   <div>
-                    <Label htmlFor="source-lang">
+                    <Label htmlFor="source-lang" className="text-base md:text-lg font-semibold">
                       Source Language <span className="text-red-600">*</span>
                     </Label>
                     <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                      <SelectTrigger id="source-lang" className="w-full mt-1">
+                      <SelectTrigger id="source-lang" className="w-full mt-1 h-11 text-base md:text-lg">
                         <SelectValue placeholder="Select source language" />
                       </SelectTrigger>
                       <SelectContent>
@@ -971,11 +953,11 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   </div>
 
                   <div>
-                    <Label htmlFor="target-lang">
+                    <Label htmlFor="target-lang" className="text-base md:text-lg font-semibold">
                       Target Language <span className="text-red-600">*</span>
                     </Label>
                     <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                      <SelectTrigger id="target-lang" className="w-full mt-1">
+                      <SelectTrigger id="target-lang" className="w-full mt-1 h-11 text-base md:text-lg">
                         <SelectValue placeholder="Select target language" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1036,7 +1018,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                         </div>
                         <div className="pt-2 border-t border-blue-200">
                           <p className="text-xs text-blue-700">
-                            ✨ Pricing automatically updated based on your language selection
+                            âœ¨ Pricing automatically updated based on your language selection
                           </p>
                         </div>
                       </div>
@@ -1048,11 +1030,11 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               {/* Package Duration Selector (Only for Startup Packages) */}
               {data.type === 'startup' && (
                 <div>
-                  <Label htmlFor="package-duration">
+                  <Label htmlFor="package-duration" className="text-base md:text-lg font-semibold">
                     Package <span className="text-red-600">*</span>
                   </Label>
                   <Select value={packageDuration} onValueChange={(value: 'full-package' | '1-year' | '2-year') => setPackageDuration(value)}>
-                    <SelectTrigger id="package-duration" className="w-full mt-1">
+                    <SelectTrigger id="package-duration" className="w-full mt-1 h-11 text-base md:text-lg">
                       <SelectValue placeholder="Select package" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1067,7 +1049,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               {/* Document Type Checkboxes - Now shown for ALL product types EXCEPT Startup packages */}
               {shouldShowDocumentTypes && (
                 <div>
-                  <Label className="mb-3 block">
+                  <Label className="mb-3 block text-base md:text-lg font-semibold">
                     Document Type <span className="text-red-600">*</span>
                   </Label>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -1080,7 +1062,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                         />
                         <label
                           htmlFor={docType.id}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          className="text-base md:text-lg font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                         >
                           {docType.label}
                         </label>
@@ -1093,7 +1075,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               {/* Upload Document - Hide for startup packages */}
               {data.type !== 'startup' && (
                 <div>
-                  <Label htmlFor="file-upload" className="mb-2 block">
+                  <Label htmlFor="file-upload" className="mb-2 block text-base md:text-lg font-semibold">
                     Upload Document (Max 7 MB, Multiple Files Allowed) <span className="text-red-600">*</span>
                   </Label>
                   <div 
@@ -1115,8 +1097,8 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                     >
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-10 h-10 mb-3 text-gray-400" />
-                        <p className="mb-2 text-sm text-gray-500"> or drag and drop<span className="font-semibold">Click to upload</span></p>
-                        <p className="text-xs text-gray-500">PDF, DOC, DOCX, JPG, PNG (MAX. 7MB)</p>
+                        <p className="mb-2 text-base md:text-lg text-gray-500"> or drag and drop <span className="font-semibold">Click to upload</span></p>
+                        <p className="text-sm md:text-base text-gray-500">PDF, DOC, DOCX, JPG, PNG (MAX. 7MB)</p>
                       </div>
                     </label>
                   </div>
@@ -1146,44 +1128,6 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   )}
                 </div>
               )}
-
-              {/* Total No. of Pages - Hide for startup packages */}
-              {data.type !== 'startup' && (
-                <div>
-                  <Label htmlFor="page-count" className="mb-2 block">
-                    Total No. of Pages
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={decrementPages}
-                      disabled={pageCount <= 1}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <input
-                      id="page-count"
-                      type="number"
-                      min="1"
-                      value={pageCount}
-                      onChange={(e) => setPageCount(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-20 text-center px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={incrementPages}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                    <span className="text-sm text-gray-600">pages</span>
-                  </div>
-                </div>
-              )}
-
               {/* Add to Cart Button */}
               <Button
                 className="w-full bg-black hover:bg-gray-800 text-white h-12 text-lg lg:sticky lg:bottom-4 z-10 shadow-lg"
@@ -1261,8 +1205,28 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
-                Add to Cart
+                                Add to Cart
               </Button>
+
+              {/* Secure Checkout Info - Below Add to Cart */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  Secure checkout with your preferred payment option.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-1.5 rounded text-xs font-bold">Razorpay</span>
+                  
+                  <img src={googlePayIcon} alt="Google Pay" className="h-10" />
+                  
+                  <img src={mastercardIcon} alt="Mastercard" className="h-10" />
+                  
+                  <img src={paypalIcon} alt="PayPal" className="h-10" />
+                  
+                  <img src={rupayIcon} alt="RuPay" className="h-10" />
+                  
+                  <img src={visaIcon} alt="Visa" className="h-10" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1385,7 +1349,12 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
         {/* Ratings & Reviews Section */}
         <ProductReviews productId={productId} productName={data.title} />
+        <div className="mt-8">
+          <GoogleReviewsSection compact />
+        </div>
       </div>
     </div>
   );
 }
+
+

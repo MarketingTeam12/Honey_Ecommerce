@@ -74,13 +74,8 @@ export function BackendStatusBanner() {
         supabase: supabaseOnline,
       });
 
-      if (localOnline && supabaseOnline) {
+      if (supabaseOnline) {
         setBackendStatus('online');
-        return;
-      }
-
-      if (localOnline || supabaseOnline) {
-        setBackendStatus('partial');
         return;
       }
 

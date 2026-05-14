@@ -197,11 +197,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: 'Item Reviews', href: '/admin/item-reviews' }
       ]
     },
-    { name: 'Work Samples', href: '/admin/work-samples', icon: LayoutGrid },
     { name: 'Inventory', href: '/admin/inventory', icon: Users },
     { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart },
     { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-    { name: 'Payment Settings', href: '/admin/api-keys', icon: Settings },
     { name: 'Customer Emails', href: '/admin/customer-emails', icon: Mail },
     { name: 'Customer Queries', href: '/admin/customer-queries', icon: MessageSquare }
   ];

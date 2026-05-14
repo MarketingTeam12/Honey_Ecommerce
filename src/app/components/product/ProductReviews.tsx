@@ -39,21 +39,78 @@ interface ProductReviewsProps {
   productName: string;
 }
 
-const getStaticStatsForProduct = (id: string): ReviewStats => {
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const staticRating = hash % 2 === 0 ? 5 : 4;
+const getSeedFromId = (id: string): number => {
+  return id.split('').reduce((acc, char, index) => {
+    return (acc + char.charCodeAt(0) * (index + 1)) % 2147483647;
+  }, 0);
+};
 
-  return staticRating === 5
-    ? {
-        totalReviews: 100,
-        averageRating: 5,
-        ratingDistribution: { 5: 100, 4: 0, 3: 0, 2: 0, 1: 0 }
-      }
-    : {
-        totalReviews: 100,
-        averageRating: 4,
-        ratingDistribution: { 5: 0, 4: 100, 3: 0, 2: 0, 1: 0 }
-      };
+const createSeededRandom = (seed: number): (() => number) => {
+  let state = seed || 1;
+  return () => {
+    state = (state * 48271) % 2147483647;
+    return state / 2147483647;
+  };
+};
+
+const getStaticStatsForProduct = (id: string): ReviewStats => {
+  const seed = getSeedFromId(id);
+  const random = createSeededRandom(seed);
+
+  // Keep totals varied per product so all products do not look identical.
+  const totalReviews = 50 + Math.floor(random() * 170); // 50-219
+
+  const distribution: ReviewStats['ratingDistribution'] = {
+    5: 0,
+    4: 0,
+    3: 0,
+    2: 0,
+    1: 0
+  };
+
+  // Ensure some low-star presence for realism.
+  distribution[1] = 1 + Math.floor(random() * 3);
+  distribution[2] = 1 + Math.floor(random() * 4);
+  distribution[3] = 2 + Math.floor(random() * 6);
+
+  const lowStarTotal = distribution[1] + distribution[2] + distribution[3];
+  let remaining = Math.max(0, totalReviews - lowStarTotal);
+
+  // Bias heavily towards 4/5 stars with product-specific variation.
+  const fiveStarShare = 0.42 + random() * 0.23; // 42% to 65% of remaining
+  distribution[5] = Math.floor(remaining * fiveStarShare);
+  distribution[4] = remaining - distribution[5];
+
+  // Small extra noise to avoid overly neat splits.
+  const moves = Math.floor(random() * 4);
+  for (let i = 0; i < moves; i++) {
+    if (distribution[5] > 0 && random() < 0.5) {
+      distribution[5]--;
+      distribution[4]++;
+    } else if (distribution[4] > 0) {
+      distribution[4]--;
+      distribution[5]++;
+    }
+  }
+
+  remaining = totalReviews - (distribution[5] + distribution[4] + distribution[3] + distribution[2] + distribution[1]);
+  if (remaining > 0) {
+    distribution[4] += remaining;
+  }
+
+  const weightedSum =
+    distribution[5] * 5 +
+    distribution[4] * 4 +
+    distribution[3] * 3 +
+    distribution[2] * 2 +
+    distribution[1] * 1;
+  const averageRating = weightedSum / totalReviews;
+
+  return {
+    totalReviews,
+    averageRating,
+    ratingDistribution: distribution
+  };
 };
 
 export function ProductReviews({ productId, productName }: ProductReviewsProps) {
@@ -90,7 +147,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
   useEffect(() => {
     const interval = setInterval(() => {
       console.log('🔄 Auto-refreshing reviews to check for admin approvals...');
-      fetchReviews();
+      fetchReviews(false);
     }, 15000); // Refresh every 15 seconds
 
     return () => clearInterval(interval);
@@ -165,9 +222,11 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
     };
   };
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (showLoader = true) => {
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
 
       // If using mock auth, load from localStorage
       if (isMockAuth()) {
@@ -217,7 +276,9 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
       setReviews(localReviews);
       setStats(calculateStats(localReviews));
     } finally {
-      setLoading(false);
+      if (showLoader) {
+        setLoading(false);
+      }
     }
   };
 
@@ -1061,11 +1122,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
           )}
 
           {/* Reviews List */}
-          {stats.totalReviews === 0 ? (
-            <div className="bg-gray-50 rounded-lg p-8 text-center">
-              <p className="text-gray-600">No reviews yet. Be the first to review this product!</p>
-            </div>
-          ) : (
+          {stats.totalReviews > 0 && (
             <div className="space-y-4">
               {reviews.map((review) => (
                 <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-6">
