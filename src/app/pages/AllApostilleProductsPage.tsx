@@ -18,6 +18,27 @@ interface Product {
   category: string;
 }
 
+const PROMO_TAGS = ['Top Rated', 'Popular Choice', 'Exclusive Deal'];
+const POPULAR_CHOICE_IDS = new Set([
+  'usa-apostille',
+  'canada-apostille',
+  'germany-apostille',
+  'new-zealand-apostille',
+  'saudi-arabia-apostille',
+  'poland-apostille',
+  'dutch-apostille',
+  'serbia-apostille',
+  'netherlands-apostille',
+]);
+
+const getPromoTag = (seed: string) => {
+  if (POPULAR_CHOICE_IDS.has(seed)) {
+    return 'Popular Choice';
+  }
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 const apostilleProducts: Product[] = [
   {
     id: 'usa-apostille',
@@ -434,8 +455,8 @@ export function AllApostilleProductsPage() {
                   </div>
                   {/* BEST OFFER Tag */}
                   <div className="mt-2">
-                    <span className="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                      BEST OFFER
+                    <span className="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-sm">
+                      {getPromoTag(product.id)}
                     </span>
                   </div>
                 </div>

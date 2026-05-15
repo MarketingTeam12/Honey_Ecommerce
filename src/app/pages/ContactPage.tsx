@@ -3,16 +3,17 @@ import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { motion } from 'motion/react';
 import { MapPin, Phone, Mail, Send } from 'lucide-react';
+import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/phoneValidation';
 
 // Country configurations with flags and validation
 const countries = [
-  { code: 'IN', name: 'India', flag: '🇮🇳', dialCode: '+91', digitLength: 10, pattern: /^[6-9]\d{9}$/ },
-  { code: 'US', name: 'United States', flag: '🇺🇸', dialCode: '+1', digitLength: 10, pattern: /^\d{10}$/ },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', dialCode: '+44', digitLength: 10, pattern: /^\d{10}$/ },
-  { code: 'AE', name: 'UAE', flag: '🇦🇪', dialCode: '+971', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'SG', name: 'Singapore', flag: '🇸🇬', dialCode: '+65', digitLength: 8, pattern: /^\d{8}$/ },
-  { code: 'AU', name: 'Australia', flag: '🇦🇺', dialCode: '+61', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦', dialCode: '+1', digitLength: 10, pattern: /^\d{10}$/ },
+  { code: 'IN', name: 'India', flag: '🇮🇳', dialCode: '+91', maxDigits: 10, minDigits: 10, pattern: /^[6-9]\d{9}$/, patternMessage: 'Indian mobile numbers must start with 6, 7, 8, or 9' },
+  { code: 'US', name: 'United States', flag: '🇺🇸', dialCode: '+1', maxDigits: 10, minDigits: 10, pattern: /^\d{10}$/ },
+  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧', dialCode: '+44', maxDigits: 10, minDigits: 10, pattern: /^\d{10}$/ },
+  { code: 'AE', name: 'UAE', flag: '🇦🇪', dialCode: '+971', maxDigits: 9, minDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'SG', name: 'Singapore', flag: '🇸🇬', dialCode: '+65', maxDigits: 8, minDigits: 8, pattern: /^\d{8}$/ },
+  { code: 'AU', name: 'Australia', flag: '🇦🇺', dialCode: '+61', maxDigits: 9, minDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'CA', name: 'Canada', flag: '🇨🇦', dialCode: '+1', maxDigits: 10, minDigits: 10, pattern: /^\d{10}$/ },
 ];
 
 export function ContactPage() {
@@ -34,25 +35,8 @@ export function ContactPage() {
   const selectedCountry = countries.find(c => c.code === formData.country) || countries[0];
 
   const validateMobile = (mobile: string) => {
-    if (!mobile) {
-      return 'Mobile number is required';
-    }
-    
-    // Remove any spaces or dashes
-    const cleanMobile = mobile.replace(/[\s-]/g, '');
-    
-    if (cleanMobile.length !== selectedCountry.digitLength) {
-      return `Mobile number must be ${selectedCountry.digitLength} digits for ${selectedCountry.name}`;
-    }
-    
-    if (!selectedCountry.pattern.test(cleanMobile)) {
-      if (selectedCountry.code === 'IN') {
-        return 'Indian mobile numbers must start with 6, 7, 8, or 9';
-      }
-      return `Invalid mobile number format for ${selectedCountry.name}`;
-    }
-    
-    return '';
+    const result = validatePhoneForCountry(mobile, selectedCountry);
+    return result.isValid ? '' : (result.error || `Invalid mobile number format for ${selectedCountry.name}`);
   };
 
   const validateEmail = (email: string) => {
@@ -81,12 +65,9 @@ export function ContactPage() {
   };
 
   const handleMobileChange = (value: string) => {
-    // Allow only numbers and limit to country's digit length
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length <= selectedCountry.digitLength) {
-      setFormData({ ...formData, mobile: cleaned });
-      setErrors({ ...errors, mobile: '' });
-    }
+    const cleaned = sanitizePhoneForCountry(value, selectedCountry);
+    setFormData({ ...formData, mobile: cleaned });
+    setErrors({ ...errors, mobile: '' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -223,7 +204,7 @@ export function ContactPage() {
                     value={formData.mobile}
                     onChange={(e) => handleMobileChange(e.target.value)}
                     className={`w-full pl-28 pr-4 py-3 border-2 ${errors.mobile ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-blue-600 outline-none transition-colors`}
-                    placeholder={`${selectedCountry.digitLength} digits`}
+                    placeholder={`${selectedCountry.maxDigits} digits`}
                   />
                 </div>
                 {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
@@ -365,3 +346,4 @@ export function ContactPage() {
 }
 
 export default ContactPage;
+

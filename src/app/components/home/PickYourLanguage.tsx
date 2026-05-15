@@ -8,6 +8,13 @@ import englishToIndianImg from 'figma:asset/5d3738f42d25760a7464ddc4a8fe45a029b7
 import indianToEnglishImg from 'figma:asset/cef973a78471dbf5787d64535927f3ed4d791b1e.png';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+
+const getPromoTag = (seed: string) => {
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 export function PickYourLanguage() {
   const { convertPrice } = useCurrency();
   const { products: adminProducts } = useProducts();
@@ -32,7 +39,7 @@ export function PickYourLanguage() {
       title: 'English to Foreign Language',
       offerPrice: 800,
       originalPrice: 2000,
-      tag: 'BEST OFFER',
+      tag: getPromoTag('fallback-1'),
       route: '/english-to-foreign-language',
       image: englishToForeignImg,
     },
@@ -41,7 +48,7 @@ export function PickYourLanguage() {
       title: 'English to Any Indian Language',
       offerPrice: 400,
       originalPrice: 2000,
-      tag: 'BEST OFFER',
+      tag: getPromoTag('fallback-2'),
       route: '/english-to-any-indian-language',
       image: englishToIndianImg,
     },
@@ -50,7 +57,7 @@ export function PickYourLanguage() {
       title: 'Any Indian Language to English',
       offerPrice: 400,
       originalPrice: 2000,
-      tag: 'BEST OFFER',
+      tag: getPromoTag('fallback-3'),
       route: '/any-indian-language-to-english',
       image: indianToEnglishImg,
     },
@@ -59,7 +66,7 @@ export function PickYourLanguage() {
       title: 'Foreign Language to English',
       offerPrice: 800,
       originalPrice: 2000,
-      tag: 'BEST OFFER',
+      tag: getPromoTag('fallback-4'),
       route: '/foreign-language-to-english',
       icon: '🔄',
     },
@@ -72,7 +79,7 @@ export function PickYourLanguage() {
         title: product.name,
         offerPrice: product.price,
         originalPrice: product.price * 2.5, // Calculate original price (2.5x offer)
-        tag: 'BEST OFFER',
+        tag: getPromoTag(product.id),
         route: `/product/${product.id}`,
         image: getFirstValidImage(product.images),
         icon: '📄'
@@ -136,7 +143,7 @@ export function PickYourLanguage() {
                       </p>
                     </div>
                     {product.tag && (
-                      <Badge className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white">
+                      <Badge className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm px-4 py-1.5 font-bold">
                         {product.tag}
                       </Badge>
                     )}

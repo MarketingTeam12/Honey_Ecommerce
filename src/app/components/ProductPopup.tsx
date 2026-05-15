@@ -45,6 +45,7 @@ const DEMO_NAMES = [
 ];
 
 const TIME_OPTIONS = ['10 minutes ago', '20 minutes ago', '30 minutes ago', '1 hour ago', '2 hours ago', '3 hours ago'];
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
 
 export function ProductPopup() {
   const navigate = useNavigate();
@@ -185,6 +186,7 @@ export function ProductPopup() {
   if (popupProducts.length === 0 || !isVisible) return null;
 
   const currentProduct = popupProducts[currentProductIndex];
+  const promoTag = PROMO_TAGS[currentProductIndex % PROMO_TAGS.length];
 
   const handleProductClick = () => {
     navigate(currentProduct.productUrl);
@@ -204,8 +206,8 @@ export function ProductPopup() {
       <div className="bg-gray-900 text-white rounded-lg shadow-2xl overflow-hidden max-w-sm w-full animate-slide-in-left">
         {/* Best Offer Badge */}
         <div className="absolute top-3 left-3 z-10">
-          <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded">
-            BEST OFFER
+          <span className="bg-red-600 text-white text-sm font-bold px-4 py-1.5 rounded-md">
+            {promoTag}
           </span>
         </div>
 

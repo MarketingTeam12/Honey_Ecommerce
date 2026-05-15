@@ -25,6 +25,40 @@ import visaIcon from 'figma:asset/6f49b2a01cfe14370d80bfa5aa6e2cb4c045e327.png';
 import { Trash2 } from 'lucide-react';
 import { getFirstValidImage, normalizeProductImages } from '@/app/utils/imageUtils';
 
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+const POPULAR_CHOICE_APOSTILLE_KEYS = ['poland-apostille', 'dutch-apostille', 'serbia-apostille', 'netherlands-apostille'];
+const DEFAULT_PRODUCT_DETAILS = [
+  'Professional translation and attestation services for all document types',
+  'Accurate and certified translations accepted by government authorities',
+  'Experienced translators for legal, educational, personal, and business documents',
+  'Fast processing with secure document handling',
+  'Reliable support for apostille, embassy attestation, and notarization',
+  'Affordable pricing with transparent service charges',
+  'Timely delivery without compromising quality',
+  'Multilingual translation support for Indian and foreign languages',
+  'Trusted by clients for quick and hassle-free documentation services',
+  'Dedicated customer assistance throughout the process',
+  'High-quality formatting and professionally structured documents',
+  'Safe and confidential handling of sensitive information',
+  'End-to-end support from submission to final delivery',
+  'Quick response and smooth communication for every request',
+  'Customized solutions based on customer requirements',
+  'Trusted service provider with a strong focus on accuracy and reliability',
+  'Easy online document submission and support',
+  'Professional standards maintained for every project',
+  'Secure verification and quality checks before delivery',
+  'Customer satisfaction focused service with reliable turnaround times',
+];
+
+const getPromoTag = (seed: string) => {
+  const normalizedSeed = seed.toLowerCase().replace(/\s+/g, '-');
+  if (POPULAR_CHOICE_APOSTILLE_KEYS.some((key) => normalizedSeed.includes(key))) {
+    return 'Popular Choice';
+  }
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 // ==================== PRICING DATA STRUCTURES ====================
 
 // 1. STANDARD TRANSLATION PRICING (Original: â‚¹2,000)
@@ -246,6 +280,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [pageCount, setPageCount] = useState(1);
   const [packageDuration, setPackageDuration] = useState<'full-package' | '1-year' | '2-year'>('full-package');
+  const [showAllProductDetails, setShowAllProductDetails] = useState(false);
   const startupVideosByPath: Record<string, { title: string; videoId: string }> = {
     '/basic-startup-package': { title: 'Basic Startup Package', videoId: 'nVrSsvjJ1lg' },
     '/standard-startup-package': { title: 'Standard Startup Package', videoId: '48XaA1Rglu0' },
@@ -294,6 +329,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     setPageCount(1);
     setPackageDuration('full-package');
     setIsZoomed(false);
+    setShowAllProductDetails(false);
   }, [productId]);
 
   // Fetch product images from database on component mount
@@ -633,6 +669,10 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     usingFallback: !data.documentTypes || data.documentTypes.length === 0
   });
 
+  const productDetailsList = DEFAULT_PRODUCT_DETAILS;
+  const visibleProductDetails = showAllProductDetails ? productDetailsList : productDetailsList.slice(0, 4);
+  const hasHiddenProductDetails = productDetailsList.length > 4;
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
@@ -812,8 +852,8 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   <span className="font-semibold">Price varies by language selection</span> - Select source and target languages to see the exact price
                 </p>
               )}
-              <Badge className="bg-red-600 hover:bg-red-700 text-white">
-                BEST OFFER
+              <Badge className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-1.5 font-bold">
+                {getPromoTag(data.id || data.title || 'product')}
               </Badge>
             </div>
 
@@ -1236,26 +1276,23 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
           {data.type === 'startup' ? (
             // For startup packages, show only Product Details without tabs
             <div className="prose max-w-none">
-              <div className="space-y-3">
-                {(data.productDetails || []).map((detail, idx) => {
-                  if (typeof detail === 'string') {
-                    return <p key={idx} className="text-gray-700">{detail}</p>;
-                  } else {
-                    // Apply styling based on style property
-                    let className = 'text-gray-700';
-                    if (detail.style === 'title-orange') {
-                      className = 'text-2xl font-bold text-[#0a1247]';
-                    } else if (detail.style === 'subtitle') {
-                      className = 'text-xl font-bold text-gray-900';
-                    } else if (detail.style === 'section-bold') {
-                      className = 'font-bold text-gray-900';
-                    } else if (detail.style === 'subsection-bold') {
-                      className = 'font-bold text-gray-800';
-                    }
-                    
-                    return detail.text ? <p key={idx} className={className} dangerouslySetInnerHTML={{ __html: detail.text }} /> : <div key={idx} className="h-2" />;
-                  }
-                })}
+              <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">Product Details</h3>
+              <div className="space-y-3 border border-gray-200 rounded-lg p-5 bg-white relative">
+                {visibleProductDetails.map((detail, idx) => (
+                  <p key={idx} className="text-gray-700">{detail}</p>
+                ))}
+                {hasHiddenProductDetails && (
+                  <div className="sticky bottom-0 pt-3 bg-white">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => setShowAllProductDetails((prev) => !prev)}
+                    >
+                      {showAllProductDetails ? 'Show Less' : 'Learn More'}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -1272,15 +1309,25 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               <TabsContent value="details" className="mt-6">
                 <div className="prose max-w-none">
                   <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">Product Details</h3>
-                  <ul className="space-y-2">
-                    {(data.productDetails || []).map((detail, idx) => {
-                      if (typeof detail === 'string') {
-                        return <li key={idx} className="text-gray-700">{detail}</li>;
-                      } else {
-                        return <li key={idx} className="text-gray-700">{detail.text}</li>;
-                      }
-                    })}
-                  </ul>
+                  <div className="border border-gray-200 rounded-lg p-5 bg-white relative">
+                    <ul className="space-y-2">
+                      {visibleProductDetails.map((detail, idx) => (
+                        <li key={idx} className="text-gray-700">{detail}</li>
+                      ))}
+                    </ul>
+                    {hasHiddenProductDetails && (
+                      <div className="sticky bottom-0 pt-4 bg-white">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full sm:w-auto"
+                          onClick={() => setShowAllProductDetails((prev) => !prev)}
+                        >
+                          {showAllProductDetails ? 'Show Less' : 'Learn More'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </TabsContent>
 
@@ -1356,5 +1403,3 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     </div>
   );
 }
-
-

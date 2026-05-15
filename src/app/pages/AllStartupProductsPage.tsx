@@ -8,6 +8,13 @@ import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';
 import { startupProducts, StartupProduct } from '@/app/data/startupProductsList';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+
+const getPromoTag = (seed: string) => {
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 export function AllStartupProductsPage() {
   const { convertPrice } = useCurrency();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -155,8 +162,8 @@ export function AllStartupProductsPage() {
                   </div>
                   {/* BEST OFFER Tag */}
                   <div className="mt-2">
-                    <span className="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                      BEST OFFER
+                    <span className="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-sm">
+                      {getPromoTag(product.id)}
                     </span>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, MessageSquare, User, Phone, Mail, Send, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/phoneValidation';
 
 interface QueryModalProps {
   isOpen: boolean;
@@ -9,31 +10,31 @@ interface QueryModalProps {
 }
 
 const countries = [
-  { code: 'IN', name: 'India', dialCode: '+91', digitLength: 10, pattern: /^[6-9]\d{9}$/ },
-  { code: 'US', name: 'United States', dialCode: '+1', digitLength: 10, pattern: /^\d{10}$/ },
-  { code: 'CA', name: 'Canada', dialCode: '+1', digitLength: 10, pattern: /^\d{10}$/ },
-  { code: 'GB', name: 'United Kingdom', dialCode: '+44', digitLength: 10, pattern: /^\d{10}$/ },
-  { code: 'AE', name: 'UAE', dialCode: '+971', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'SG', name: 'Singapore', dialCode: '+65', digitLength: 8, pattern: /^\d{8}$/ },
-  { code: 'AU', name: 'Australia', dialCode: '+61', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'NZ', name: 'New Zealand', dialCode: '+64', digitLength: 9, pattern: /^\d{8,9}$/ },
-  { code: 'DE', name: 'Germany', dialCode: '+49', digitLength: 10, pattern: /^\d{10,11}$/ },
-  { code: 'FR', name: 'France', dialCode: '+33', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'IT', name: 'Italy', dialCode: '+39', digitLength: 10, pattern: /^\d{9,10}$/ },
-  { code: 'ES', name: 'Spain', dialCode: '+34', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'NL', name: 'Netherlands', dialCode: '+31', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'IE', name: 'Ireland', dialCode: '+353', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'ZA', name: 'South Africa', dialCode: '+27', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'MY', name: 'Malaysia', dialCode: '+60', digitLength: 9, pattern: /^\d{9,10}$/ },
-  { code: 'TH', name: 'Thailand', dialCode: '+66', digitLength: 9, pattern: /^\d{8,9}$/ },
-  { code: 'JP', name: 'Japan', dialCode: '+81', digitLength: 10, pattern: /^\d{9,10}$/ },
-  { code: 'KR', name: 'South Korea', dialCode: '+82', digitLength: 9, pattern: /^\d{9,10}$/ },
-  { code: 'CN', name: 'China', dialCode: '+86', digitLength: 11, pattern: /^\d{11}$/ },
-  { code: 'HK', name: 'Hong Kong', dialCode: '+852', digitLength: 8, pattern: /^\d{8}$/ },
-  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', digitLength: 9, pattern: /^\d{9}$/ },
-  { code: 'QA', name: 'Qatar', dialCode: '+974', digitLength: 8, pattern: /^\d{8}$/ },
-  { code: 'KW', name: 'Kuwait', dialCode: '+965', digitLength: 8, pattern: /^\d{8}$/ },
-  { code: 'OM', name: 'Oman', dialCode: '+968', digitLength: 8, pattern: /^\d{8}$/ },
+  { code: 'IN', name: 'India', dialCode: '+91', minDigits: 10, maxDigits: 10, pattern: /^[6-9]\d{9}$/, patternMessage: 'Indian mobile numbers must start with 6, 7, 8, or 9' },
+  { code: 'US', name: 'United States', dialCode: '+1', minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: 'CA', name: 'Canada', dialCode: '+1', minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: 'GB', name: 'United Kingdom', dialCode: '+44', minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: 'AE', name: 'UAE', dialCode: '+971', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'SG', name: 'Singapore', dialCode: '+65', minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
+  { code: 'AU', name: 'Australia', dialCode: '+61', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'NZ', name: 'New Zealand', dialCode: '+64', minDigits: 8, maxDigits: 9, pattern: /^\d{8,9}$/ },
+  { code: 'DE', name: 'Germany', dialCode: '+49', minDigits: 10, maxDigits: 11, pattern: /^\d{10,11}$/ },
+  { code: 'FR', name: 'France', dialCode: '+33', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'IT', name: 'Italy', dialCode: '+39', minDigits: 9, maxDigits: 10, pattern: /^\d{9,10}$/ },
+  { code: 'ES', name: 'Spain', dialCode: '+34', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'NL', name: 'Netherlands', dialCode: '+31', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'IE', name: 'Ireland', dialCode: '+353', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'ZA', name: 'South Africa', dialCode: '+27', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'MY', name: 'Malaysia', dialCode: '+60', minDigits: 9, maxDigits: 10, pattern: /^\d{9,10}$/ },
+  { code: 'TH', name: 'Thailand', dialCode: '+66', minDigits: 8, maxDigits: 9, pattern: /^\d{8,9}$/ },
+  { code: 'JP', name: 'Japan', dialCode: '+81', minDigits: 9, maxDigits: 10, pattern: /^\d{9,10}$/ },
+  { code: 'KR', name: 'South Korea', dialCode: '+82', minDigits: 9, maxDigits: 10, pattern: /^\d{9,10}$/ },
+  { code: 'CN', name: 'China', dialCode: '+86', minDigits: 11, maxDigits: 11, pattern: /^\d{11}$/ },
+  { code: 'HK', name: 'Hong Kong', dialCode: '+852', minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
+  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: 'QA', name: 'Qatar', dialCode: '+974', minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
+  { code: 'KW', name: 'Kuwait', dialCode: '+965', minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
+  { code: 'OM', name: 'Oman', dialCode: '+968', minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
 ];
 
 const getFlagUrl = (countryCode: string) =>
@@ -63,24 +64,8 @@ export function QueryModal({ isOpen, onClose }: QueryModalProps) {
   };
 
   const validateMobile = (mobile: string) => {
-    if (!mobile.trim()) {
-      return 'Please enter your mobile number';
-    }
-
-    const cleanMobile = mobile.replace(/\D/g, '');
-
-    if (cleanMobile.length !== selectedCountry.digitLength) {
-      return `Mobile number must be ${selectedCountry.digitLength} digits for ${selectedCountry.name}`;
-    }
-
-    if (!selectedCountry.pattern.test(cleanMobile)) {
-      if (selectedCountry.code === 'IN') {
-        return 'Indian mobile numbers must start with 6, 7, 8, or 9';
-      }
-      return `Invalid mobile number format for ${selectedCountry.name}`;
-    }
-
-    return '';
+    const result = validatePhoneForCountry(mobile, selectedCountry);
+    return result.isValid ? '' : (result.error || `Invalid mobile number format for ${selectedCountry.name}`);
   };
 
   const validateEmail = (email: string) => {
@@ -90,7 +75,7 @@ export function QueryModal({ isOpen, onClose }: QueryModalProps) {
   };
 
   const handleMobileChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, '').slice(0, selectedCountry.digitLength);
+    const cleaned = sanitizePhoneForCountry(value, selectedCountry);
     setFormData(prev => ({ ...prev, mobile: cleaned }));
     setErrors(prev => ({ ...prev, mobile: '' }));
   };
@@ -284,8 +269,8 @@ export function QueryModal({ isOpen, onClose }: QueryModalProps) {
                 name="mobile"
                 value={formData.mobile}
                 onChange={(e) => handleMobileChange(e.target.value)}
-                placeholder={`${selectedCountry.digitLength} digits`}
-                maxLength={selectedCountry.digitLength}
+                placeholder={`${selectedCountry.minDigits === selectedCountry.maxDigits ? selectedCountry.maxDigits : `${selectedCountry.minDigits}-${selectedCountry.maxDigits}`} digits`}
+                maxLength={selectedCountry.maxDigits}
                 inputMode="numeric"
                 className={`w-full px-4 py-3 border ${errors.mobile ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-[#1a1f5c] focus:border-transparent outline-none transition-all`}
                 required
@@ -300,7 +285,7 @@ export function QueryModal({ isOpen, onClose }: QueryModalProps) {
                 />
                 {selectedCountry.dialCode}
               </span>
-              <span>{selectedCountry.digitLength} digits</span>
+              <span>{selectedCountry.minDigits === selectedCountry.maxDigits ? selectedCountry.maxDigits : `${selectedCountry.minDigits}-${selectedCountry.maxDigits}`} digits</span>
             </div>
             {errors.mobile && (
               <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>

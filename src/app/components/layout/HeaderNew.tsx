@@ -93,8 +93,8 @@ export function HeaderNew() {
     <>
       {/* Top Bar */}
       <div className="bg-[#1a1f5c] text-white px-6 py-3 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-6 text-[15px]">
+        <div className="max-w-7xl mx-auto flex items-center justify-end gap-6">
+          <div className="order-1 flex items-center gap-6 text-[15px]">
             <a href="mailto:salesteam@honeytranslations.com" className="hover:text-gray-300 transition-colors">
               📧 salesteam@honeytranslations.com
             </a>
@@ -106,7 +106,7 @@ export function HeaderNew() {
           </div>
           
           {/* Sign In/Out Button in Top Bar */}
-          <div className="flex items-center gap-3">
+          <div className="order-2 flex items-center gap-3">
             {user ? (
               <div className="flex items-center gap-4">
                 <button

@@ -7,6 +7,13 @@ import italianSwornImg from 'figma:asset/aebd76dfa545dcd480a431d627b9afa2c177b49
 import germanSwornImg from 'figma:asset/604e66db6f8e40cd18af4a70c2668969707585de.png';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+
+const getPromoTag = (seed: string) => {
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 export function ChooseSwornTranslation() {
   const { convertPrice } = useCurrency();
   const { products: adminProducts } = useProducts();
@@ -109,7 +116,7 @@ export function ChooseSwornTranslation() {
                     {convertPrice(product.originalPrice)}
                   </p>
                 </div>
-                <Badge className="bg-red-600 hover:bg-red-700">BEST OFFER</Badge>
+                <Badge className="bg-red-600 hover:bg-red-700 text-sm px-4 py-1.5 font-bold">{getPromoTag(product.id)}</Badge>
               </div>
             </Link>
           ))}

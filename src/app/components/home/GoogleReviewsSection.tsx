@@ -154,9 +154,9 @@ export function GoogleReviewsSection({ compact = false }: GoogleReviewsSectionPr
             {/* Header with Rating */}
             <div className="text-center mb-4">
               <h3 className="text-4xl font-bold text-gray-900 mb-4">EXCELLENT</h3>
-              <div className="flex items-center justify-center gap-1 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-6">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-8 h-8 fill-yellow-400 text-yellow-400" />
+                  <Star key={i} className="w-11 h-11 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.95)]" />
                 ))}
               </div>
               <div className="flex justify-center">
@@ -206,8 +206,8 @@ export function GoogleReviewsSection({ compact = false }: GoogleReviewsSectionPr
                       {review.initial}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">{review.name}</h4>
-                      <p className="text-sm text-gray-500">{review.date}</p>
+                      <h4 className="font-semibold text-gray-900 text-[1.05rem]">{review.name}</h4>
+                      <p className="text-base text-gray-500">{review.date}</p>
                     </div>
                   </div>
                   <svg viewBox="0 0 24 24" className="w-6 h-6">
@@ -219,14 +219,14 @@ export function GoogleReviewsSection({ compact = false }: GoogleReviewsSectionPr
                 </div>
 
                 {/* Rating */}
-                <div className="flex items-center gap-1 mb-3">
+                <div className="flex items-center gap-2 mb-3">
                   {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.9)]" />
                   ))}
                 </div>
 
                 {/* Review Text */}
-                <p className="text-gray-700 text-sm leading-relaxed">{review.text}</p>
+                <p className="text-gray-700 text-base leading-relaxed">{review.text}</p>
               </div>
             ))}
           </div>

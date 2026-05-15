@@ -6,6 +6,13 @@ import { Badge } from '@/app/components/ui/badge';
 import { useState } from 'react';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+
+const getPromoTag = (seed: string) => {
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 export function SwornTranslationsListingPage() {
   const { convertPrice } = useCurrency();
   const { products, isLoading } = useProducts();
@@ -128,8 +135,8 @@ export function SwornTranslationsListingPage() {
                           )}
                         </div>
                         {product.compareAtPrice && product.compareAtPrice > product.price && (
-                          <Badge className="bg-red-600 text-white px-2 py-0.5 text-xs">
-                            BEST OFFER
+                          <Badge className="bg-red-600 text-white px-4 py-1.5 text-sm font-bold">
+                            {getPromoTag(product.id)}
                           </Badge>
                         )}
                       </div>

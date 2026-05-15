@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router';
 import { MapPin, Plus, Tag, Trash2, Edit2 } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
+import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/phoneValidation';
 
 // Country codes with validation rules
 const countryCodes = [
-  { code: '+91', country: 'India', flag: '🇮🇳', digits: 10 },
-  { code: '+1', country: 'USA', flag: '🇺🇸', digits: 10 },
-  { code: '+44', country: 'UK', flag: '🇬🇧', digits: 10 },
-  { code: '+971', country: 'UAE', flag: '🇦🇪', digits: 9 },
-  { code: '+65', country: 'Singapore', flag: '🇸🇬', digits: 8 },
-  { code: '+60', country: 'Malaysia', flag: '🇲🇾', digits: 9 },
-  { code: '+61', country: 'Australia', flag: '🇦🇺', digits: 9 },
+  { code: '+91', country: 'India', flag: '🇮🇳', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^[6-9]\d{9}$/, patternMessage: 'Indian mobile numbers must start with 6, 7, 8, or 9' },
+  { code: '+1', country: 'USA', flag: '🇺🇸', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: '+44', country: 'UK', flag: '🇬🇧', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: '+971', country: 'UAE', flag: '🇦🇪', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬', digits: 8, minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
+  { code: '+60', country: 'Malaysia', flag: '🇲🇾', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: '+61', country: 'Australia', flag: '🇦🇺', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
 ];
 
 // Valid Indian cities
@@ -252,17 +253,9 @@ export function CheckoutAddressPage() {
 
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Only allow numeric input
-    if (value === '' || /^\d+$/.test(value)) {
-      // Get selected country's digit limit
-      const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode);
-      const maxDigits = countryConfig?.digits || 10;
-      
-      // Limit to max digits
-      if (value.length <= maxDigits) {
-        setNewAddressForm({ ...newAddressForm, phone: value });
-      }
-    }
+    const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode) || countryCodes[0];
+    const cleaned = sanitizePhoneForCountry(value, { dialCode: countryConfig.code, maxDigits: countryConfig.maxDigits });
+    setNewAddressForm({ ...newAddressForm, phone: cleaned });
   };
 
   const handlePincodeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,15 +282,19 @@ export function CheckoutAddressPage() {
     }
     
     // Phone validation with dynamic digit count
-    const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode);
-    const requiredDigits = countryConfig?.digits || 10;
-    
-    if (!newAddressForm.phone.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!/^\d+$/.test(newAddressForm.phone.trim())) {
-      errors.phone = 'Phone number must contain only digits';
-    } else if (newAddressForm.phone.trim().length !== requiredDigits) {
-      errors.phone = `Phone number must be exactly ${requiredDigits} digits for ${countryConfig?.country}`;
+    const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode) || countryCodes[0];
+    const phoneValidation = validatePhoneForCountry(newAddressForm.phone, {
+      code: countryConfig.code,
+      name: countryConfig.country,
+      dialCode: countryConfig.code,
+      minDigits: countryConfig.minDigits,
+      maxDigits: countryConfig.maxDigits,
+      pattern: countryConfig.pattern,
+      patternMessage: countryConfig.patternMessage,
+    });
+
+    if (!phoneValidation.isValid) {
+      errors.phone = phoneValidation.error || `Invalid phone number format for ${countryConfig.country}`;
     }
     
     // Address Line 1 validation
@@ -567,7 +564,8 @@ export function CheckoutAddressPage() {
                         onChange={(phone, country: any) => {
                           // Extract country code and phone number
                           const countryCode = '+' + country.dialCode;
-                          const phoneWithoutCode = phone.replace(country.dialCode, '');
+                          const mappedCountry = countryCodes.find(c => c.code === countryCode) || countryCodes[0];
+                          const phoneWithoutCode = sanitizePhoneForCountry(phone, { dialCode: countryCode, maxDigits: mappedCountry.maxDigits });
                           setNewAddressForm({ 
                             ...newAddressForm, 
                             phoneCountryCode: countryCode,

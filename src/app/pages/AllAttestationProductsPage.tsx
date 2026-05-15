@@ -18,6 +18,13 @@ interface Product {
   category: string;
 }
 
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+
+const getPromoTag = (seed: string) => {
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 const attestationProducts: Product[] = [
   {
     id: 'china-attestation',
@@ -221,8 +228,8 @@ export function AllAttestationProductsPage() {
                   </div>
                   {/* BEST OFFER Tag */}
                   <div className="mt-2">
-                    <span className="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                      BEST OFFER
+                    <span className="inline-block bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow-sm">
+                      {getPromoTag(product.id)}
                     </span>
                   </div>
                 </div>

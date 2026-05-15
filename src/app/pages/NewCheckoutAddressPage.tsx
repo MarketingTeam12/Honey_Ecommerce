@@ -4,6 +4,7 @@ import { MapPin, Plus, Tag, ChevronRight, Trash2, Edit2 } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
+import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/phoneValidation';
 
 // Country codes with validation rules
 const countryCodes = [
@@ -250,17 +251,9 @@ export function NewCheckoutAddressPage() {
 
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Only allow numeric input
-    if (value === '' || /^\d+$/.test(value)) {
-      // Get selected country's digit limit
-      const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode);
-      const maxDigits = countryConfig?.digits || 10;
-      
-      // Limit to max digits
-      if (value.length <= maxDigits) {
-        setNewAddressForm({ ...newAddressForm, phone: value });
-      }
-    }
+    const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode) || countryCodes[0];
+    const cleaned = sanitizePhoneForCountry(value, { dialCode: countryConfig.code, maxDigits: countryConfig.digits || 10 });
+    setNewAddressForm({ ...newAddressForm, phone: cleaned });
   };
 
   const handlePincodeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,15 +280,20 @@ export function NewCheckoutAddressPage() {
     }
     
     // Phone validation with dynamic digit count
-    const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode);
+    const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode) || countryCodes[0];
     const requiredDigits = countryConfig?.digits || 10;
-    
-    if (!newAddressForm.phone.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!/^\d+$/.test(newAddressForm.phone.trim())) {
-      errors.phone = 'Phone number must contain only digits';
-    } else if (newAddressForm.phone.trim().length !== requiredDigits) {
-      errors.phone = `Phone number must be exactly ${requiredDigits} digits for ${countryConfig?.country}`;
+    const phoneValidation = validatePhoneForCountry(newAddressForm.phone, {
+      code: countryConfig.code,
+      name: countryConfig.country,
+      dialCode: countryConfig.code,
+      minDigits: requiredDigits,
+      maxDigits: requiredDigits,
+      pattern: countryConfig.code === '+91' ? /^[6-9]\d{9}$/ : new RegExp(`^\\d{${requiredDigits}}$`),
+      patternMessage: countryConfig.code === '+91' ? 'Indian mobile numbers must start with 6, 7, 8, or 9' : undefined,
+    });
+
+    if (!phoneValidation.isValid) {
+      errors.phone = phoneValidation.error || `Invalid phone number format for ${countryConfig?.country}`;
     }
     
     // Address Line 1 validation

@@ -39,6 +39,13 @@ const DOCUMENT_TYPES = [
   'Driving License',
 ];
 
+const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+
+const getPromoTag = (seed: string) => {
+  const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return PROMO_TAGS[hash % PROMO_TAGS.length];
+};
+
 export function SwornTranslationPage() {
   const { language } = useParams<{ language: string }>();
   const navigate = useNavigate();
@@ -258,8 +265,8 @@ export function SwornTranslationPage() {
                   {convertPrice(data.offerPrice)}
                 </span>
               </div>
-              <Badge className="bg-red-600 hover:bg-red-700 text-white">
-                BEST OFFER
+              <Badge className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-1.5 font-bold">
+                {getPromoTag(language || 'sworn-translation')}
               </Badge>
             </div>
 
