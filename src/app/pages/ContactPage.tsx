@@ -66,8 +66,9 @@ export function ContactPage() {
 
   const handleMobileChange = (value: string) => {
     const cleaned = sanitizePhoneForCountry(value, selectedCountry);
+    const mobileError = cleaned ? validateMobile(cleaned) : '';
     setFormData({ ...formData, mobile: cleaned });
-    setErrors({ ...errors, mobile: '' });
+    setErrors({ ...errors, mobile: mobileError });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -178,7 +179,13 @@ export function ContactPage() {
                 </label>
                 <select
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  onChange={(e) => {
+                    const nextCountry = countries.find(c => c.code === e.target.value) || countries[0];
+                    const sanitizedMobile = sanitizePhoneForCountry(formData.mobile, nextCountry);
+                    const mobileError = sanitizedMobile ? (validatePhoneForCountry(sanitizedMobile, nextCountry).error || '') : '';
+                    setFormData({ ...formData, country: e.target.value, mobile: sanitizedMobile });
+                    setErrors({ ...errors, mobile: mobileError });
+                  }}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 outline-none transition-colors"
                 >
                   {countries.map(country => (
@@ -203,6 +210,7 @@ export function ContactPage() {
                     required
                     value={formData.mobile}
                     onChange={(e) => handleMobileChange(e.target.value)}
+                    onBlur={() => setErrors({ ...errors, mobile: validateMobile(formData.mobile) })}
                     className={`w-full pl-28 pr-4 py-3 border-2 ${errors.mobile ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-blue-600 outline-none transition-colors`}
                     placeholder={`${selectedCountry.maxDigits} digits`}
                   />

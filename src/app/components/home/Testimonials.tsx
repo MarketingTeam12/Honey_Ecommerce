@@ -86,19 +86,8 @@ export function Testimonials() {
   // Duplicate testimonials for seamless infinite scroll loop
   const duplicatedTestimonials = [...testimonials, ...testimonials];
   const logoOnlyCompanies = new Set(testimonials.map((testimonial) => testimonial.company));
-  const compactLogoCompanies = new Set([
-    'Fratelli',
-    'TVS Motor Company Ltd',
-    'HP Valves & Fittings',
-    'Aachi Masala Foods Pvt. Ltd',
-    'ARC International Fertility',
-    'Royal Enfield',
-    'DBS',
-    'Identity',
-    'LRK',
-    'Bright Light Society',
-  ]);
   const blendLogoCompanies = new Set(testimonials.map((testimonial) => testimonial.company));
+  const extraLargeLogoCompanies = new Set(['Royal Enfield', 'Saint-Gobain']);
 
   return (
     <section className="py-8 md:py-10 bg-white overflow-hidden">
@@ -125,21 +114,21 @@ export function Testimonials() {
                 className="flex-shrink-0 mx-4"
                 style={{ width: '400px' }}
               >
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow h-full">
-                  <div className="w-32 h-20 mb-6 mx-auto flex items-center justify-center">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-shadow h-full">
+                  <div className="w-44 h-28 mb-2 mx-auto flex items-center justify-center">
                     <ImageWithFallback
                       src={testimonial.logoSrc}
                       alt={testimonial.company}
-                      className={`${compactLogoCompanies.has(testimonial.company) ? 'w-28 h-auto' : 'max-w-full max-h-full'} ${blendLogoCompanies.has(testimonial.company) ? 'mix-blend-multiply' : ''} object-contain mx-auto`}
+                      className={`${extraLargeLogoCompanies.has(testimonial.company) ? 'w-52 h-36' : 'w-36 h-20'} ${blendLogoCompanies.has(testimonial.company) ? 'mix-blend-multiply' : ''} object-contain mx-auto`}
                     />
                   </div>
                   {!logoOnlyCompanies.has(testimonial.company) && (
-                    <h3 className="text-2xl font-bold text-gray-900 text-center mb-4">{testimonial.company}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 text-center mb-1">{testimonial.company}</h3>
                   )}
                   <p className="text-gray-700 text-center italic leading-relaxed text-sm">"{testimonial.text}"</p>
-                  <div className="flex justify-center gap-1 mt-6">
+                  <div className="flex justify-center gap-2 mt-2">
                     {[...Array(5)].map((_, i) => (
-                      <span key={i} className="text-amber-400 text-xl">★</span>
+                      <span key={i} className="text-yellow-300 text-4xl drop-shadow-[0_0_8px_rgba(253,224,71,1)]">{'\u2605'}</span>
                     ))}
                   </div>
                 </div>
@@ -171,3 +160,4 @@ export function Testimonials() {
     </section>
   );
 }
+

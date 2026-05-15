@@ -76,13 +76,17 @@ export function QueryModal({ isOpen, onClose }: QueryModalProps) {
 
   const handleMobileChange = (value: string) => {
     const cleaned = sanitizePhoneForCountry(value, selectedCountry);
+    const mobileError = cleaned ? validateMobile(cleaned) : '';
     setFormData(prev => ({ ...prev, mobile: cleaned }));
-    setErrors(prev => ({ ...prev, mobile: '' }));
+    setErrors(prev => ({ ...prev, mobile: mobileError }));
   };
 
   const handleCountryChange = (countryCode: string) => {
-    setFormData(prev => ({ ...prev, country: countryCode, mobile: '' }));
-    setErrors(prev => ({ ...prev, mobile: '' }));
+    const nextCountry = countries.find(country => country.code === countryCode) || countries[0];
+    const sanitizedMobile = sanitizePhoneForCountry(formData.mobile, nextCountry);
+    const mobileError = sanitizedMobile ? (validatePhoneForCountry(sanitizedMobile, nextCountry).error || '') : '';
+    setFormData(prev => ({ ...prev, country: countryCode, mobile: sanitizedMobile }));
+    setErrors(prev => ({ ...prev, mobile: mobileError }));
     setShowCountryDropdown(false);
   };
 
@@ -269,6 +273,7 @@ export function QueryModal({ isOpen, onClose }: QueryModalProps) {
                 name="mobile"
                 value={formData.mobile}
                 onChange={(e) => handleMobileChange(e.target.value)}
+                onBlur={() => setErrors(prev => ({ ...prev, mobile: validateMobile(formData.mobile) }))}
                 placeholder={`${selectedCountry.minDigits === selectedCountry.maxDigits ? selectedCountry.maxDigits : `${selectedCountry.minDigits}-${selectedCountry.maxDigits}`} digits`}
                 maxLength={selectedCountry.maxDigits}
                 inputMode="numeric"

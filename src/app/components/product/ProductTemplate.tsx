@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, MouseEvent } from 'react';
+import { useState, useEffect, useRef, MouseEvent, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -27,6 +27,105 @@ import { getFirstValidImage, normalizeProductImages } from '@/app/utils/imageUti
 
 const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
 const POPULAR_CHOICE_APOSTILLE_KEYS = ['poland-apostille', 'dutch-apostille', 'serbia-apostille', 'netherlands-apostille'];
+const APOSTILLE_DOCUMENT_TYPES = [
+  { value: 'personal', label: 'Personal' },
+  { value: 'education', label: 'Education' },
+  { value: 'commercial', label: 'Commercial' },
+];
+const PERSONAL_DOCUMENT_OPTIONS: DocumentTypeOption[] = [
+  { id: 'aadhaar-card', label: 'Aadhaar Card' },
+  { id: 'birth-certificate', label: 'Birth Certificate' },
+  { id: 'criminal-record', label: 'Criminal Record' },
+  { id: 'drivers-license', label: "Driver's License" },
+  { id: 'identification-card', label: 'Identification Card' },
+  { id: 'medical-certificate', label: 'Medical Certificate' },
+  { id: 'police-clearance-certificate', label: 'Police Clearance Certificate' },
+  { id: 'rent-agreement', label: 'Rent Agreement' },
+  { id: 'single-status-certificate', label: 'Single Status Certificate' },
+  { id: 'appointment-letter', label: 'Appointment Letter' },
+  { id: 'bonafide-certificate', label: 'Bonafide Certificate' },
+  { id: 'death-certificate', label: 'Death Certificate' },
+  { id: 'first-information-report-fir', label: 'First Information Report (FIR)' },
+  { id: 'insurance-related-document', label: 'Insurance-related Document' },
+  { id: 'passport', label: 'Passport' },
+  { id: 'power-of-attorney', label: 'Power of Attorney' },
+  { id: 'salary-statement', label: 'Salary Statement' },
+  { id: 'utility-bill', label: 'Utility Bill' },
+  { id: 'bank-statement', label: 'Bank Statement' },
+  { id: 'caste-certificate', label: 'Caste Certificate' },
+  { id: 'divorce-certificate', label: 'Divorce Certificate' },
+  { id: 'gift-deed', label: 'Gift Deed' },
+  { id: 'marriage-certificate', label: 'Marriage Certificate' },
+  { id: 'payslip', label: 'Payslip' },
+  { id: 'ration-card', label: 'Ration Card' },
+  { id: 'sale-deed', label: 'Sale Deed' },
+  { id: 'will-testament', label: 'Will Testament' },
+  { id: 'other', label: 'Other' },
+];
+const EDUCATION_DOCUMENT_OPTIONS: DocumentTypeOption[] = [
+  { id: 'college-leaving-certificate', label: 'College Leaving Certificate' },
+  { id: 'diploma-certificate', label: 'Diploma Certificate' },
+  { id: 'hsc-certificate', label: 'HSC Certificate' },
+  { id: 'inter-marksheet', label: 'Inter Marksheet' },
+  { id: 'post-graduation-degree-certificate', label: 'Post-Graduation Degree Certificate' },
+  { id: 'ssc-certificate', label: 'SSC Certificate' },
+  { id: 'transfer-certificate', label: 'Transfer Certificate' },
+  { id: 'college-marksheet', label: 'College Marksheet' },
+  { id: 'diploma-marksheet', label: 'Diploma Marksheet' },
+  { id: 'hsc-marksheet', label: 'HSC Marksheet' },
+  { id: 'mbbs-certificate', label: 'MBBS Certificate' },
+  { id: 'school-leaving-certificate', label: 'School Leaving Certificate' },
+  { id: 'ssc-marksheet', label: 'SSC Marksheet' },
+  { id: 'other', label: 'Other' },
+  { id: 'dentists-certificate', label: 'Dentists Certificate' },
+  { id: 'graduation-degree-certificate', label: 'Graduation Degree Certificate' },
+  { id: 'inter-certificate', label: 'Inter Certificate' },
+  { id: 'nursing-certificate', label: 'Nursing Certificate' },
+  { id: 'school-marksheet', label: 'School Marksheet' },
+  { id: 'transcript-certificate', label: 'Transcript Certificate' },
+];
+const COMMERCIAL_DOCUMENT_OPTIONS: DocumentTypeOption[] = [
+  { id: 'business-license', label: 'Business License' },
+  { id: 'gumasta', label: 'Gumasta' },
+  { id: 'memorandum-of-association', label: 'Memorandum of Association' },
+  { id: 'physical-or-chemical-analysis-report', label: 'Physical or chemical analysis report' },
+  { id: 'shop-and-establishment-certificate', label: 'Shop and Establishment Certificate' },
+  { id: 'certificate-of-incorporation', label: 'Certificate of incorporation' },
+  { id: 'insurance-related-document', label: 'Insurance-related document' },
+  { id: 'packaging-list', label: 'Packaging List' },
+  { id: 'power-of-attorney', label: 'Power of attorney' },
+  { id: 'trade-certificate', label: 'Trade Certificate' },
+  { id: 'certificate-of-origin', label: 'Certificate of origin' },
+  { id: 'invoice', label: 'Invoice' },
+  { id: 'partnership-deed', label: 'Partnership Deed' },
+  { id: 'product-certificate', label: 'Product certificate' },
+  { id: 'other', label: 'Other' },
+];
+const FALLBACK_DESTINATIONS = ['Australia', 'Canada', 'France', 'Germany', 'India', 'Netherlands', 'Saudi Arabia', 'Singapore', 'United Arab Emirates', 'United Kingdom', 'United States'];
+const ALL_LANGUAGE_OPTIONS = [
+  { value: 'english', label: 'English' },
+  { value: 'spanish', label: 'Spanish' },
+  { value: 'french', label: 'French' },
+  { value: 'german', label: 'German' },
+  { value: 'italian', label: 'Italian' },
+  { value: 'portuguese', label: 'Portuguese' },
+  { value: 'dutch', label: 'Dutch' },
+  { value: 'russian', label: 'Russian' },
+  { value: 'chinese', label: 'Chinese' },
+  { value: 'japanese', label: 'Japanese' },
+  { value: 'korean', label: 'Korean' },
+  { value: 'arabic', label: 'Arabic' },
+  { value: 'hindi', label: 'Hindi' },
+  { value: 'bengali', label: 'Bengali' },
+  { value: 'tamil', label: 'Tamil' },
+  { value: 'telugu', label: 'Telugu' },
+  { value: 'marathi', label: 'Marathi' },
+  { value: 'gujarati', label: 'Gujarati' },
+  { value: 'kannada', label: 'Kannada' },
+  { value: 'malayalam', label: 'Malayalam' },
+  { value: 'punjabi', label: 'Punjabi' },
+  { value: 'urdu', label: 'Urdu' },
+];
 const DEFAULT_PRODUCT_DETAILS = [
   'Professional translation and attestation services for all document types',
   'Accurate and certified translations accepted by government authorities',
@@ -61,10 +160,10 @@ const getPromoTag = (seed: string) => {
 
 // ==================== PRICING DATA STRUCTURES ====================
 
-// 1. STANDARD TRANSLATION PRICING (Original: â‚¹2,000)
+// 1. STANDARD TRANSLATION PRICING (Original: ₹2,000)
 const STANDARD_TRANSLATION_ORIGINAL = 2000;
 
-// English â†’ Foreign Language
+// English → Foreign Language
 const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -81,7 +180,7 @@ const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'indonesian': 800,
 };
 
-// Foreign Language â†’ English
+// Foreign Language → English
 const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -99,7 +198,7 @@ const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'indonesian': 900,
 };
 
-// English â†’ Indian Language (Most are â‚¹600, with exceptions)
+// English → Indian Language (Most are ₹600, with exceptions)
 const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -118,7 +217,7 @@ const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'sanskrit': 600,
 };
 
-// Indian Language â†’ English (Same prices as above)
+// Indian Language → English (Same prices as above)
 const INDIAN_TO_ENGLISH: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -137,7 +236,7 @@ const INDIAN_TO_ENGLISH: { [key: string]: number } = {
   'sanskrit': 600,
 };
 
-// 2. SWORN TRANSLATION PRICING (Original: â‚¹5,000)
+// 2. SWORN TRANSLATION PRICING (Original: ₹5,000)
 const SWORN_TRANSLATION_ORIGINAL = 5000;
 const SWORN_TRANSLATION_PRICING: { [key: string]: number } = {
   'english-spanish': 3299,
@@ -146,7 +245,7 @@ const SWORN_TRANSLATION_PRICING: { [key: string]: number } = {
   'english-french': 3300,
 };
 
-// 3. APOSTILLE SERVICES PRICING (Original: â‚¹3,500, Offer: â‚¹2,500 for all)
+// 3. APOSTILLE SERVICES PRICING (Original: ₹3,500, Offer: ₹2,500 for all)
 const APOSTILLE_ORIGINAL = 3500;
 const APOSTILLE_OFFER = 2500;
 
@@ -268,7 +367,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Use productKey if provided, otherwise generate from title (for backward compatibility)
   const productId = productKey || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   
-  console.log('ðŸ”‘ ProductTemplate - productKey:', productKey, 'productId:', productId);
+  console.log('🔑 ProductTemplate - productKey:', productKey, 'productId:', productId);
   
   // Check if product is in wishlist
   const inWishlist = isInWishlist(productId);
@@ -276,6 +375,11 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Form state for product configuration
   const [sourceLanguage, setSourceLanguage] = useState('');
   const [targetLanguage, setTargetLanguage] = useState('');
+  const [destination, setDestination] = useState('');
+  const [apostilleDocumentType, setApostilleDocumentType] = useState('');
+  const [needTranslation, setNeedTranslation] = useState('');
+  const [translateFromLanguage, setTranslateFromLanguage] = useState('');
+  const [translateToLanguage, setTranslateToLanguage] = useState('');
   const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [pageCount, setPageCount] = useState(1);
@@ -294,7 +398,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Pre-fill form if in edit mode
   useEffect(() => {
     if (isEditMode && editCartItem) {
-      console.log('ðŸ“ Edit mode detected, pre-filling form with:', editCartItem);
+      console.log('📝 Edit mode detected, pre-filling form with:', editCartItem);
       
       if (editCartItem.sourceLanguage) setSourceLanguage(editCartItem.sourceLanguage);
       if (editCartItem.targetLanguage) setTargetLanguage(editCartItem.targetLanguage);
@@ -313,7 +417,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset images to default when productId or data.images changes
   useEffect(() => {
-    console.log('ðŸ”„ Product changed, resetting images to default:', productId);
+    console.log('🔄 Product changed, resetting images to default:', productId);
     setProductImages(normalizeProductImages(data.images, data.title));
     setSelectedImage(0);
     setImagesLoaded(false);
@@ -321,9 +425,14 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset all form fields when product changes
   useEffect(() => {
-    console.log('ðŸ”„ Product changed, resetting all form fields:', productId);
+    console.log('🔄 Product changed, resetting all form fields:', productId);
     setSourceLanguage('');
     setTargetLanguage('');
+    setDestination('');
+    setApostilleDocumentType('');
+    setNeedTranslation('');
+    setTranslateFromLanguage('');
+    setTranslateToLanguage('');
     setSelectedDocTypes([]);
     setUploadedFiles([]);
     setPageCount(1);
@@ -339,7 +448,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         // Normalize productId to lowercase for consistency
         const normalizedProductId = productId.toLowerCase();
         
-        console.log('ðŸ“¸ Fetching images for product:', normalizedProductId);
+        console.log('📸 Fetching images for product:', normalizedProductId);
         
         // Add cache-busting parameter to force fresh data
         const cacheBuster = Date.now();
@@ -354,24 +463,24 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('ðŸ“¦ Received images data:', data);
+          console.log('📦 Received images data:', data);
           
           if (data.images && Array.isArray(data.images)) {
             const validDbImages = normalizeProductImages(data.images, data.title);
-            console.log('âœ… Valid images found:', validDbImages.length);
+            console.log('✅ Valid images found:', validDbImages.length);
             
             if (validDbImages.length > 0) {
-              console.log('ðŸ”„ Updating product images from database');
+              console.log('🔄 Updating product images from database');
               setProductImages(validDbImages);
             } else {
-              console.log('âš ï¸ No valid images in database, using default images');
+              console.log('⚠️ No valid images in database, using default images');
             }
           }
         } else {
-          console.error('âŒ Failed to fetch images, status:', response.status);
+          console.error('❌ Failed to fetch images, status:', response.status);
         }
       } catch (error) {
-        console.log('âš ï¸ Using default product images:', error);
+        console.log('⚠️ Using default product images:', error);
         // Keep using the default images from data.images
       } finally {
         setImagesLoaded(true);
@@ -542,6 +651,23 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   const currentPrice = getDynamicPrice();
   const currentOriginalPrice = getDynamicOriginalPrice();
+  const isApostilleService = data.type === 'apostille';
+  const destinationOptions = useMemo(() => {
+    try {
+      const intlAny = Intl as unknown as { supportedValuesOf?: (type: string) => string[] };
+      const regionCodes = intlAny.supportedValuesOf?.('region') || [];
+      if (regionCodes.length === 0) {
+        return FALLBACK_DESTINATIONS;
+      }
+      const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+      return regionCodes
+        .map((code) => displayNames.of(code))
+        .filter((name): name is string => !!name && name.length > 0)
+        .sort((a, b) => a.localeCompare(b));
+    } catch {
+      return FALLBACK_DESTINATIONS;
+    }
+  }, []);
 
   // Don't set default language values automatically - let user select them
   // This ensures validation works properly
@@ -630,7 +756,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   };
 
   // Debug logging for startup packages
-  console.log('ðŸ“¦ ProductTemplate Debug:', {
+  console.log('📦 ProductTemplate Debug:', {
     title: data.title,
     type: data.type,
     isStartup: data.type === 'startup',
@@ -640,7 +766,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   });
 
   // CRITICAL: Force hide document types for startup packages, but always show for others
-  const shouldShowDocumentTypes = data.type !== 'startup';
+  const shouldShowDocumentTypes = data.type !== 'startup' && !isApostilleService;
   const currentStartupVideo = startupVideosByPath[location.pathname];
   
   // Provide fallback document types if none are provided
@@ -659,8 +785,16 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         { id: 'medical-certificate', label: 'Medical Certificate' },
         { id: 'driving-license', label: 'Driving License' },
       ];
+  const apostilleDocumentOptionsToShow: DocumentTypeOption[] =
+    apostilleDocumentType === 'personal'
+      ? PERSONAL_DOCUMENT_OPTIONS
+      : apostilleDocumentType === 'education'
+        ? EDUCATION_DOCUMENT_OPTIONS
+        : apostilleDocumentType === 'commercial'
+          ? COMMERCIAL_DOCUMENT_OPTIONS
+          : [];
   
-  console.log('ðŸ” Document Type Visibility Check:', {
+  console.log('🔍 Document Type Visibility Check:', {
     productType: data.type,
     isNotStartup: data.type !== 'startup',
     hasDocTypes: !!data.documentTypes,
@@ -672,6 +806,9 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const productDetailsList = DEFAULT_PRODUCT_DETAILS;
   const visibleProductDetails = showAllProductDetails ? productDetailsList : productDetailsList.slice(0, 4);
   const hasHiddenProductDetails = productDetailsList.length > 4;
+  const isNetherlandsApostille =
+    isApostilleService &&
+    (productId.includes('netherlands-apostille') || data.title.toLowerCase().includes('netherlands apostille'));
 
   return (
     <div className="min-h-screen bg-white">
@@ -790,6 +927,25 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   />
                 </div>
                 <p className="text-center font-medium text-gray-900">{currentStartupVideo.title}</p>
+              </div>
+            )}
+
+            {isNetherlandsApostille && (
+              <div className="space-y-3 pt-2">
+                <h4 className="text-base md:text-lg font-semibold text-[#0a1247]">
+                  Netherlands Apostille Sample Documents
+                </h4>
+                <div className="w-full max-w-[520px] mx-auto rounded-lg border-2 border-gray-200 bg-gray-50 p-6">
+                  <div className="w-full min-h-[320px] flex items-center justify-center rounded-md border border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div className="text-center p-8">
+                      <svg className="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
+                      <p className="text-lg text-gray-400 font-medium">No Image Available</p>
+                      <p className="text-sm text-gray-400 mt-2">Service details available below</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -938,6 +1094,145 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                 </div>
               </div>
             )}
+            {isApostilleService && (
+              <>
+                <div>
+                  <Label htmlFor="destination" className="text-base md:text-lg font-semibold">
+                    Destination <span className="text-red-600">*</span>
+                  </Label>
+                  <Select value={destination} onValueChange={setDestination}>
+                    <SelectTrigger id="destination" className="w-full mt-1 h-11 text-base md:text-lg">
+                      <SelectValue placeholder="Select destination country" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {destinationOptions.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          {country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="apostille-document-type" className="text-base md:text-lg font-semibold">
+                    Document Type <span className="text-red-600">*</span>
+                  </Label>
+                  <Select
+                    value={apostilleDocumentType}
+                    onValueChange={(value) => {
+                      setApostilleDocumentType(value);
+                      setSelectedDocTypes([]);
+                    }}
+                  >
+                    <SelectTrigger id="apostille-document-type" className="w-full mt-1 h-11 text-base md:text-lg">
+                      <SelectValue placeholder="Select document type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {APOSTILLE_DOCUMENT_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {apostilleDocumentType && (
+                  <div>
+                    <Label className="mb-3 block text-base md:text-lg font-semibold">
+                      {apostilleDocumentType === 'personal'
+                        ? 'Personal Documents'
+                        : apostilleDocumentType === 'education'
+                          ? 'Education Documents'
+                          : 'Commercial Documents'} <span className="text-red-600">*</span>
+                    </Label>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {apostilleDocumentOptionsToShow.map((docType) => (
+                        <div key={docType.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={docType.id}
+                            checked={selectedDocTypes.includes(docType.id)}
+                            onCheckedChange={() => handleDocTypeToggle(docType.id)}
+                          />
+                          <label htmlFor={docType.id} className="text-base md:text-lg font-medium leading-none cursor-pointer">
+                            {docType.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {isApostilleService && (
+              <div className="border-t pt-2 space-y-4">
+                <div>
+                  <Label htmlFor="need-translation" className="text-base md:text-lg font-semibold">
+                    If Translation Need
+                  </Label>
+                  <div id="need-translation" className="mt-2 flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant={needTranslation === 'yes' ? 'default' : 'outline'}
+                      className="h-11 px-6 text-base md:text-lg"
+                      onClick={() => setNeedTranslation('yes')}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={needTranslation === 'no' ? 'default' : 'outline'}
+                      className="h-11 px-6 text-base md:text-lg"
+                      onClick={() => {
+                        setNeedTranslation('no');
+                        setTranslateFromLanguage('');
+                        setTranslateToLanguage('');
+                      }}
+                    >
+                      No
+                    </Button>
+                  </div>
+                </div>
+
+                {needTranslation === 'yes' && (
+                  <>
+                    <div>
+                      <Label htmlFor="translate-from" className="text-base md:text-lg font-semibold">
+                        Translate Document From:
+                      </Label>
+                      <Select value={translateFromLanguage} onValueChange={setTranslateFromLanguage}>
+                        <SelectTrigger id="translate-from" className="w-full mt-1 h-11 text-base md:text-lg">
+                          <SelectValue placeholder="Select source language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALL_LANGUAGE_OPTIONS.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="translate-into" className="text-base md:text-lg font-semibold">
+                        Translate Document Into:
+                      </Label>
+                      <Select value={translateToLanguage} onValueChange={setTranslateToLanguage}>
+                        <SelectTrigger id="translate-into" className="w-full mt-1 h-11 text-base md:text-lg">
+                          <SelectValue placeholder="Select target language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALL_LANGUAGE_OPTIONS.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Configurable Options */}
             <div className="border-t pt-2 space-y-4">
@@ -1058,7 +1353,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                         </div>
                         <div className="pt-2 border-t border-blue-200">
                           <p className="text-xs text-blue-700">
-                            âœ¨ Pricing automatically updated based on your language selection
+                            ✨ Pricing automatically updated based on your language selection
                           </p>
                         </div>
                       </div>
@@ -1191,10 +1486,19 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                       errors.push('Please select a target language');
                     }
                   }
+                  if (isApostilleService && !destination) {
+                    errors.push('Please select a destination');
+                  }
+                  if (isApostilleService && !apostilleDocumentType) {
+                    errors.push('Please select a document type');
+                  }
 
                   // Check document type selection - skip for startup packages
-                  if (data.type !== 'startup' && selectedDocTypes.length === 0) {
+                  if (!isApostilleService && data.type !== 'startup' && selectedDocTypes.length === 0) {
                     errors.push('Please select at least one document type');
+                  }
+                  if (isApostilleService && apostilleDocumentType && selectedDocTypes.length === 0) {
+                    errors.push('Please select at least one document');
                   }
 
                   // Check file upload - skip for startup packages
@@ -1403,3 +1707,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     </div>
   );
 }
+
+
+
+

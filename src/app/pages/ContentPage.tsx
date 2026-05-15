@@ -381,7 +381,7 @@ export function ContentPage() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
                   <span className="text-green-600">✓</span>
-                  <span className="text-gray-700">50+ languages supported</span>
+                  <span className="text-gray-700">200+ languages supported</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-600">✓</span>
@@ -473,7 +473,7 @@ export function ContentPage() {
           <section>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Our Services</h2>
             <ul className="list-disc list-inside space-y-2 text-gray-700">
-              <li>Document translation for all Indian and 50+ foreign languages</li>
+              <li>Document translation for all Indian and 200+ foreign languages</li>
               <li>Certified translations accepted worldwide</li>
               <li>Apostille services for Hague Convention countries</li>
               <li>Embassy attestation services</li>

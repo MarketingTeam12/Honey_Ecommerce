@@ -103,7 +103,7 @@ function createApostilleData(country: string, price: number, originalPrice: numb
       },
       {
         id: 'saudi-apostille',
-        title: 'Saudi Arabia Apostille Services',
+        title: 'Apostille Services',
         imageUrl: '',
         price: 4500,
         originalPrice: 6000,

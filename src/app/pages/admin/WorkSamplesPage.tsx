@@ -95,6 +95,18 @@ export function WorkSamplesPage() {
           // Load demo data for better UX
           const demoSamples: WorkSample[] = [
             {
+              id: 'demo-netherlands-apostille-sample',
+              title: 'Netherlands Apostille Sample Documents',
+              category: 'Legal Documents',
+              description: 'Sample reference documents for Netherlands Apostille service',
+              fileUrl: '#',
+              fileName: 'netherlands_apostille_sample.pdf',
+              order: 0,
+              status: 'active',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            },
+            {
               id: 'demo-1',
               title: 'Certified Translation - Hindi to English (Birth Certificate)',
               category: 'Indian Languages',
@@ -153,6 +165,18 @@ export function WorkSamplesPage() {
         
         // Load demo data for better UX
         const demoSamples: WorkSample[] = [
+          {
+            id: 'demo-netherlands-apostille-sample',
+            title: 'Netherlands Apostille Sample Documents',
+            category: 'Legal Documents',
+            description: 'Sample reference documents for Netherlands Apostille service',
+            fileUrl: '#',
+            fileName: 'netherlands_apostille_sample.pdf',
+            order: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
           {
             id: 'demo-1',
             title: 'Certified Translation - Hindi to English (Birth Certificate)',

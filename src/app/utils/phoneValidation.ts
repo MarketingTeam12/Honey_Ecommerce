@@ -29,10 +29,6 @@ export const sanitizePhoneForCountry = (
     national = allDigits.slice(dialDigits.length);
   }
 
-  if (national.length > rule.maxDigits) {
-    national = national.slice(national.length - rule.maxDigits);
-  }
-
   return national;
 };
 
@@ -79,4 +75,3 @@ export const validatePhoneForCountry = (
     fullInternationalNumber,
   };
 };
-

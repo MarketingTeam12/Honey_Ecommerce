@@ -2,7 +2,8 @@ import { motion } from 'motion/react';
 import { CheckCircle, Star } from 'lucide-react';
 import { Upload } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import translationImage from 'figma:asset/932f33a08fc9b252330c11c14559a461e76f7fd3.png';
+import certificateLeftImage from '@/assets/certificate-left.png';
+import certificateRightImage from '@/assets/certificate-right.png';
 
 export function HeroSection() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative bg-gradient-to-br from-[#b8d4e8] via-[#c5ddf0] to-[#a8c9e0] overflow-hidden pt-6 pb-16 lg:pt-10 lg:pb-24">
+    <section className="relative bg-gradient-to-br from-[#b8d4e8] via-[#c5ddf0] to-[#a8c9e0] overflow-hidden pt-0 pb-16 lg:pt-0 lg:pb-24 min-h-screen flex items-center">
       {/* Animated Background Text */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
         {/* First row moving right */}
@@ -55,7 +56,7 @@ export function HeroSection() {
             repeatType: 'loop'
           }}
         >
-          ISO CERTIFIED • FAST SERVICE • 50+ LANGUAGES •
+          ISO CERTIFIED • FAST SERVICE • 200+ LANGUAGES •
         </motion.div>
         
         {/* Fourth row moving left */}
@@ -73,18 +74,27 @@ export function HeroSection() {
         </motion.div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="max-w-[1800px] mx-auto px-6 lg:px-8 relative z-10">
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-[1650px] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: Image with smooth animation */}
-          <div className="relative">
-            <img
-              src={translationImage}
-              alt="Translation Services"
-              className="w-full max-w-md mx-auto"
-              style={{
-                mixBlendMode: 'multiply'
-              }}
-            />
+          <div className="relative w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 max-w-[96vw] lg:max-w-[820px] xl:max-w-[920px] mx-auto">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden aspect-[3/4]">
+                <img
+                  src={certificateLeftImage}
+                  alt="Certificate sample left"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden aspect-[3/4]">
+                <img
+                  src={certificateRightImage}
+                  alt="Certificate sample right"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Right: Text content with staggered animation */}
@@ -100,7 +110,7 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              Certified Document
+              CERTIFIED TRANSLATIONS
             </motion.h1>
 
             <motion.h2 
@@ -109,8 +119,8 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
             >
-              Break Language Barriers with<br />
-              <span className="text-[#0a1247]">Professional Translation Services</span>
+              Valid for Visa, Immigration,<br />
+              <span className="text-[#0a1247]">Court & International Use</span>
             </motion.h2>
 
             <motion.p 
@@ -131,7 +141,7 @@ export function HeroSection() {
               transition={{ delay: 1.2 }}
             >
               <Upload className="w-5 h-5" />
-              Upload Document
+              Order Now
             </motion.button>
 
             <motion.div 
@@ -141,7 +151,7 @@ export function HeroSection() {
               transition={{ delay: 1.4 }}
             >
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-900">50+</div>
+                <div className="text-3xl font-bold text-blue-900">200+</div>
                 <div className="text-sm text-gray-700">Languages</div>
               </div>
               <div className="text-center">
@@ -154,6 +164,7 @@ export function HeroSection() {
               </div>
             </motion.div>
           </motion.div>
+          </div>
         </div>
       </div>
 

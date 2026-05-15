@@ -254,6 +254,17 @@ export function NewCheckoutAddressPage() {
     const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode) || countryCodes[0];
     const cleaned = sanitizePhoneForCountry(value, { dialCode: countryConfig.code, maxDigits: countryConfig.digits || 10 });
     setNewAddressForm({ ...newAddressForm, phone: cleaned });
+    const requiredDigits = countryConfig?.digits || 10;
+    const phoneValidation = validatePhoneForCountry(cleaned, {
+      code: countryConfig.code,
+      name: countryConfig.country,
+      dialCode: countryConfig.code,
+      minDigits: requiredDigits,
+      maxDigits: requiredDigits,
+      pattern: countryConfig.code === '+91' ? /^[6-9]\d{9}$/ : new RegExp(`^\\d{${requiredDigits}}$`),
+      patternMessage: countryConfig.code === '+91' ? 'Indian mobile numbers must start with 6, 7, 8, or 9' : undefined,
+    });
+    setValidationErrors(prev => ({ ...prev, phone: cleaned ? (phoneValidation.isValid ? '' : (phoneValidation.error || '')) : '' }));
   };
 
   const handlePincodeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -553,10 +564,23 @@ export function NewCheckoutAddressPage() {
                           value={newAddressForm.phoneCountryCode}
                           onChange={(e) => {
                             const code = e.target.value;
-                            setNewAddressForm({ ...newAddressForm, phoneCountryCode: code, phone: '' });
-                            setSelectedCountryCode(countryCodes.find(c => c.code === code) || countryCodes[0]);
+                            const nextCountry = countryCodes.find(c => c.code === code) || countryCodes[0];
+                            const cleaned = sanitizePhoneForCountry(newAddressForm.phone, { dialCode: nextCountry.code, maxDigits: nextCountry.digits || 10 });
+                            const requiredDigits = nextCountry?.digits || 10;
+                            const phoneValidation = validatePhoneForCountry(cleaned, {
+                              code: nextCountry.code,
+                              name: nextCountry.country,
+                              dialCode: nextCountry.code,
+                              minDigits: requiredDigits,
+                              maxDigits: requiredDigits,
+                              pattern: nextCountry.code === '+91' ? /^[6-9]\d{9}$/ : new RegExp(`^\\d{${requiredDigits}}$`),
+                              patternMessage: nextCountry.code === '+91' ? 'Indian mobile numbers must start with 6, 7, 8, or 9' : undefined,
+                            });
+                            setNewAddressForm({ ...newAddressForm, phoneCountryCode: code, phone: cleaned });
+                            setSelectedCountryCode(nextCountry);
+                            setValidationErrors(prev => ({ ...prev, phone: cleaned ? (phoneValidation.isValid ? '' : (phoneValidation.error || '')) : '' }));
                           }}
-                          className="px-3 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none bg-white transition-all"
+                          className={`px-3 py-3 border ${validationErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none bg-white transition-all`}
                         >
                           {countryCodes.map(country => (
                             <option key={country.code} value={country.code}>
@@ -569,8 +593,22 @@ export function NewCheckoutAddressPage() {
                           placeholder={`${selectedCountryCode.digits} digits`}
                           value={newAddressForm.phone}
                           onChange={handlePhoneInput}
+                          onBlur={() => {
+                            const countryConfig = countryCodes.find(c => c.code === newAddressForm.phoneCountryCode) || countryCodes[0];
+                            const requiredDigits = countryConfig?.digits || 10;
+                            const phoneValidation = validatePhoneForCountry(newAddressForm.phone, {
+                              code: countryConfig.code,
+                              name: countryConfig.country,
+                              dialCode: countryConfig.code,
+                              minDigits: requiredDigits,
+                              maxDigits: requiredDigits,
+                              pattern: countryConfig.code === '+91' ? /^[6-9]\d{9}$/ : new RegExp(`^\\d{${requiredDigits}}$`),
+                              patternMessage: countryConfig.code === '+91' ? 'Indian mobile numbers must start with 6, 7, 8, or 9' : undefined,
+                            });
+                            setValidationErrors(prev => ({ ...prev, phone: phoneValidation.isValid ? '' : (phoneValidation.error || '') }));
+                          }}
                           maxLength={selectedCountryCode.digits}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                          className={`flex-1 px-4 py-3 border ${validationErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all`}
                         />
                       </div>
                       {validationErrors.phone && <p className="text-red-500 text-xs mt-1">{validationErrors.phone}</p>}

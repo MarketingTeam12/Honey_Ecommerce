@@ -3,3 +3,14 @@
 @import './theme.css';
 @import 'slick-carousel/slick/slick.css';
 @import 'slick-carousel/slick/slick-theme.css';
+
+/* Show hand cursor for interactive UI elements */
+a,
+button,
+[role='button'],
+label[for],
+[data-slot='select-trigger'],
+[data-slot='select-item'],
+[data-radix-collection-item] {
+  cursor: pointer;
+}

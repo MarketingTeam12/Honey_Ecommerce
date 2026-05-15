@@ -156,7 +156,7 @@ honey-translation-services/
 │   │   │   │   ├── AdminDashboard.tsx
 │   │   │   │   ├── OrdersPage.tsx
 │   │   │   │   └── CustomersPage.tsx
-│   │   │   └── ... (50+ pages)
+│   │   │   └── ... (200+ pages)
 │   │   ├── utils/
 │   │   │   ├── buildHeaders.ts    # JWT header utility
 │   │   │   └── supabaseClient.ts

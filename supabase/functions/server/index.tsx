@@ -1659,7 +1659,7 @@ app.post("/make-server-a67f0635/admin/initialize-products", async (c) => {
       { id: 'portugal-apostille', name: 'Portugal Apostille Services', category: 'Apostille', price: 7500, stock: 999, status: 'In Stock', image: '' },
       { id: 'poland-apostille', name: 'Poland Apostille Services', category: 'Apostille', price: 7500, stock: 999, status: 'In Stock', image: '' },
       { id: 'new-zealand-apostille', name: 'New Zealand Apostille Services', category: 'Apostille', price: 8000, stock: 999, status: 'In Stock', image: '' },
-      { id: 'saudi-arabia-apostille', name: 'Saudi Arabia Apostille Services', category: 'Apostille', price: 7000, stock: 999, status: 'In Stock', image: '' },
+      { id: 'saudi-arabia-apostille', name: 'Apostille Services', category: 'Apostille', price: 7000, stock: 999, status: 'In Stock', image: '' },
       { id: 'slovakia-apostille', name: 'Slovakia Apostille Services', category: 'Apostille', price: 7500, stock: 999, status: 'In Stock', image: '' },
       { id: 'iceland-apostille', name: 'Iceland Apostille Services', category: 'Apostille', price: 7500, stock: 999, status: 'In Stock', image: '' },
       { id: 'russia-apostille', name: 'Russia Apostille Services', category: 'Apostille', price: 7500, stock: 999, status: 'In Stock', image: '' },

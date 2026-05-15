@@ -572,6 +572,16 @@ export function CheckoutAddressPage() {
                             phone: phoneWithoutCode
                           });
                           setSelectedCountryCode(countryCodes.find(c => c.code === countryCode) || countryCodes[0]);
+                          const validation = validatePhoneForCountry(phoneWithoutCode, {
+                            code: mappedCountry.code,
+                            name: mappedCountry.country,
+                            dialCode: mappedCountry.code,
+                            minDigits: mappedCountry.minDigits,
+                            maxDigits: mappedCountry.maxDigits,
+                            pattern: mappedCountry.pattern,
+                            patternMessage: mappedCountry.patternMessage,
+                          });
+                          setValidationErrors(prev => ({ ...prev, phone: validation.isValid ? '' : (validation.error || '') }));
                         }}
                         enableSearch={true}
                         countryCodeEditable={false}
@@ -593,7 +603,7 @@ export function CheckoutAddressPage() {
                           height: '42px',
                           fontSize: '14px',
                           paddingLeft: '48px',
-                          border: '1px solid #d1d5db',
+                          border: validationErrors.phone ? '1px solid #ef4444' : '1px solid #d1d5db',
                           borderRadius: '0.5rem'
                         }}
                         buttonStyle={{

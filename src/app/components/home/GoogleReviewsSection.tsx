@@ -156,7 +156,7 @@ export function GoogleReviewsSection({ compact = false }: GoogleReviewsSectionPr
               <h3 className="text-4xl font-bold text-gray-900 mb-4">EXCELLENT</h3>
               <div className="flex items-center justify-center gap-2 mb-6">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-11 h-11 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.95)]" />
+                  <Star key={i} className="w-10 h-10 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.95)]" />
                 ))}
               </div>
               <div className="flex justify-center">

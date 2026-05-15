@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
-import honeyLogo from 'figma:asset/8c2fe7ab481f5f0c43b276208d40db63dfe3a146.png';
+import honeyLogo from '@/assets/honey-log.png';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { startupProducts } from '@/app/data/startupProductsList';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
@@ -68,7 +68,6 @@ export function HeaderNew() {
 
   // For "Language" dropdown, check both "Language" and "Translation" categories
   const languageCategory = getCategory('Language') || getCategory('Translation');
-  const apostilleCategory = getCategory('Apostille');
   const attestationCategory = getCategory('Attestation');
   const startupCategory = getCategory('Startup') || getCategory('Startup Packages');
   
@@ -197,14 +196,14 @@ export function HeaderNew() {
             <nav className="hidden lg:flex items-center gap-6 flex-grow justify-center">
               <Link
                 to="/"
-                className="bg-[#1a1f5c] text-white px-6 py-2 rounded-full hover:bg-[#252b70] transition-colors font-bold"
+                className="bg-[#1a1f5c] text-white px-6 py-2 rounded-full hover:bg-[#252b70] transition-colors font-bold text-lg"
               >
                 Home
               </Link>
 
               {/* Language Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold">
+                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
                   Language <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64">
@@ -232,39 +231,15 @@ export function HeaderNew() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Apostille Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold">
-                  Apostille <ChevronDown className="w-4 h-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="max-h-96 overflow-y-auto">
-                  <DropdownMenuItem asChild>
-                    <Link to="/all-apostille-products" className="font-semibold text-blue-600">
-                      🌍 View All Apostille Services
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {categoriesLoading ? (
-                    <DropdownMenuItem disabled>
-                      <span className="text-gray-500">Loading...</span>
-                    </DropdownMenuItem>
-                  ) : apostilleCategory && apostilleCategory.products.length > 0 ? (
-                    apostilleCategory.products.map(product => (
-                      <DropdownMenuItem key={product.id} asChild>
-                        <Link to={`/product/${product.id}`}>{product.name}</Link>
-                      </DropdownMenuItem>
-                    ))
-                  ) : (
-                    <DropdownMenuItem disabled>
-                      <span className="text-gray-500">No products available</span>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
+              <Link
+                to="/apostille/netherlands"
+                className="text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg"
+              >
+                Apostille
+              </Link>
               {/* Attestation Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold">
+                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
                   Attestation <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -294,7 +269,7 @@ export function HeaderNew() {
 
               {/* Startup Package Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold">
+                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
                   Startup <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -316,7 +291,7 @@ export function HeaderNew() {
 
               {/* More Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold">
+                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
                   More <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -522,11 +497,11 @@ export function HeaderNew() {
                 Translation Services
               </Link>
               <Link
-                to="/all-apostille-products"
+                to="/apostille/netherlands"
                 className="block px-4 py-2 hover:bg-gray-100 rounded-lg"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Apostille Services
+                Apostille
               </Link>
               <Link
                 to="/all-attestation-products"
@@ -565,3 +540,4 @@ export function HeaderNew() {
     </>
   );
 }
+

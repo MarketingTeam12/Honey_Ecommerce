@@ -192,7 +192,7 @@ const apostilleProducts: Product[] = [
   },
   {
     id: 'saudi-arabia-apostille',
-    name: 'Saudi Arabia Apostille Services',
+    name: 'Apostille Services',
     price: 2500,
     originalPrice: 3500,
     image: 'https://images.unsplash.com/photo-1757361821434-691a76960f0e?w=800&q=80',
