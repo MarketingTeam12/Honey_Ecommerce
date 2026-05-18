@@ -101,11 +101,11 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
-            className="relative w-full mt-2 sm:mt-3 lg:mt-4"
+            className="relative w-full mt-1 sm:mt-2 lg:mt-2.5"
           >
             <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-r from-white/50 via-[#cce2f2]/30 to-white/50 blur-xl" />
-            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-2.5 lg:gap-3.5 max-w-[96vw] sm:max-w-[90vw] lg:max-w-[760px] mx-auto items-stretch">
-              <div className="relative bg-white rounded-2xl border-2 border-[#6f88a3] shadow-lg overflow-visible aspect-[3/4]">
+            <div className="relative flex justify-between gap-2.5 lg:gap-3.5 max-w-[96vw] sm:max-w-[90vw] lg:max-w-[90vw] mx-auto items-stretch">
+              <div className="relative bg-white rounded-2xl border-2 border-[#6f88a3] shadow-lg overflow-visible">
                 <img
                   src={bannerCertificateCustom}
                   alt="Certificate sample left"
@@ -118,7 +118,7 @@ export function HeroSection() {
                   className="absolute top-[1.6%] left-[1.6%] w-[7.8%] h-auto object-contain z-20"
                 />
               </div>
-              <div className="relative bg-white rounded-2xl border-2 border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4] md:-translate-y-1">
+              <div className="relative bg-white rounded-2xl border-2 border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4] ">
                 <img
                   src={bannerBefore}
                   alt="Certificate sample center"
@@ -158,4 +158,3 @@ export function HeroSection() {
     </section>
   );
 }
-
