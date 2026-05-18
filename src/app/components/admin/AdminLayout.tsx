@@ -87,6 +87,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   // Initial load
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+
     // Only load notifications if we have a valid access token or user
     // This prevents 401 errors on initial load before auth is ready
     if (user || accessToken) {
@@ -214,8 +218,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <aside
         className={`${
-          sidebarOpen ? 'w-64' : 'w-20'
-        } bg-[#1a1f2e] text-white transition-all duration-300 flex flex-col`}
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } fixed lg:static inset-y-0 left-0 z-40 w-64 bg-[#1a1f2e] text-white transition-transform duration-300 flex flex-col`}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-700">
@@ -307,23 +311,39 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
       </aside>
 
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close sidebar"
+        />
+      )}
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative flex-1 max-w-md">
+        <header className="min-h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 py-2 gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 hover:bg-gray-100 rounded lg:hidden"
+              aria-label="Open sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="relative flex-1 max-w-md min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search in Customers ( / )"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full min-w-0 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-sm text-gray-600 hover:text-gray-900">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 hidden xl:block">
               Honey Universal Digital Pvt Ltd
             </Link>
             <button className="p-2 hover:bg-gray-100 rounded-lg relative">

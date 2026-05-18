@@ -229,10 +229,10 @@ export function CustomerNotificationBell() {
 
       {/* Dropdown Panel - Using fixed positioning */}
       <div
-        className="fixed w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-[9999] max-h-[600px] overflow-hidden flex flex-col"
+        className="fixed w-[calc(100vw-1rem)] max-w-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-[9999] max-h-[70vh] sm:max-h-[600px] overflow-hidden flex flex-col"
         style={{
           top: `${dropdownPosition.top}px`,
-          right: `${dropdownPosition.right}px`
+          right: `${Math.max(dropdownPosition.right, 8)}px`
         }}
       >
         {/* Header */}

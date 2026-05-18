@@ -199,7 +199,7 @@ export function ProductPopup() {
 
   return (
     <div
-      className={`fixed bottom-6 left-6 z-50 transition-all duration-500 ${
+      className={`fixed bottom-20 sm:bottom-6 left-3 right-3 sm:left-6 sm:right-auto z-50 transition-all duration-500 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >

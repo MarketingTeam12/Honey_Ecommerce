@@ -91,9 +91,9 @@ export function HeaderNew() {
   return (
     <>
       {/* Top Bar */}
-      <div className="bg-[#1a1f5c] text-white px-6 py-2 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-end gap-4">
-          <div className="order-1 flex items-center gap-5 text-[14px]">
+      <div className="bg-[#1a1f5c] text-white px-3 sm:px-6 py-2 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+          <div className="order-2 sm:order-1 flex items-center gap-3 sm:gap-5 text-[12px] sm:text-[14px] flex-wrap">
             <a href="mailto:salesteam@honeytranslations.com" className="hover:text-gray-300 transition-colors">
               📧 salesteam@honeytranslations.com
             </a>
@@ -105,12 +105,12 @@ export function HeaderNew() {
           </div>
           
           {/* Sign In/Out Button in Top Bar */}
-          <div className="order-2 flex items-center gap-2">
+          <div className="order-1 sm:order-2 flex items-center gap-2 w-full sm:w-auto justify-end">
             {user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4">
                 <button
                   onClick={() => setQueryModalOpen(true)}
-                  className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full transition-all text-[14px] font-semibold shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                  className="hidden sm:flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full transition-all text-[14px] font-semibold shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
                   title="Submit your query"
                 >
                   <MessageSquare className="w-4 h-4" />
@@ -180,8 +180,8 @@ export function HeaderNew() {
       </div>
 
       {/* Main Header */}
-      <header className="bg-white shadow-md sticky top-[48px] z-40">
-        <div className="max-w-7xl mx-auto px-6 py-2.5">
+      <header className="bg-white shadow-md sticky top-[80px] sm:top-[48px] z-40">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5">
           <div className="flex items-center justify-between gap-5">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 flex-shrink-0">
@@ -327,7 +327,7 @@ export function HeaderNew() {
             </nav>
 
             {/* Right Side Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3">
               {/* Wishlist */}
               <Link
                 to="/wishlist"
@@ -335,7 +335,7 @@ export function HeaderNew() {
                 aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5 text-gray-700" />
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center">
                   {getWishlistCount()}
                 </span>
               </Link>
@@ -348,7 +348,7 @@ export function HeaderNew() {
                   aria-label="Cart"
                 >
                   <ShoppingCart className="w-5 h-5 text-gray-700" />
-                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center">
                     {getCartCount()}
                   </span>
                 </Link>
@@ -417,8 +417,8 @@ export function HeaderNew() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-200 bg-white">
-            <div className="px-6 py-4 space-y-3">
+          <div className="lg:hidden border-t border-gray-200 bg-white max-h-[calc(100vh-8rem)] overflow-y-auto">
+            <div className="px-4 sm:px-6 py-4 space-y-3">
               {/* User Section in Mobile */}
               {user ? (
                 <div className="border-b pb-3 mb-3">

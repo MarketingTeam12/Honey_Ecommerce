@@ -181,7 +181,7 @@ export function SalesNotificationPopup() {
 
   return (
     <div
-      className={`fixed bottom-6 left-6 z-50 transition-all duration-500 ease-out ${
+      className={`fixed bottom-20 sm:bottom-6 left-3 right-3 sm:left-6 sm:right-auto z-50 transition-all duration-500 ease-out ${
         isVisible
           ? 'translate-x-0 opacity-100'
           : '-translate-x-full opacity-0'
@@ -189,7 +189,7 @@ export function SalesNotificationPopup() {
     >
       <div
         onClick={handleClick}
-        className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300 max-w-sm"
+        className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300 max-w-sm w-full sm:w-auto"
         role="button"
         tabIndex={0}
         onKeyPress={(e) => {

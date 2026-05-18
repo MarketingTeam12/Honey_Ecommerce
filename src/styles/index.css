@@ -4,6 +4,40 @@
 @import 'slick-carousel/slick/slick.css';
 @import 'slick-carousel/slick/slick-theme.css';
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg,
+iframe {
+  max-width: 100%;
+}
+
+input,
+textarea,
+select {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .container,
+  [class*='max-w-'] {
+    width: 100%;
+  }
+}
+
 /* Show hand cursor for interactive UI elements */
 a,
 button,

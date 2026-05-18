@@ -197,7 +197,7 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -211,10 +211,10 @@ export function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your store today.</p>
         </div>
 
@@ -231,7 +231,7 @@ export function AdminDashboard() {
                   <p className="text-sm text-orange-800 mb-2">
                     Storage buckets need to be created manually in your Supabase Dashboard to enable file uploads.
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Link
                       to="/storage-setup"
                       className="inline-flex items-center gap-1 text-sm font-medium text-orange-700 hover:text-orange-900 underline"
@@ -315,10 +315,10 @@ export function AdminDashboard() {
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
           {/* Sales Summary */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Sales Summary</h3>
               <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option>This Month</option>
@@ -337,7 +337,7 @@ export function AdminDashboard() {
 
           {/* Shipping Overview */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Shipping Overview</h3>
               <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option>This Month</option>
@@ -356,7 +356,7 @@ export function AdminDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           <Link
             to="/admin/items/new"
             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all group"
