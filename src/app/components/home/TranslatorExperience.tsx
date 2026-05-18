@@ -25,7 +25,7 @@ export function TranslatorExperience() {
   // You can paste full YouTube links or just the video IDs
   const videos = [
     'https://youtu.be/WN6rFWYseNI?si=GIXs0RHKjCm5fexD',
-    'https://youtu.be/4RvUxV2hjyI?si=C1YEfMYdVWnuO85m',
+    'https://youtube.com/shorts/7QAiA9OCTBs?si=SxUE92G5BwBnlOLN',
     'https://youtu.be/667EkeEaFmw?si=UvN13CsZhMGpa00f',
     'https://youtu.be/qhNdikINxZE?si=7h6orTKP-0tgrFoR',
   ];

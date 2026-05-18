@@ -25,11 +25,13 @@ export function PickYourApostille() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <img
-              src={apostilleImage}
-              alt="Apostille Services"
-              className="w-full h-auto object-contain rounded-2xl shadow-2xl"
-            />
+            <div className="rounded-2xl border-2 border-[#0a1247] shadow-2xl overflow-hidden group cursor-zoom-in">
+              <img
+                src={apostilleImage}
+                alt="Apostille Services"
+                className="w-full h-auto object-contain transition-transform duration-500 ease-out group-hover:scale-110"
+              />
+            </div>
           </motion.div>
 
           {/* Right: Content */}

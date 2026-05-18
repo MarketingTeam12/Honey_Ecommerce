@@ -263,7 +263,7 @@ export function AdminDashboard() {
         )}
 
         {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Pending Orders */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
@@ -312,17 +312,6 @@ export function AdminDashboard() {
             <p className="text-xs text-gray-500">To Be Received</p>
           </div>
 
-          {/* Out of Stock */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Package className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-            <h3 className="text-sm font-medium text-gray-600 mb-1">OUT OF STOCK ITEMS</h3>
-            <p className="text-3xl font-bold text-gray-900 mb-1">{stats.outOfStockItems}</p>
-            <p className="text-xs text-gray-500">To Be Restocked</p>
-          </div>
         </div>
 
         {/* Charts Section */}

@@ -27,7 +27,7 @@ export function ISOCertificationSection() {
             className="relative flex items-center"
           >
             <div 
-              className="relative overflow-hidden rounded-2xl shadow-2xl bg-white p-4 border-2 border-gray-200 cursor-zoom-in w-full"
+              className="relative overflow-hidden rounded-2xl shadow-2xl bg-white p-4 border-2 border-[#0a1247] cursor-zoom-in w-full"
               onMouseMove={handleMouseMove}
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}

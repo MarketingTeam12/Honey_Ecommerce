@@ -91,9 +91,9 @@ export function HeaderNew() {
   return (
     <>
       {/* Top Bar */}
-      <div className="bg-[#1a1f5c] text-white px-6 py-3 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-end gap-6">
-          <div className="order-1 flex items-center gap-6 text-[15px]">
+      <div className="bg-[#1a1f5c] text-white px-6 py-2 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-end gap-4">
+          <div className="order-1 flex items-center gap-5 text-[14px]">
             <a href="mailto:salesteam@honeytranslations.com" className="hover:text-gray-300 transition-colors">
               📧 salesteam@honeytranslations.com
             </a>
@@ -105,7 +105,7 @@ export function HeaderNew() {
           </div>
           
           {/* Sign In/Out Button in Top Bar */}
-          <div className="order-2 flex items-center gap-3">
+          <div className="order-2 flex items-center gap-2">
             {user ? (
               <div className="flex items-center gap-4">
                 <button
@@ -180,20 +180,20 @@ export function HeaderNew() {
       </div>
 
       {/* Main Header */}
-      <header className="bg-white shadow-md sticky top-[56px] z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between gap-8">
+      <header className="bg-white shadow-md sticky top-[48px] z-40">
+        <div className="max-w-7xl mx-auto px-6 py-2.5">
+          <div className="flex items-center justify-between gap-5">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 flex-shrink-0">
               <img 
                 src={honeyLogo} 
                 alt="Honey Translation Services" 
-                className="h-20 w-auto object-contain"
+                className="h-16 w-auto object-contain"
               />
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-6 flex-grow justify-center">
+            <nav className="hidden lg:flex items-center gap-5 flex-grow justify-center">
               <Link
                 to="/"
                 className="bg-[#1a1f5c] text-white px-6 py-2 rounded-full hover:bg-[#252b70] transition-colors font-bold text-lg"

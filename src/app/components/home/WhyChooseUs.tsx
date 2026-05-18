@@ -17,7 +17,10 @@ export function WhyChooseUs() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {reasons.map((reason, index) => (
-            <div key={index} className="bg-white rounded-lg p-8 shadow-lg text-center">
+            <div
+              key={index}
+              className={`bg-white rounded-lg p-8 shadow-lg text-center ${reason.title === 'Certified Quality' ? 'border-2 border-[#0a1247]' : ''}`}
+            >
               <div className="flex items-center justify-center mb-6">
                 <img 
                   src={reason.image} 

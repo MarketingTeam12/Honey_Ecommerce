@@ -18,67 +18,67 @@ export function Testimonials() {
   const testimonials = [
     { 
       company: 'Fratelli', 
-      text: 'Honey Universal Digital\'s localization services helped us expand our reach in the Indian market. Their attention to detail and cultural sensitivity in translating our product documentation and marketing materials made a significant difference in customer engagement.',
+      text: 'Honey Universal Digital helped us localize product and marketing content for India with excellent cultural accuracy and stronger customer engagement.',
       logoSrc: fratelliTestimonialLogo
     },
     { 
       company: 'TVS Motor Company Ltd', 
-      text: 'Despite strong advertising efforts, we struggled to connect with rural customers. Honey Universal Digital helped us bridge this gap by localizing our campaigns in regional languages, significantly increasing our market impact and brand recognition across India.',
+      text: 'Their regional-language campaign localization improved our connection with rural audiences and noticeably increased market reach across India.',
       logoSrc: tvsLogoClean
     },
     { 
       company: 'HP Valves & Fittings', 
-      text: 'Our technical documentation required precise translation to maintain safety standards and accuracy. Honey Universal Digital delivered exceptional quality, ensuring our engineering specifications were perfectly communicated across different languages and markets.',
+      text: 'Their precise technical translations preserved safety and engineering accuracy across languages, helping us communicate clearly in every market.',
       logoSrc: hpTestimonialLogo
     },
     { 
       company: 'Aachi Masala Foods Pvt. Ltd', 
-      text: 'With Honey Universal Digital\'s localization expertise, we successfully connected with spice lovers across regions, increasing sales and expanding our exports. Their strategic approach also helped us resolve controversies and reinforce our brand\'s credibility.',
+      text: 'Their localization support strengthened our regional communication, boosted customer trust, and supported growth in sales and exports.',
       logoSrc: aachiTestimonialLogo
     },
     { 
       company: 'ARC International Fertility', 
-      text: 'Communicating sensitive medical information requires utmost care and precision. Honey Universal Digital provided expert translation services that helped us reach diverse communities with empathy and accuracy, making our fertility services more accessible to everyone.',
+      text: 'They translated sensitive medical content with empathy and precision, helping us reach diverse communities with clarity and confidence.',
       logoSrc: arcTestimonialLogo
     },
     { 
       company: 'Bright Light Society', 
-      text: 'As a non-profit organization, clear communication is vital to our mission. Honey Universal Digital helped us translate our educational materials and outreach programs into multiple languages, significantly expanding our impact in underserved communities.',
+      text: 'Their multilingual translation of our education and outreach materials expanded our impact in underserved communities.',
       logoSrc: brightLightSocietyLogo
     },
     { 
       company: 'DBS', 
-      text: 'Entering the Indian market required us to localize our banking services and communications. Honey Universal Digital\'s expertise in financial terminology and regulatory compliance made our expansion smooth and helped us build trust with local customers.',
+      text: 'Their finance-focused localization and terminology accuracy supported a smoother India expansion and stronger local customer trust.',
       logoSrc: dbsLogo
     },
     { 
       company: 'Identity', 
-      text: 'Our brand messaging needed to resonate across different cultural contexts. Honey Universal Digital delivered creative localization that maintained our brand identity while adapting perfectly to regional markets, helping us establish a strong presence across India.',
+      text: 'They adapted our brand messaging for regional audiences while preserving identity, helping us build a stronger nationwide presence.',
       logoSrc: identityLogo
     },
     { 
       company: 'LRK', 
-      text: 'Precision in translation is critical for our industry. Honey Universal Digital provided accurate and timely translation services that helped us maintain quality standards and expand our business operations into new regions with confidence.',
+      text: 'Their accurate and timely translations helped us maintain quality standards while scaling operations into new regions.',
       logoSrc: lrkLogo
     },
     { 
       company: 'Muthoot Finance', 
-      text: 'Reaching customers in their native language is key to financial inclusion. Honey Universal Digital helped us translate our loan products and financial education materials, making our services more accessible and building stronger relationships with customers across India.',
+      text: 'Their native-language translations made our financial services more accessible and improved customer relationships across India.',
       logoSrc: muthootFinanceLogo
     },
     { 
       company: 'The New India Assurance', 
-      text: 'Honey Universal Digital helped us enhance customer confidence through expert translation and localization. Their work significantly boosted our sales and strengthened our reputation across India, making our services more accessible and trustworthy.',
+      text: 'Their translation and localization support improved customer confidence, strengthened reputation, and contributed to better sales.',
       logoSrc: newIndiaLogo
     },
     { 
       company: 'Royal Enfield', 
-      text: 'Honey Universal Digital played a crucial role in strengthening our market presence. Their strategic localization efforts helped transform Royal Enfield into a household name while preserving the brand\'s rich heritage and legacy.',
+      text: 'Their strategic localization strengthened our market presence while preserving Royal Enfield’s brand heritage and legacy.',
       logoSrc: royalEnfieldTestimonialLogo
     },
     { 
       company: 'Saint-Gobain', 
-      text: 'As a global construction materials leader, we needed localization that maintained technical accuracy across languages. Honey Universal Digital delivered exceptional quality, helping us communicate complex building solutions to architects, contractors, and distributors throughout India.',
+      text: 'They localized technical building content with high accuracy, helping us clearly communicate with architects, contractors, and distributors.',
       logoSrc: saintGobainLogo
     },
   ];
@@ -109,12 +109,18 @@ export function Testimonials() {
         <div className="relative">
           <div className="flex w-max animate-scroll-testimonials">
             {duplicatedTestimonials.map((testimonial, index) => (
-              <div 
+              <motion.div
                 key={`${testimonial.company}-${index}`}
-                className="flex-shrink-0 mx-4"
+                className="flex-shrink-0 mx-4 testimonial-card-wrapper"
                 style={{ width: '400px' }}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 0.5, delay: (index % testimonials.length) * 0.03 }}
+                whileHover={{ scale: 0.96, y: -4 }}
               >
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-shadow h-full">
+                <div className="testimonial-card bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 shadow-lg hover:shadow-xl hover:border-blue-200 transition-all duration-500 h-full border border-blue-100/60 relative overflow-hidden">
+                  <div className="testimonial-glow" />
                   <div className="w-44 h-28 mb-2 mx-auto flex items-center justify-center">
                     <ImageWithFallback
                       src={testimonial.logoSrc}
@@ -125,14 +131,24 @@ export function Testimonials() {
                   {!logoOnlyCompanies.has(testimonial.company) && (
                     <h3 className="text-2xl font-bold text-gray-900 text-center mb-1">{testimonial.company}</h3>
                   )}
-                  <p className="text-gray-700 text-center italic leading-relaxed text-sm">"{testimonial.text}"</p>
-                  <div className="flex justify-center gap-2 mt-2">
+                  <p
+                    className="text-gray-700 text-center italic leading-relaxed text-sm"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    "{testimonial.text}"
+                  </p>
+                  <div className="flex justify-center gap-2 mt-2 testimonial-stars">
                     {[...Array(5)].map((_, i) => (
                       <span key={i} className="text-yellow-300 text-4xl drop-shadow-[0_0_8px_rgba(253,224,71,1)]">{'\u2605'}</span>
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -155,6 +171,60 @@ export function Testimonials() {
 
         .animate-scroll-testimonials:hover {
           animation-play-state: paused;
+        }
+
+        .testimonial-card-wrapper {
+          transform-origin: center center;
+          transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .testimonial-card {
+          backdrop-filter: blur(2px);
+        }
+
+        .testimonial-glow {
+          position: absolute;
+          inset: -140% -70%;
+          background: radial-gradient(circle at center, rgba(37, 99, 235, 0.18), rgba(255, 255, 255, 0));
+          transform: translateX(-28%);
+          opacity: 0;
+          transition: transform 0.9s ease, opacity 0.9s ease;
+          pointer-events: none;
+        }
+
+        .testimonial-card:hover .testimonial-glow {
+          opacity: 1;
+          transform: translateX(28%);
+        }
+
+        .testimonial-stars span {
+          animation: testimonial-star-pulse 2.1s ease-in-out infinite;
+        }
+
+        .testimonial-stars span:nth-child(2) { animation-delay: 0.15s; }
+        .testimonial-stars span:nth-child(3) { animation-delay: 0.3s; }
+        .testimonial-stars span:nth-child(4) { animation-delay: 0.45s; }
+        .testimonial-stars span:nth-child(5) { animation-delay: 0.6s; }
+
+        @keyframes testimonial-star-pulse {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            filter: brightness(1);
+          }
+          50% {
+            transform: translateY(-3px) scale(1.04);
+            filter: brightness(1.08);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-scroll-testimonials,
+          .testimonial-stars span {
+            animation: none !important;
+          }
+          .testimonial-card-wrapper {
+            transition: none !important;
+          }
         }
       `}</style>
     </section>
