@@ -25,8 +25,6 @@ export function TranslatorExperience() {
   // You can paste full YouTube links or just the video IDs
   const videos = [
     'https://youtu.be/WN6rFWYseNI?si=GIXs0RHKjCm5fexD',
-    'https://youtube.com/shorts/7QAiA9OCTBs?si=SxUE92G5BwBnlOLN',
-    'https://youtu.be/667EkeEaFmw?si=UvN13CsZhMGpa00f',
     'https://youtu.be/qhNdikINxZE?si=7h6orTKP-0tgrFoR',
   ];
 
@@ -34,7 +32,7 @@ export function TranslatorExperience() {
     <section className="py-8 md:py-10 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-8">
-          Translator Experience
+          Translator Experience & Customer Reviews
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 max-w-7xl mx-auto">

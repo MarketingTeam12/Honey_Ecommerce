@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { HeaderNew } from '@/app/components/layout/HeaderNew';
 import { FooterNew } from '@/app/components/layout/FooterNew';
 import { WhatsAppButton } from '@/app/components/layout/WhatsAppButton';
+import { CallWidget } from '@/app/components/layout/CallWidget';
 
 interface PublicLayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
         {children}
       </main>
       <FooterNew />
+      <CallWidget />
       <WhatsAppButton />
     </div>
   );

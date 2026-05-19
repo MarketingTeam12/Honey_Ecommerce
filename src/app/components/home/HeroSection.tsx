@@ -3,9 +3,26 @@ import bannerCertificateCustom from '@/assets/banner-certificate-custom.png';
 import honeyFavicon from '@/assets/honey-favicon.ico';
 import bannerBefore from '@/assets/banner-before.png';
 import bannerAfter from '@/assets/banner-after.png';
-import approveStamp from '@/assets/approve.png';
+import approvedStampGreen from '@/assets/approved-stamp-green.png';
 
 export function HeroSection() {
+  const flags = [
+    { code: 'fr', label: 'France' },
+    { code: 'de', label: 'Germany' },
+    { code: 'in', label: 'India' },
+    { code: 'us', label: 'United States' },
+    { code: 'gb', label: 'United Kingdom' },
+    { code: 'it', label: 'Italy' },
+    { code: 'es', label: 'Spain' },
+    { code: 'ca', label: 'Canada' },
+    { code: 'au', label: 'Australia' },
+    { code: 'ae', label: 'United Arab Emirates' },
+    { code: 'jp', label: 'Japan' },
+    { code: 'kr', label: 'South Korea' },
+    { code: 'sg', label: 'Singapore' },
+  ];
+  const scrollingFlags = [...flags, ...flags];
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-[#c7dbea] via-[#bdd4e6] to-[#b4cde0] border-t-4 border-[#2d96d8] rounded-t-[22px] pt-3 pb-6 lg:pb-7 min-h-[calc(100vh-150px)] sm:min-h-[calc(100vh-120px)] flex items-start">
       <div className="absolute inset-0 pointer-events-none">
@@ -105,56 +122,101 @@ export function HeroSection() {
           >
             <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-r from-white/50 via-[#cce2f2]/30 to-white/50 blur-xl" />
             <div className="relative flex justify-between gap-2.5 lg:gap-3.5 max-w-[96vw] sm:max-w-[90vw] lg:max-w-[90vw] mx-auto items-stretch">
-              <div className="relative bg-white rounded-2xl border-2 border-[#6f88a3] shadow-lg overflow-visible">
+              <div className="relative aspect-[3/4] overflow-visible">
+                <div className="relative h-full bg-white rounded-2xl border-[2.5px] border-[#6f88a3] shadow-lg overflow-hidden">
+                  <img
+                    src={bannerBefore}
+                    alt="Certificate sample left"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-[0.8%] left-[0.8%] w-[20%] h-[9.5%] bg-white rounded-md z-10" />
+                  <img
+                    src={honeyFavicon}
+                    alt="Certificate icon left"
+                    className="absolute top-[1.4%] left-[1.5%] w-[7.2%] h-auto object-contain z-20"
+                  />
+                </div>
+                <img
+                  src={approvedStampGreen}
+                  alt="Approved stamp left"
+                  className="absolute -left-[9%] bottom-[11%] w-[20%] h-auto object-contain z-30 rotate-[-34deg] pointer-events-none"
+                />
+              </div>
+              <div className="relative bg-white rounded-2xl border-[2.5px] border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4]">
                 <img
                   src={bannerCertificateCustom}
-                  alt="Certificate sample left"
+                  alt="Certificate sample center"
                   className="w-full h-full object-contain object-top bg-white"
                 />
                 <div className="absolute top-[0.8%] left-[0.6%] w-[19%] h-[10.5%] bg-white rounded-md z-10" />
-                <img
-                  src={honeyFavicon}
-                  alt="Certificate icon left"
-                  className="absolute top-[1.6%] left-[1.6%] w-[7.8%] h-auto object-contain z-20"
-                />
-              </div>
-              <div className="relative bg-white rounded-2xl border-2 border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4] ">
-                <img
-                  src={bannerBefore}
-                  alt="Certificate sample center"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-[0.8%] left-[0.8%] w-[20%] h-[9.5%] bg-white rounded-md z-10" />
                 <img
                   src={honeyFavicon}
                   alt="Certificate icon center"
-                  className="absolute top-[1.4%] left-[1.5%] w-[7.2%] h-auto object-contain z-20"
-                />
-              </div>
-              <div className="relative bg-white rounded-2xl border-2 border-[#6f88a3] shadow-lg overflow-visible aspect-[3/4]">
-                <img
-                  src={bannerAfter}
-                  alt="Certificate sample right"
-                  className="w-full h-full object-contain object-top bg-white"
-                />
-                <div className="absolute top-[0.8%] left-[0.6%] w-[19%] h-[10.5%] bg-white rounded-md z-10" />
-                <img
-                  src={honeyFavicon}
-                  alt="Certificate icon right"
                   className="absolute top-[1.6%] left-[1.6%] w-[7.8%] h-auto object-contain z-20"
                 />
+              </div>
+              <div className="relative aspect-[3/4] overflow-visible">
+                <div className="relative h-full bg-white rounded-2xl border-[2.5px] border-[#6f88a3] shadow-lg overflow-hidden">
+                  <img
+                    src={bannerAfter}
+                    alt="Certificate sample right"
+                    className="w-full h-full object-contain object-top bg-white"
+                  />
+                  <div className="absolute top-[0.8%] left-[0.6%] w-[19%] h-[10.5%] bg-white rounded-md z-10" />
+                  <img
+                    src={honeyFavicon}
+                    alt="Certificate icon right"
+                    className="absolute top-[1.6%] left-[1.6%] w-[7.8%] h-auto object-contain z-20"
+                  />
+                </div>
                 <img
-                  src={approveStamp}
+                  src={approvedStampGreen}
                   alt="Approved stamp right"
-                  className="absolute -right-[8%] top-[9%] w-[22%] h-auto object-contain z-30 rotate-[34deg]"
+                  className="absolute -right-[9%] top-[11%] w-[20%] h-auto object-contain z-30 rotate-[34deg] pointer-events-none"
                 />
               </div>
             </div>
+
+            <div className="mt-4 sm:mt-5 w-full border-t border-[#2d96d8]/40 pt-3 overflow-hidden">
+              <div className="flags-track flex w-max gap-6 sm:gap-8 pr-6 sm:pr-8">
+                {scrollingFlags.map((flag, index) => (
+                  <img
+                    key={`${flag.code}-${index}`}
+                    src={`https://flagcdn.com/w40/${flag.code}.png`}
+                    alt={flag.label}
+                    className="h-6 sm:h-7 w-auto select-none shrink-0"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ))}
+              </div>
+            </div>
+
           </motion.div>
         </div>
       </div>
 
       <div className="absolute bottom-0 left-0 w-full h-28 bg-gradient-to-t from-white/85 to-transparent" />
+
+      <style>{`
+        @keyframes scroll-flags {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+
+        .flags-track {
+          animation: scroll-flags 40s linear infinite;
+        }
+
+        .flags-track:hover {
+          animation-play-state: paused;
+        }
+
+      `}</style>
     </section>
   );
 }

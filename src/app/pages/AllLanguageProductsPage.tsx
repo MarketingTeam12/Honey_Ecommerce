@@ -1,11 +1,9 @@
 import { Link } from 'react-router';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useWishlist } from '@/app/context/WishlistContext';
-import { useCart } from '@/app/context/CartContext';
 import { useProducts } from '@/app/context/ProductContext';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
-import { toast } from 'sonner';
 
 interface Product {
   id: string;
@@ -28,7 +26,6 @@ const getPromoTag = (seed: string) => {
 export function AllLanguageProductsPage() {
   const { convertPrice } = useCurrency();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
-  const { addToCart } = useCart();
   const { products: adminProducts, isLoading } = useProducts();
 
   // Get Language/Translation products from admin
@@ -67,23 +64,6 @@ export function AllLanguageProductsPage() {
         url: product.url,
       });
     }
-  };
-
-  const handleAddToCart = (product: Product) => {
-    if (product.category !== 'startup') {
-      toast.error('Please upload the required document before adding this product to the cart.');
-      return;
-    }
-    addToCart({
-      id: `${product.id}-${Date.now()}`,
-      name: product.name,
-      basePrice: product.price,
-      category: product.category,
-      url: product.url,
-      image: product.image,
-      pageCount: 1,
-      totalPrice: product.price,
-    });
   };
 
   if (isLoading) {
@@ -127,22 +107,22 @@ export function AllLanguageProductsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {adminLanguageProducts.map((product) => (
               <div
                 key={product.id}
-                className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-white flex flex-col lg:flex-row"
+                className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-white flex flex-col"
               >
                 {/* Image Container */}
-                <Link to={product.url} className="block relative overflow-hidden bg-gray-100 lg:w-2/5">
+                <Link to={product.url} className="block relative overflow-hidden bg-gray-100">
                   {product.image ? (
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-64 lg:h-full object-contain bg-white p-3 group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-64 sm:h-72 object-cover bg-white group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-64 lg:h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                    <div className="w-full h-64 sm:h-72 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
                       <div className="text-center">
                         <svg className="w-20 h-20 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -179,7 +159,7 @@ export function AllLanguageProductsPage() {
                 </Link>
 
                 {/* Product Info */}
-                <div className="p-4 lg:w-3/5 flex flex-col justify-between">
+                <div className="p-4 flex flex-col justify-between">
                   <Link to={product.url}>
                     <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
                       {product.name}

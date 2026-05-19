@@ -54,81 +54,81 @@ export function CompanyLogosSlider() {
       id: 1,
       name: 'Fratelli',
       image: fratelliLogo,
-      imageClassName: 'w-full max-w-[230px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 2,
       name: 'TVS',
       image: tvsLogo,
-      imageClassName: 'w-full max-w-[170px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 3,
       name: 'HP Valves',
       image: hpLogo,
-      imageClassName: 'w-full max-w-[220px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 4,
       name: 'Aachi',
       image: aachiLogo,
-      imageClassName: 'w-full max-w-[280px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[165px] h-auto object-contain',
     },
     {
       id: 5,
       name: 'ARC International',
       image: arcLogo,
-      imageClassName: 'w-full max-w-[220px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 6,
       name: 'Bright Light',
       image: brightLightSocietyLogo,
-      imageClassName: 'w-full max-w-[180px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 7,
       name: 'DBS',
       image: dbsLogo,
-      imageClassName: 'w-full max-w-[220px] h-auto object-contain px-2',
+      imageClassName: 'w-full max-w-[150px] h-auto object-contain px-2',
     },
     {
       id: 8,
       name: 'Identity',
       image: identityLogo,
-      imageClassName: 'w-full max-w-[170px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 9,
       name: 'LRK',
       image: lrkLogo,
-      imageClassName: 'w-full max-w-[180px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 10,
       name: 'Muthoot Finance',
       image: muthootFinanceLogo,
-      imageClassName: 'w-full max-w-[250px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[160px] h-auto object-contain',
       imageStyle: { mixBlendMode: 'multiply' as const },
     },
     {
       id: 11,
       name: 'New India Assurance',
       image: newIndiaLogo,
-      imageClassName: 'w-full max-w-[220px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 12,
       name: 'Royal Enfield',
       image: royalEnfieldLogo,
-      imageClassName: 'w-full max-w-[240px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[155px] h-auto object-contain',
       imageStyle: { mixBlendMode: 'multiply' as const },
     },
     {
       id: 13,
       name: 'Saint-Gobain',
       image: saintGobainLogo,
-      imageClassName: 'w-full max-w-[260px] h-auto object-contain',
+      imageClassName: 'w-full max-w-[165px] h-auto object-contain',
     },
   ];
 
@@ -149,9 +149,9 @@ export function CompanyLogosSlider() {
               <div 
                 key={`${logo.id}-${index}`} 
                 className="flex-shrink-0 mx-4"
-                style={{ width: '350px' }}
+                style={{ width: '250px' }}
               >
-                <div className="bg-white rounded-lg p-8 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-48">
+                <div className="bg-white rounded-lg border border-gray-300 p-5 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-32">
                   <img 
                     src={logo.image} 
                     alt={logo.name} 
@@ -171,7 +171,7 @@ export function CompanyLogosSlider() {
             transform: translateX(0);
           }
           100% {
-            transform: translateX(calc(-350px * 14 - 14 * 32px));
+            transform: translateX(calc(-250px * 14 - 14 * 32px));
           }
         }
 

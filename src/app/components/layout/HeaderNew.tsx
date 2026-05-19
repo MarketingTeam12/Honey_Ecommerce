@@ -203,7 +203,9 @@ export function HeaderNew() {
 
               {/* Language Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
+                <DropdownMenuTrigger
+                  className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg"
+                >
                   Language <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64">
@@ -239,7 +241,9 @@ export function HeaderNew() {
               </Link>
               {/* Attestation Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
+                <DropdownMenuTrigger
+                  className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg"
+                >
                   Attestation <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -269,7 +273,9 @@ export function HeaderNew() {
 
               {/* Startup Package Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
+                <DropdownMenuTrigger
+                  className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg"
+                >
                   Startup <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -291,7 +297,9 @@ export function HeaderNew() {
 
               {/* More Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg">
+                <DropdownMenuTrigger
+                  className="flex items-center gap-1 text-gray-700 hover:text-[#1a1f5c] transition-colors font-bold text-lg"
+                >
                   More <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -328,6 +336,14 @@ export function HeaderNew() {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-1 sm:gap-3">
+              <Link
+                to="/all-language-products"
+                className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1a1f5c] text-white font-semibold text-sm hover:bg-[#252b70] transition-colors"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Order Now
+              </Link>
+
               {/* Wishlist */}
               <Link
                 to="/wishlist"
@@ -488,6 +504,13 @@ export function HeaderNew() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Home
+              </Link>
+              <Link
+                to="/all-language-products"
+                className="block px-4 py-2 bg-blue-600 text-white rounded-lg text-center font-medium hover:bg-blue-700 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Order Now
               </Link>
               <Link
                 to="/all-translation-products"
