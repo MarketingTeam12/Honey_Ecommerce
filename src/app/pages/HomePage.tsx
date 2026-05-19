@@ -1,6 +1,6 @@
 import { HeroSection } from '@/app/components/home/HeroSection';
 import { CompanyLogosSlider } from '@/app/components/home/CompanyLogosSlider';
-import { GoogleReviewsSection } from '@/app/components/home/GoogleReviewsSection';
+import { TrustIndexReviewsSection } from '@/app/components/home/TrustIndexReviewsSection';
 import { ISOCertificationSection } from '@/app/components/home/ISOCertificationSection';
 import { TranslatorExperience } from '@/app/components/home/TranslatorExperience';
 import { PickYourLanguage } from '@/app/components/home/PickYourLanguage';
@@ -12,7 +12,7 @@ function HomePage() {
     <div className="min-h-screen">
       <HeroSection />
       <CompanyLogosSlider />
-      <GoogleReviewsSection />
+      <TrustIndexReviewsSection />
       <ISOCertificationSection />
       <TranslatorExperience />
       <PickYourLanguage />

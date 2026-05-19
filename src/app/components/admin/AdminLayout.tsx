@@ -344,7 +344,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 hidden xl:block">
-              Honey Universal Digital Pvt Ltd
+              Honey Translation Services
             </Link>
             <button className="p-2 hover:bg-gray-100 rounded-lg relative">
               <Plus className="w-5 h-5 text-white bg-red-600 rounded" />

@@ -1,6 +1,6 @@
 ﻿import { motion } from 'motion/react';
-import bannerCertificateCustom from '@/assets/banner-certificate-custom.png';
-import honeyFavicon from '@/assets/honey-favicon.ico';
+import centerCertificate from '@/assets/center-certificate-v2.png';
+import honeyFavicon from '@/assets/honey-favicon-transparent.png';
 import bannerBefore from '@/assets/banner-before.png';
 import bannerAfter from '@/assets/banner-after.png';
 import approvedStampGreen from '@/assets/approved-stamp-green.png';
@@ -144,15 +144,15 @@ export function HeroSection() {
               </div>
               <div className="relative bg-white rounded-2xl border-[2.5px] border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4]">
                 <img
-                  src={bannerCertificateCustom}
+                  src={centerCertificate}
                   alt="Certificate sample center"
                   className="w-full h-full object-contain object-top bg-white"
                 />
-                <div className="absolute top-[0.8%] left-[0.6%] w-[19%] h-[10.5%] bg-white rounded-md z-10" />
+                <div className="absolute top-[1%] left-[0.8%] w-[9.8%] h-[8.8%] bg-white rounded-md z-10" />
                 <img
                   src={honeyFavicon}
                   alt="Certificate icon center"
-                  className="absolute top-[1.6%] left-[1.6%] w-[7.8%] h-auto object-contain z-20"
+                  className="absolute top-[1.8%] left-[1.75%] w-[6.2%] h-auto object-contain z-20"
                 />
               </div>
               <div className="relative aspect-[3/4] overflow-visible">
