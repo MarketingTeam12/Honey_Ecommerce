@@ -202,6 +202,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       ]
     },
     { name: 'Inventory', href: '/admin/inventory', icon: Users },
+    { name: 'User Management', href: '/admin/customers', icon: Users },
     { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart },
     { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
     { name: 'Customer Emails', href: '/admin/customer-emails', icon: Mail },
@@ -543,4 +544,3 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     </div>
   );
 }
-

@@ -71,7 +71,7 @@ export function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true);
+      // Keep UI interactive while data refreshes in background
       
       console.log('📊 [Dashboard] Fetching dashboard data...');
       
@@ -194,21 +194,6 @@ export function AdminDashboard() {
     shippingOrders: 0
   };
 
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="p-4 sm:p-6 lg:p-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading dashboard...</p>
-            </div>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
       <div className="p-4 sm:p-6 lg:p-8">
@@ -216,6 +201,9 @@ export function AdminDashboard() {
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your store today.</p>
+          {loading && (
+            <p className="text-xs text-blue-600 mt-2">Updating latest data...</p>
+          )}
         </div>
 
         {/* Storage Setup Banner */}

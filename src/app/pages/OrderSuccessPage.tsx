@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router';
 import { CheckCircle, Download, MessageCircle, Package, ShoppingBag, FileText, Loader2, Receipt, Calendar, CreditCard, Mail, User } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'sonner';
+import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
+
+const LOCAL_BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
 interface Order {
   id: string;
@@ -23,10 +26,15 @@ interface Order {
   zoho_invoice_number?: string;
   invoicePath?: string;
   invoice_path?: string;
+  subtotal?: string;
+  discount?: string;
+  tax?: string;
+  updated_at?: string;
+  user_id?: string;
 }
 
 export function OrderSuccessPage() {
-  const { accessToken, user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('orderId');
@@ -105,26 +113,85 @@ export function OrderSuccessPage() {
     }
   };
 
-  const handleDownloadInvoice = async () => {
-    if (!invoicePath) {
-      toast.error('Invoice not available yet');
-      return;
+  const normalizeInvoiceUrl = (rawPath: string) => {
+    if (/^https?:\/\//i.test(rawPath)) {
+      return rawPath;
+    }
+    const trimmed = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
+    return `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635${trimmed}`;
+  };
+
+  const downloadFromUrl = async (rawPath: string) => {
+    const response = await fetch(normalizeInvoiceUrl(rawPath));
+    if (!response.ok) {
+      throw new Error('Invoice file download failed');
+    }
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = `invoice-${order?.order_number || 'receipt'}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+  };
+
+  const generateTemplateInvoice = async () => {
+    if (!order) return null;
+
+    const response = await fetch(`${LOCAL_BACKEND_BASE}/api/generate-invoice`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ order }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Template invoice generation failed');
     }
 
+    const data = await response.json();
+    if (!data?.invoicePath) {
+      throw new Error('Template invoice path not returned');
+    }
+
+    if (orderId) {
+      localStorage.setItem(`invoicePath_${orderId}`, data.invoicePath);
+    }
+    setInvoicePath(data.invoicePath);
+    return data.invoicePath as string;
+  };
+
+  const handleDownloadInvoice = async () => {
     setDownloadingInvoice(true);
 
     try {
-      // Create a temporary anchor element to trigger download
-      const link = document.createElement('a');
-      link.href = invoicePath;
-      link.download = `invoice-${order?.order_number || 'receipt'}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (!order) {
+        throw new Error('Invoice not available');
+      }
+      // Prefer backend HTML template for exact matching output.
+      try {
+        const activeInvoicePath = await generateTemplateInvoice();
+        if (!activeInvoicePath) throw new Error('Invoice path not available');
+        await downloadFromUrl(activeInvoicePath);
+      } catch (templateError) {
+        console.warn('Template invoice generation failed, falling back to client PDF:', templateError);
+        await generateInvoicePDF({
+          ...order,
+          user_id: order.user_id || 'guest',
+          subtotal: String(order.subtotal ?? order.total_amount ?? '0'),
+          discount: String(order.discount ?? '0'),
+          tax: String(order.tax ?? '0'),
+          updated_at: order.updated_at || order.created_at,
+        } as Parameters<typeof generateInvoicePDF>[0]);
+      }
+
       toast.success('Invoice downloaded successfully');
     } catch (error) {
       console.error('Error downloading invoice:', error);
-      toast.error('Failed to download invoice. Please try again later.');
+      toast.error('Failed to generate invoice. Please try again.');
     } finally {
       setDownloadingInvoice(false);
     }

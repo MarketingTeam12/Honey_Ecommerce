@@ -105,7 +105,7 @@ export function HeroSection() {
             <div className="w-[125px] sm:w-[175px] h-[3px] bg-[#0a1247] mx-auto rounded-full mt-1 mb-1" />
 
             <motion.p
-              className="text-[0.82rem] sm:text-[1.02rem] lg:text-[1.25rem] text-[#203247] max-w-4xl leading-[1.35] font-medium mx-auto px-1 sm:px-0"
+              className="text-[0.82rem] sm:text-[1.02rem] lg:text-[1.25rem] text-[#065F46] max-w-4xl leading-[1.35] font-medium mx-auto px-1 sm:px-0"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}

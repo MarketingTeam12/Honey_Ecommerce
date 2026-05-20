@@ -73,15 +73,15 @@ export async function generateInvoicePDF(order: Order): Promise<void> {
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
 
-    // Brand Color
-    const brandColor: [number, number, number] = [231, 76, 60]; // #e74c3c
+    // Brand Color (Blue invoice theme to match the HTML invoice template)
+    const brandColor: [number, number, number] = [36, 38, 100]; // #242664
 
     // ==================== HEADER ====================
     // Company Logo/Name
-    doc.setFontSize(24);
+    doc.setFontSize(20);
     doc.setTextColor(...brandColor);
     doc.setFont('helvetica', 'bold');
-    doc.text('HONEY TRANSLATION SERVICES', pageWidth / 2, yPosition, { align: 'center' });
+    doc.text('HONEY UNIVERSAL DIGITAL PRIVATE LIMITED', pageWidth / 2, yPosition, { align: 'center' });
     
     yPosition += 8;
     doc.setFontSize(10);

@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { Copy, ChevronRight, Eye, FileText, Download, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
-import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 const DELETED_ORDERS_KEY = 'honey_translation_deleted_orders';
@@ -67,21 +66,28 @@ interface Order {
 
 export function OrdersPage() {
   const navigate = useNavigate();
-  const { accessToken, user } = useAuth();
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('All');
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showSetupBanner, setShowSetupBanner] = useState(false);
 
   useEffect(() => {
-    fetchOrders();
+    const cachedOrders = getSortedActiveOrders(loadOrdersFromLocalStorage());
+    if (cachedOrders.length > 0) {
+      setOrders(cachedOrders);
+      setLoading(false);
+    }
+
+    void fetchOrders({ background: cachedOrders.length > 0 });
     
     // Listen for new order events
     const handleNewOrder = () => {
-      console.log('🔔 [OrdersPage] New order event received, refreshing...');
-      fetchOrders();
+      console.log('ðŸ”” [OrdersPage] New order event received, refreshing...');
+      void fetchOrders({ background: true });
     };
     
     window.addEventListener('newOrderNotification', handleNewOrder);
@@ -91,10 +97,12 @@ export function OrdersPage() {
     };
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async ({ background = false }: { background?: boolean } = {}) => {
     try {
-      setLoading(true);
-      console.log('📡 [OrdersPage] Fetching orders from all sources...');
+      if (!background) {
+        setLoading(true);
+      }
+      console.log('ðŸ“¡ [OrdersPage] Fetching orders from all sources...');
       
       // ===== SOURCE 1: Backend KV store =====
       let backendOrders: Order[] = [];
@@ -102,34 +110,38 @@ export function OrdersPage() {
       
       try {
         const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const response = await fetch(url, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${publicAnonKey}`,
             'apikey': publicAnonKey
-          }
+          },
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
         
         if (response.ok) {
           const data = await response.json();
           backendOrders = data.orders || [];
           backendAvailable = true;
           setShowSetupBanner(false);
-          console.log('✅ [OrdersPage] Backend returned', backendOrders.length, 'orders');
+          console.log('âœ… [OrdersPage] Backend returned', backendOrders.length, 'orders');
         } else {
           const errorText = await response.text().catch(() => '');
-          console.warn('⚠️ [OrdersPage] Backend returned status', response.status);
+          console.warn('âš ï¸ [OrdersPage] Backend returned status', response.status);
           if (errorText.includes('relation') || errorText.includes('does not exist') || errorText.includes('kv_store_a67f0635')) {
             setShowSetupBanner(true);
           }
         }
       } catch (backendError: any) {
-        console.warn('⚠️ [OrdersPage] Backend fetch failed:', backendError.message);
+        console.warn('âš ï¸ [OrdersPage] Backend fetch failed:', backendError.message);
       }
       
       // ===== SOURCE 2: localStorage =====
       const localOrders = loadOrdersFromLocalStorage();
-      console.log('📦 [OrdersPage] localStorage has', localOrders.length, 'orders');
+      console.log('ðŸ“¦ [OrdersPage] localStorage has', localOrders.length, 'orders');
       
       // ===== MERGE: Combine both sources, deduplicate by order ID =====
       const orderMap = new Map<string, Order>();
@@ -152,85 +164,28 @@ export function OrdersPage() {
       
       // ===== AUTO-SYNC: Push unsynced localStorage orders to backend =====
       if (backendAvailable && unsyncedOrders.length > 0) {
-        console.log('🔄 [OrdersPage] Auto-syncing', unsyncedOrders.length, 'localStorage orders to backend...');
-        
-        for (const order of unsyncedOrders) {
-          try {
-            const syncResponse = await fetch(
-              `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${publicAnonKey}`,
-                  'apikey': publicAnonKey
-                },
-                body: JSON.stringify({
-                  userId: order.user_id || 'guest',
-                  userEmail: order.customer_email || '',
-                  userName: order.customer_name || 'Guest',
-                  orderId: order.id,
-                  orderNumber: order.order_number,
-                  trackingNumber: order.tracking_number || '',
-                  amount: parseFloat(order.total_amount) || 0,
-                  currency: order.currency || 'INR',
-                  paymentMethod: order.payment_method || 'zoho_payments',
-                  items: order.items || [],
-                  subtotal: parseFloat(order.subtotal) || 0,
-                  discount: parseFloat(order.discount) || 0,
-                  tax: parseFloat(order.tax) || 0,
-                  shippingAddress: order.shipping_address || null,
-                  notes: order.notes || '',
-                  tip: order.tip || 0,
-                  shippingMethod: order.shipping_method || 'email'
-                })
-              }
-            );
-            
-            if (syncResponse.ok) {
-              console.log('✅ [OrdersPage] Synced order', order.order_number, 'to backend');
-            }
-          } catch (syncErr) {
-            console.warn('⚠️ [OrdersPage] Failed to sync order', order.order_number);
-          }
-        }
-        
-        if (unsyncedOrders.length > 0) {
-          toast.success(`Synced ${unsyncedOrders.length} local order(s) to database`);
-        }
+        console.log('ðŸ„ [OrdersPage] Starting background sync for', unsyncedOrders.length, 'localStorage order(s)...');
+        void syncUnsyncedOrders(unsyncedOrders);
       }
       
       // ===== FINAL: Sort and set =====
-      const mergedOrders = Array.from(orderMap.values());
-      
-      // Filter out deleted orders
-      const deletedIds = getDeletedOrderIds();
-      const activeOrders = mergedOrders.filter(order => !deletedIds.has(order.id));
-      
-      if (deletedIds.size > 0) {
-        console.log(`🗑️ [OrdersPage] Filtered out ${deletedIds.size} deleted orders`);
-      }
-      
-      const sortedOrders = activeOrders.sort((a: Order, b: Order) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+      const sortedOrders = getSortedActiveOrders(Array.from(orderMap.values()));
       
       setOrders(sortedOrders);
-      console.log('✅ [OrdersPage] Total orders displayed:', sortedOrders.length, 
+      console.log('âœ… [OrdersPage] Total orders displayed:', sortedOrders.length, 
         `(${backendOrders.length} backend + ${unsyncedOrders.length} local-only)`);
       
     } catch (error: any) {
-      console.error('❌ [OrdersPage] Critical error fetching orders:', error);
+      console.error('âŒ [OrdersPage] Critical error fetching orders:', error);
       
       // Last resort: try localStorage only
-      const localOrders = loadOrdersFromLocalStorage();
+      const localOrders = getSortedActiveOrders(loadOrdersFromLocalStorage());
       if (localOrders.length > 0) {
-        const sortedOrders = localOrders.sort((a: Order, b: Order) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        setOrders(sortedOrders);
-        toast.info('Showing orders from browser cache', { duration: 3000 });
-      } else {
+        setOrders(localOrders);
+        if (!background) {
+          toast.info('Showing orders from browser cache', { duration: 3000 });
+        }
+      } else if (!background) {
         setOrders([]);
       }
     } finally {
@@ -275,8 +230,8 @@ export function OrdersPage() {
     setDeleting(true);
     
     try {
-      console.log(`🗑️ [OrdersPage] Deleting ${count} selected orders...`);
-      console.log('🔐 [Delete] User:', user.email);
+      console.log(`ðŸ—‘ï¸ [OrdersPage] Deleting ${count} selected orders...`);
+      console.log('ðŸ” [Delete] User:', user.email);
       
       let successCount = 0;
       let failCount = 0;
@@ -284,7 +239,7 @@ export function OrdersPage() {
 
       // DEMO ENVIRONMENT: Delete from localStorage only
       // This avoids JWT authentication issues in the demo environment
-      console.log('🎭 [Delete] Demo environment - deleting from localStorage only');
+      console.log('ðŸŽ­ [Delete] Demo environment - deleting from localStorage only');
       
       const deletedIds: string[] = [];
       
@@ -293,11 +248,11 @@ export function OrdersPage() {
           removeOrderFromLocalStorage(orderId);
           deletedIds.push(orderId);
           successCount++;
-          console.log(`✅ [OrdersPage] Deleted order from localStorage: ${orderId}`);
+          console.log(`âœ… [OrdersPage] Deleted order from localStorage: ${orderId}`);
         } catch (error: any) {
           failCount++;
           const errorMsg = error.message || String(error);
-          console.error(`❌ [OrdersPage] Error deleting order ${orderId}:`, error);
+          console.error(`âŒ [OrdersPage] Error deleting order ${orderId}:`, error);
           errors.push(`Order ${orderId.substring(0, 8)}: ${errorMsg}`);
         }
       }
@@ -310,7 +265,7 @@ export function OrdersPage() {
       if (failCount > 0) {
         const errorDetails = errors.length > 0 ? `\n\nDetails:\n${errors.slice(0, 3).join('\n')}${errors.length > 3 ? `\n... and ${errors.length - 3} more` : ''}` : '';
         toast.error(`Failed to delete ${failCount} order(s)${errorDetails}`, { duration: 5000 });
-        console.error('🔍 [Delete] All errors:', errors);
+        console.error('ðŸ” [Delete] All errors:', errors);
       }
 
       // Clear selection
@@ -319,10 +274,10 @@ export function OrdersPage() {
       // Update local state immediately - remove deleted orders from the orders array
       setOrders(prevOrders => prevOrders.filter(order => !deletedIds.includes(order.id)));
       
-      console.log(`✅ [OrdersPage] Removed ${deletedIds.length} orders from display`);
+      console.log(`âœ… [OrdersPage] Removed ${deletedIds.length} orders from display`);
       
     } catch (error) {
-      console.error('❌ [OrdersPage] Delete error:', error);
+      console.error('âŒ [OrdersPage] Delete error:', error);
       toast.error('Failed to delete orders: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setDeleting(false);
@@ -422,23 +377,6 @@ export function OrdersPage() {
     );
   };
 
-  const downloadInvoice = async (order: Order, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    try {
-      console.log('📄 [OrdersPage] Generating invoice PDF for order:', order.order_number);
-      
-      // Generate and download invoice PDF
-      await generateInvoicePDF(order);
-      
-      toast.success('Invoice PDF downloaded successfully');
-      console.log('✅ [OrdersPage] Invoice PDF downloaded:', order.order_number);
-    } catch (error) {
-      console.error('❌ [OrdersPage] Failed to download invoice PDF:', error);
-      toast.error('Failed to generate invoice PDF');
-    }
-  };
-
   const filteredOrders = filterStatus === 'All' 
     ? orders 
     : orders.filter(order => order.status.toLowerCase() === filterStatus.toLowerCase());
@@ -471,15 +409,15 @@ export function OrdersPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
-                  fetchOrders();
-                  toast.success('Refreshing orders...');
+                  setRefreshing(true);
+                  void fetchOrders({ background: true }).finally(() => setRefreshing(false));
                 }}
-                disabled={loading}
+                disabled={loading || refreshing}
                 className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 title="Refresh orders"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
               </button>
               {selectedOrders.size > 0 && (
                 <button
@@ -641,7 +579,7 @@ export function OrdersPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="text-sm font-medium text-gray-900">
-                      {order.currency === 'INR' ? '₹' : '$'}{parseFloat(order.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {order.currency === 'INR' ? '\u20B9' : '$'}{parseFloat(order.total_amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -655,13 +593,6 @@ export function OrdersPage() {
                   </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={(e) => downloadInvoice(order, e)}
-                        className="p-1.5 hover:bg-blue-50 rounded transition-colors group"
-                        title="Download Invoice"
-                      >
-                        <FileText className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
-                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -734,6 +665,51 @@ export function OrdersPage() {
 
 export default OrdersPage;
 
+const getSortedActiveOrders = (orders: Order[]) => {
+  const deletedIds = getDeletedOrderIds();
+  const activeOrders = orders.filter((order) => !deletedIds.has(order.id));
+  return activeOrders.sort(
+    (a: Order, b: Order) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+};
+
+const syncUnsyncedOrders = async (ordersToSync: Order[]) => {
+  if (ordersToSync.length === 0) return;
+
+  await Promise.allSettled(
+    ordersToSync.map(async (order) => {
+      await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${publicAnonKey}`,
+          'apikey': publicAnonKey,
+        },
+        body: JSON.stringify({
+          userId: order.user_id || 'guest',
+          userEmail: order.customer_email || '',
+          userName: order.customer_name || 'Guest',
+          orderId: order.id,
+          orderNumber: order.order_number,
+          trackingNumber: order.tracking_number || '',
+          amount: parseFloat(order.total_amount) || 0,
+          currency: order.currency || 'INR',
+          paymentMethod: order.payment_method || 'zoho_payments',
+          items: order.items || [],
+          subtotal: parseFloat(order.subtotal) || 0,
+          discount: parseFloat(order.discount) || 0,
+          tax: parseFloat(order.tax) || 0,
+          shippingAddress: order.shipping_address || null,
+          notes: order.notes || '',
+          tip: order.tip || 0,
+          shippingMethod: order.shipping_method || 'email',
+        }),
+      });
+    }),
+  );
+};
+
 // Function to load orders from both localStorage sources
 function loadOrdersFromLocalStorage(): Order[] {
   const allOrders: Order[] = [];
@@ -748,7 +724,7 @@ function loadOrdersFromLocalStorage(): Order[] {
         orderMap.set(order.id, order);
       });
     } catch (e) {
-      console.error('❌ [OrdersPage] Failed to parse admin localStorage:', e);
+      console.error('âŒ [OrdersPage] Failed to parse admin localStorage:', e);
     }
   }
   
@@ -764,7 +740,7 @@ function loadOrdersFromLocalStorage(): Order[] {
         }
       });
     } catch (e) {
-      console.error('❌ [OrdersPage] Failed to parse user localStorage:', e);
+      console.error('âŒ [OrdersPage] Failed to parse user localStorage:', e);
     }
   }
   
@@ -781,7 +757,7 @@ function removeOrderFromLocalStorage(orderId: string) {
       const updatedOrders = adminOrders.filter((order: Order) => order.id !== orderId);
       localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(updatedOrders));
     } catch (e) {
-      console.error('❌ [OrdersPage] Failed to remove order from admin localStorage:', e);
+      console.error('âŒ [OrdersPage] Failed to remove order from admin localStorage:', e);
     }
   }
   
@@ -793,7 +769,7 @@ function removeOrderFromLocalStorage(orderId: string) {
       const updatedOrders = userOrders.filter((order: Order) => order.id !== orderId);
       localStorage.setItem('user_orders', JSON.stringify(updatedOrders));
     } catch (e) {
-      console.error('❌ [OrdersPage] Failed to remove order from user localStorage:', e);
+      console.error('âŒ [OrdersPage] Failed to remove order from user localStorage:', e);
     }
   }
   
@@ -804,10 +780,10 @@ function removeOrderFromLocalStorage(orderId: string) {
     if (!deletedIds.includes(orderId)) {
       deletedIds.push(orderId);
       localStorage.setItem(DELETED_ORDERS_KEY, JSON.stringify(deletedIds));
-      console.log(`✅ [OrdersPage] Added ${orderId} to deleted orders list`);
+      console.log(`âœ… [OrdersPage] Added ${orderId} to deleted orders list`);
     }
   } catch (e) {
-    console.error('❌ [OrdersPage] Failed to update deleted orders list:', e);
+    console.error('âŒ [OrdersPage] Failed to update deleted orders list:', e);
   }
 }
 
@@ -820,7 +796,15 @@ function getDeletedOrderIds(): Set<string> {
       return new Set(deletedIds);
     }
   } catch (e) {
-    console.error('❌ [OrdersPage] Failed to load deleted orders list:', e);
+    console.error('âŒ [OrdersPage] Failed to load deleted orders list:', e);
   }
   return new Set();
 }
+
+
+
+
+
+
+
+

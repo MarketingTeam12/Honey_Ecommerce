@@ -50,6 +50,7 @@ export function CompanyLogosSlider() {
       id: 1,
       name: 'Fratelli',
       image: fratelliLogo,
+      imageStyle: { maxWidth: '220px', maxHeight: '82px', mixBlendMode: 'darken' as const },
     },
     {
       id: 2,
@@ -106,12 +107,13 @@ export function CompanyLogosSlider() {
       id: 12,
       name: 'Royal Enfield',
       image: royalEnfieldLogo,
-      imageStyle: { mixBlendMode: 'multiply' as const },
+      imageStyle: { maxWidth: '220px', maxHeight: '82px', mixBlendMode: 'multiply' as const },
     },
     {
       id: 13,
       name: 'Saint-Gobain',
       image: saintGobainLogo,
+      imageStyle: { maxWidth: '220px', maxHeight: '82px', mixBlendMode: 'darken' as const },
     },
   ];
 
@@ -132,13 +134,13 @@ export function CompanyLogosSlider() {
               <div 
                 key={`${logo.id}-${index}`} 
                 className="flex-shrink-0 mx-4"
-                style={{ width: '250px' }}
+                style={{ width: '270px' }}
               >
-                <div className="bg-white rounded-lg border border-gray-300 p-4 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-32">
+                <div className="bg-white rounded-lg border border-gray-300 p-5 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-36">
                   <img 
                     src={logo.image} 
                     alt={logo.name} 
-                    className="w-auto max-w-[165px] max-h-[60px] object-contain"
+                    className="w-auto max-w-[200px] max-h-[74px] object-contain"
                     style={logo.imageStyle ?? { mixBlendMode: 'darken' }}
                   />
                 </div>
@@ -154,7 +156,7 @@ export function CompanyLogosSlider() {
             transform: translateX(0);
           }
           100% {
-            transform: translateX(calc(-250px * 13 - 13 * 32px));
+            transform: translateX(calc(-270px * 13 - 13 * 32px));
           }
         }
 

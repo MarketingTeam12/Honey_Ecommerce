@@ -401,7 +401,7 @@ export function ItemReviewsPage() {
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="text-sm font-medium text-gray-600 mb-1">Avg Rating</h3>
-            <p className="text-3xl font-bold text-amber-600">{stats.averageRating} ★</p>
+     
           </div>
         </div>
 

@@ -30,16 +30,16 @@ export function TranslatorExperience() {
 
   return (
     <section className="py-8 md:py-10 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="max-w-[1500px] mx-auto px-3 sm:px-4 lg:px-6">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-900 mb-8">
           Translator Experience & Customer Reviews
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-[1450px] mx-auto">
           {videos.map((video, index) => {
             const videoId = extractVideoId(video);
             return (
-              <div key={index} className="aspect-video rounded-lg overflow-hidden shadow-lg">
+              <div key={index} className="aspect-video w-full rounded-xl overflow-hidden shadow-xl ring-1 ring-gray-200 bg-black">
                 <iframe
                   width="100%"
                   height="100%"
