@@ -4,7 +4,6 @@ import arcLogo from '@/assets/arc-logo.avif';
 import brightLightSocietyLogo from '@/assets/bright-light-society-logo.png';
 import dbsLogo from '@/assets/dbs-logo-fixed.png';
 import fratelliLogo from '@/assets/fratelli-logo.jpg';
-import honeyLogo from 'figma:asset/8c2fe7ab481f5f0c43b276208d40db63dfe3a146.png';
 import hpLogo from '@/assets/hp-logo.jpeg';
 import identityLogo from '@/assets/identity-logo.png';
 import lrkLogo from '@/assets/lrk-logo.jpg';
@@ -19,8 +18,6 @@ export function CompanyLogosSlider() {
     id: number;
     name: string;
     image: string;
-    isMainLogo?: boolean;
-    imageClassName?: string;
     imageStyle?: CSSProperties;
   };
 
@@ -49,86 +46,72 @@ export function CompanyLogosSlider() {
   };
   
   const logos: LogoItem[] = [
-    { id: 0, name: 'Honey Translation Services', image: honeyLogo, isMainLogo: true },
     {
       id: 1,
       name: 'Fratelli',
       image: fratelliLogo,
-      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 2,
       name: 'TVS',
       image: tvsLogo,
-      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 3,
       name: 'HP Valves',
       image: hpLogo,
-      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 4,
       name: 'Aachi',
       image: aachiLogo,
-      imageClassName: 'w-full max-w-[165px] h-auto object-contain',
     },
     {
       id: 5,
       name: 'ARC International',
       image: arcLogo,
-      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 6,
       name: 'Bright Light',
       image: brightLightSocietyLogo,
-      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 7,
       name: 'DBS',
       image: dbsLogo,
-      imageClassName: 'w-full max-w-[150px] h-auto object-contain px-2',
     },
     {
       id: 8,
       name: 'Identity',
       image: identityLogo,
-      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 9,
       name: 'LRK',
       image: lrkLogo,
-      imageClassName: 'w-full max-w-[125px] h-auto object-contain',
     },
     {
       id: 10,
       name: 'Muthoot Finance',
       image: muthootFinanceLogo,
-      imageClassName: 'w-full max-w-[160px] h-auto object-contain',
       imageStyle: { mixBlendMode: 'multiply' as const },
     },
     {
       id: 11,
       name: 'New India Assurance',
       image: newIndiaLogo,
-      imageClassName: 'w-full max-w-[150px] h-auto object-contain',
     },
     {
       id: 12,
       name: 'Royal Enfield',
       image: royalEnfieldLogo,
-      imageClassName: 'w-full max-w-[155px] h-auto object-contain',
       imageStyle: { mixBlendMode: 'multiply' as const },
     },
     {
       id: 13,
       name: 'Saint-Gobain',
       image: saintGobainLogo,
-      imageClassName: 'w-full max-w-[165px] h-auto object-contain',
     },
   ];
 
@@ -151,11 +134,11 @@ export function CompanyLogosSlider() {
                 className="flex-shrink-0 mx-4"
                 style={{ width: '250px' }}
               >
-                <div className="bg-white rounded-lg border border-gray-300 p-5 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-32">
+                <div className="bg-white rounded-lg border border-gray-300 p-4 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-32">
                   <img 
                     src={logo.image} 
                     alt={logo.name} 
-                    className={logo.imageClassName ?? 'max-w-full max-h-full object-contain'}
+                    className="w-auto max-w-[165px] max-h-[60px] object-contain"
                     style={logo.imageStyle ?? { mixBlendMode: 'darken' }}
                   />
                 </div>
@@ -171,7 +154,7 @@ export function CompanyLogosSlider() {
             transform: translateX(0);
           }
           100% {
-            transform: translateX(calc(-250px * 14 - 14 * 32px));
+            transform: translateX(calc(-250px * 13 - 13 * 32px));
           }
         }
 

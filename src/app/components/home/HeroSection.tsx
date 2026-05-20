@@ -139,7 +139,7 @@ export function HeroSection() {
                 <img
                   src={approvedStampGreen}
                   alt="Approved stamp left"
-                  className="absolute -left-[9%] bottom-[11%] w-[20%] h-auto object-contain z-30 rotate-[-34deg] pointer-events-none"
+                  className="absolute -left-[9%] bottom-[11%] w-[20%] h-auto object-contain z-30 pointer-events-none"
                 />
               </div>
               <div className="relative bg-white rounded-2xl border-[2.5px] border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4]">
@@ -172,7 +172,7 @@ export function HeroSection() {
                 <img
                   src={approvedStampGreen}
                   alt="Approved stamp right"
-                  className="absolute -right-[9%] top-[11%] w-[20%] h-auto object-contain z-30 rotate-[34deg] pointer-events-none"
+                  className="absolute -right-[10%] top-[11%] w-[20%] h-auto object-contain z-30 rotate-[45deg] pointer-events-none"
                 />
               </div>
             </div>
