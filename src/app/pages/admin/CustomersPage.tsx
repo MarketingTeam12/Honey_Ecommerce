@@ -5,6 +5,7 @@ import { User, Mail, Phone, Eye, MoreVertical, Search, Filter } from 'lucide-rea
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
+const USER_ROLES_STORAGE_KEY = 'honey_translation_user_roles';
 
 interface Customer {
   id: string;
@@ -18,16 +19,36 @@ interface Customer {
   currency: string;
 }
 
+type UserRole = 'User' | 'Admin' | 'Manager';
+
 function CustomersPage() {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('All');
+  const [customerRoles, setCustomerRoles] = useState<Record<string, UserRole>>({});
 
   useEffect(() => {
+    const savedRoles = localStorage.getItem(USER_ROLES_STORAGE_KEY);
+    if (savedRoles) {
+      try {
+        setCustomerRoles(JSON.parse(savedRoles));
+      } catch (error) {
+        console.error('Failed to parse saved user roles:', error);
+      }
+    }
     fetchCustomers();
   }, []);
+
+  const handleRoleChange = (customerEmail: string, role: UserRole) => {
+    const updatedRoles = {
+      ...customerRoles,
+      [customerEmail]: role
+    };
+    setCustomerRoles(updatedRoles);
+    localStorage.setItem(USER_ROLES_STORAGE_KEY, JSON.stringify(updatedRoles));
+  };
 
   const fetchCustomers = () => {
     try {
@@ -234,6 +255,9 @@ function CustomersPage() {
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                   Status
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  Role
+                </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
@@ -307,6 +331,17 @@ function CustomersPage() {
                     }`}>
                       {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <select
+                      value={customerRoles[customer.email] || 'User'}
+                      onChange={(e) => handleRoleChange(customer.email, e.target.value as UserRole)}
+                      className="min-w-[140px] rounded-md border border-blue-500 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="User">User</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Manager">Manager</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
