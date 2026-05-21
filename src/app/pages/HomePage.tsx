@@ -4,7 +4,6 @@ import { TrustIndexReviewsSection } from '@/app/components/home/TrustIndexReview
 import { ISOCertificationSection } from '@/app/components/home/ISOCertificationSection';
 import { TranslatorExperience } from '@/app/components/home/TranslatorExperience';
 import { PickYourLanguage } from '@/app/components/home/PickYourLanguage';
-import { CustomerReviews } from '@/app/components/home/CustomerReviews';
 import { Testimonials } from '@/app/components/home/Testimonials';
 
 function HomePage() {
@@ -16,7 +15,6 @@ function HomePage() {
       <ISOCertificationSection />
       <TranslatorExperience />
       <PickYourLanguage />
-      <CustomerReviews />
       <Testimonials />
     </div>
   );
