@@ -33,6 +33,7 @@ export function NewCheckoutReviewPage() {
   const [billingAddress, setBillingAddress] = useState<BillingAddress | null>(null);
   const [shippingMethod, setShippingMethod] = useState<'email' | 'physical'>('email');
   const [deliveryEmail, setDeliveryEmail] = useState('');
+  const [deliveryWhatsappNumber, setDeliveryWhatsappNumber] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [shippingError, setShippingError] = useState('');
   
@@ -137,7 +138,9 @@ export function NewCheckoutReviewPage() {
 
     if (shippingMethod === 'email') {
       const email = deliveryEmail.trim();
+      const whatsappNumber = deliveryWhatsappNumber.trim();
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const phoneRegex = /^[0-9]{10,15}$/;
 
       if (!email) {
         setShippingError('Please enter your email address for delivery.');
@@ -146,6 +149,16 @@ export function NewCheckoutReviewPage() {
 
       if (!emailRegex.test(email)) {
         setShippingError('Please enter a valid email address.');
+        return false;
+      }
+
+      if (!whatsappNumber) {
+        setShippingError('Please enter your WhatsApp number for delivery updates.');
+        return false;
+      }
+
+      if (!phoneRegex.test(whatsappNumber)) {
+        setShippingError('Please enter a valid WhatsApp number (10-15 digits).');
         return false;
       }
     } else {
@@ -157,6 +170,7 @@ export function NewCheckoutReviewPage() {
 
     const savedDetails = {
       email: shippingMethod === 'email' ? deliveryEmail.trim() : '',
+      whatsappNumber: shippingMethod === 'email' ? deliveryWhatsappNumber.trim() : '',
       address: shippingMethod === 'physical' ? deliveryAddress.trim() : '',
     };
 
@@ -164,6 +178,13 @@ export function NewCheckoutReviewPage() {
     localStorage.setItem('shippingDetails', JSON.stringify(savedDetails));
     toast.success('Delivery details submitted successfully.');
     return true;
+  };
+
+  const handleDeliveryDetailsKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveDeliveryDetails();
+    }
   };
 
   const handleMakePayment = () => {
@@ -258,7 +279,7 @@ export function NewCheckoutReviewPage() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-gray-900">Email Delivery</span>
+                      <span className="font-semibold text-gray-900">Email Delivery + Whatsapp Delivery</span>
                       <span className="text-green-600 font-semibold">FREE</span>
                     </div>
                     <p className="text-sm text-gray-600">
@@ -310,10 +331,25 @@ export function NewCheckoutReviewPage() {
                         setShippingError('');
                       }}
                       placeholder="Enter your email address"
+                      onKeyDown={handleDeliveryDetailsKeyDown}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none"
+                    />
+                    <label className="block text-sm font-semibold text-gray-900">WhatsApp Number</label>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={deliveryWhatsappNumber}
+                      onChange={(e) => {
+                        const digitsOnly = e.target.value.replace(/\D/g, '');
+                        setDeliveryWhatsappNumber(digitsOnly);
+                        setShippingError('');
+                      }}
+                      onKeyDown={handleDeliveryDetailsKeyDown}
+                      placeholder="Enter your WhatsApp number"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none"
                     />
                     <p className="text-sm text-gray-600">
-                      Documents will be sent directly to this email address.
+                      Documents will be sent to your email, and updates will be shared on WhatsApp.
                     </p>
                   </div>
                 ) : (
@@ -327,6 +363,7 @@ export function NewCheckoutReviewPage() {
                       }}
                       placeholder="Enter your full delivery address, including house number, street, city, state, pincode, and country"
                       rows={4}
+                      onKeyDown={handleDeliveryDetailsKeyDown}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
                     />
                     <p className="text-sm text-gray-600">
