@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+﻿import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 
 interface DiagnosticResult {
@@ -23,7 +23,7 @@ export function EdgeFunctionDiagnostics() {
       const tests: DiagnosticResult[] = [];
 
       // Test 1: Check if publicAnonKey is valid
-      console.log('🔍 [Diagnostics] Test 1: Checking publicAnonKey validity...');
+      console.log('ðŸ” [Diagnostics] Test 1: Checking publicAnonKey validity...');
       if (!publicAnonKey || publicAnonKey === 'undefined' || publicAnonKey.length < 20) {
         tests.push({
           test: 'Public Anon Key',
@@ -41,7 +41,7 @@ export function EdgeFunctionDiagnostics() {
       }
 
       // Test 2: Try to reach the ultra-simple root endpoint
-      console.log('🔍 [Diagnostics] Test 2: Testing basic Edge Function connectivity...');
+      console.log('ðŸ” [Diagnostics] Test 2: Testing basic Edge Function connectivity...');
       try {
         const response = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/`,
@@ -82,7 +82,7 @@ export function EdgeFunctionDiagnostics() {
       }
 
       // Test 3: Try to fetch /health endpoint
-      console.log('🔍 [Diagnostics] Test 3: Testing /health endpoint...');
+      console.log('ðŸ” [Diagnostics] Test 3: Testing /health endpoint...');
       try {
         const response = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/health`,
@@ -123,7 +123,7 @@ export function EdgeFunctionDiagnostics() {
       }
 
       // Test 4: Try to fetch /diagnostics endpoint
-      console.log('🔍 [Diagnostics] Test 4: Testing /diagnostics endpoint...');
+      console.log('ðŸ” [Diagnostics] Test 4: Testing /diagnostics endpoint...');
       try {
         const response = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/diagnostics`,
@@ -167,7 +167,7 @@ export function EdgeFunctionDiagnostics() {
       setIsRunning(false);
 
       // Log all results
-      console.log('🔍 [Diagnostics] All tests complete:', tests);
+      console.log('ðŸ” [Diagnostics] All tests complete:', tests);
     };
 
     runDiagnostics();
@@ -196,7 +196,7 @@ export function EdgeFunctionDiagnostics() {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center">
-              <span className="text-2xl mr-2">⚠️</span>
+              <span className="text-2xl mr-2">âš </span>
               <div>
                 <h3 className="font-semibold text-yellow-900">
                   {hasCriticalError ? 'Edge Function Not Accessible' : 'Configuration Issues Detected'}
@@ -222,7 +222,7 @@ export function EdgeFunctionDiagnostics() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="font-medium">
-                          {result.status === 'success' ? '✅' : '❌'} {result.test}
+                          {result.status === 'success' ? 'âœ…' : 'âŒ'} {result.test}
                         </div>
                         <div className={result.status === 'success' ? 'text-green-700' : 'text-red-700'}>
                           {result.message}
@@ -272,3 +272,4 @@ export function EdgeFunctionDiagnostics() {
 }
 
 export default EdgeFunctionDiagnostics;
+

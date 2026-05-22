@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, ShoppingBag } from 'lucide-react';
 import { allProductsMap } from '@/app/data/allProductData';
 
@@ -296,3 +296,4 @@ export function SalesNotificationPopup() {
     </div>
   );
 }
+

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit, Trash2, Download, Upload } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
@@ -57,7 +57,7 @@ export function WorkSamplesPage() {
   const fetchSamples = async () => {
     try {
       setLoading(true);
-      console.log('📋 [WorkSamples] Fetching work samples...');
+      console.log('ðŸ“‹ [WorkSamples] Fetching work samples...');
       
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -76,7 +76,7 @@ export function WorkSamplesPage() {
 
       clearTimeout(timeout);
 
-      console.log('📋 [WorkSamples] Response status:', response.status);
+      console.log('ðŸ“‹ [WorkSamples] Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -89,7 +89,7 @@ export function WorkSamplesPage() {
                                response.status === 404;
         
         if (isBackendIssue) {
-          console.log('ℹ️ Backend not deployed - showing demo work samples');
+          console.log('â„¹ Backend not deployed - showing demo work samples');
           setBackendAvailable(false);
           
           // Load demo data for better UX
@@ -152,7 +152,7 @@ export function WorkSamplesPage() {
       }
 
       const data = await response.json();
-      console.log('📋 [WorkSamples] Fetched', data.samples?.length || 0, 'samples');
+      console.log('ðŸ“‹ [WorkSamples] Fetched', data.samples?.length || 0, 'samples');
       setSamples(data.samples || []);
       setBackendAvailable(true);
     } catch (error) {
@@ -160,7 +160,7 @@ export function WorkSamplesPage() {
       
       // Check if it's a timeout/network error
       if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) {
-        console.log('ℹ️ [WorkSamples] Request timed out or network error - showing demo samples');
+        console.log('â„¹ [WorkSamples] Request timed out or network error - showing demo samples');
         setBackendAvailable(false);
         
         // Load demo data for better UX
@@ -244,7 +244,7 @@ export function WorkSamplesPage() {
 
     try {
       setUploading(true);
-      console.log('📤 Uploading file:', file.name);
+      console.log('ðŸ“¤ Uploading file:', file.name);
 
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
@@ -268,7 +268,7 @@ export function WorkSamplesPage() {
       }
 
       const data = await response.json();
-      console.log('✅ Upload successful:', data);
+      console.log('âœ… Upload successful:', data);
 
       setFormData(prev => ({
         ...prev,
@@ -278,7 +278,7 @@ export function WorkSamplesPage() {
 
       alert('File uploaded successfully!');
     } catch (error) {
-      console.error('❌ Upload error:', error);
+      console.error('âŒ Upload error:', error);
       alert(error instanceof Error ? error.message : 'Failed to upload file');
     } finally {
       setUploading(false);
@@ -493,7 +493,7 @@ export function WorkSamplesPage() {
                   </label>
                   {formData.fileName && (
                     <span className="text-sm text-gray-600">
-                      ✓ {formData.fileName}
+                      âœ“ {formData.fileName}
                     </span>
                   )}
                 </div>
@@ -645,3 +645,4 @@ export function WorkSamplesPage() {
 }
 
 export default WorkSamplesPage;
+

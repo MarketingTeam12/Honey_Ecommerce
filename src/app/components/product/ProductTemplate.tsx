@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, MouseEvent, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+﻿import { useState, useEffect, useRef, MouseEvent, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
 import { useWishlist } from '@/app/context/WishlistContext';
@@ -160,10 +160,10 @@ const getPromoTag = (seed: string) => {
 
 // ==================== PRICING DATA STRUCTURES ====================
 
-// 1. STANDARD TRANSLATION PRICING (Original: ₹2,000)
+// 1. STANDARD TRANSLATION PRICING (Original: ?2,000)
 const STANDARD_TRANSLATION_ORIGINAL = 2000;
 
-// English → Foreign Language
+// English â†’ Foreign Language
 const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -180,7 +180,7 @@ const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'indonesian': 800,
 };
 
-// Foreign Language → English
+// Foreign Language â†’ English
 const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -198,7 +198,7 @@ const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'indonesian': 900,
 };
 
-// English → Indian Language (Most are ₹600, with exceptions)
+// English â†’ Indian Language (Most are ?600, with exceptions)
 const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -217,7 +217,7 @@ const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'sanskrit': 600,
 };
 
-// Indian Language → English (Same prices as above)
+// Indian Language â†’ English (Same prices as above)
 const INDIAN_TO_ENGLISH: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -236,7 +236,7 @@ const INDIAN_TO_ENGLISH: { [key: string]: number } = {
   'sanskrit': 600,
 };
 
-// 2. SWORN TRANSLATION PRICING (Original: ₹5,000)
+// 2. SWORN TRANSLATION PRICING (Original: ?5,000)
 const SWORN_TRANSLATION_ORIGINAL = 5000;
 const SWORN_TRANSLATION_PRICING: { [key: string]: number } = {
   'english-spanish': 3299,
@@ -245,7 +245,7 @@ const SWORN_TRANSLATION_PRICING: { [key: string]: number } = {
   'english-french': 3300,
 };
 
-// 3. APOSTILLE SERVICES PRICING (Original: ₹3,500, Offer: ₹2,500 for all)
+// 3. APOSTILLE SERVICES PRICING (Original: ?3,500, Offer: ?2,500 for all)
 const APOSTILLE_ORIGINAL = 3500;
 const APOSTILLE_OFFER = 2500;
 
@@ -367,7 +367,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Use productKey if provided, otherwise generate from title (for backward compatibility)
   const productId = productKey || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   
-  console.log('🔑 ProductTemplate - productKey:', productKey, 'productId:', productId);
+  console.log('ðŸ”‘ ProductTemplate - productKey:', productKey, 'productId:', productId);
   
   // Check if product is in wishlist
   const inWishlist = isInWishlist(productId);
@@ -398,7 +398,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Pre-fill form if in edit mode
   useEffect(() => {
     if (isEditMode && editCartItem) {
-      console.log('📝 Edit mode detected, pre-filling form with:', editCartItem);
+      console.log('ðŸ“ Edit mode detected, pre-filling form with:', editCartItem);
       
       if (editCartItem.sourceLanguage) setSourceLanguage(editCartItem.sourceLanguage);
       if (editCartItem.targetLanguage) setTargetLanguage(editCartItem.targetLanguage);
@@ -417,7 +417,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset images to default when productId or data.images changes
   useEffect(() => {
-    console.log('🔄 Product changed, resetting images to default:', productId);
+    console.log('ðŸ”„ Product changed, resetting images to default:', productId);
     setProductImages(normalizeProductImages(data.images, data.title));
     setSelectedImage(0);
     setImagesLoaded(false);
@@ -425,7 +425,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset all form fields when product changes
   useEffect(() => {
-    console.log('🔄 Product changed, resetting all form fields:', productId);
+    console.log('ðŸ”„ Product changed, resetting all form fields:', productId);
     setSourceLanguage('');
     setTargetLanguage('');
     setDestination('');
@@ -448,7 +448,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         // Normalize productId to lowercase for consistency
         const normalizedProductId = productId.toLowerCase();
         
-        console.log('📸 Fetching images for product:', normalizedProductId);
+        console.log('ðŸ“¸ Fetching images for product:', normalizedProductId);
         
         // Add cache-busting parameter to force fresh data
         const cacheBuster = Date.now();
@@ -463,24 +463,24 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('📦 Received images data:', data);
+          console.log('ðŸ“¦ Received images data:', data);
           
           if (data.images && Array.isArray(data.images)) {
             const validDbImages = normalizeProductImages(data.images, data.title);
-            console.log('✅ Valid images found:', validDbImages.length);
+            console.log('âœ… Valid images found:', validDbImages.length);
             
             if (validDbImages.length > 0) {
-              console.log('🔄 Updating product images from database');
+              console.log('ðŸ”„ Updating product images from database');
               setProductImages(validDbImages);
             } else {
-              console.log('⚠️ No valid images in database, using default images');
+              console.log('âš  No valid images in database, using default images');
             }
           }
         } else {
-          console.error('❌ Failed to fetch images, status:', response.status);
+          console.error('âŒ Failed to fetch images, status:', response.status);
         }
       } catch (error) {
-        console.log('⚠️ Using default product images:', error);
+        console.log('âš  Using default product images:', error);
         // Keep using the default images from data.images
       } finally {
         setImagesLoaded(true);
@@ -756,7 +756,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   };
 
   // Debug logging for startup packages
-  console.log('📦 ProductTemplate Debug:', {
+  console.log('ðŸ“¦ ProductTemplate Debug:', {
     title: data.title,
     type: data.type,
     isStartup: data.type === 'startup',
@@ -794,7 +794,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
           ? COMMERCIAL_DOCUMENT_OPTIONS
           : [];
   
-  console.log('🔍 Document Type Visibility Check:', {
+  console.log('ðŸ” Document Type Visibility Check:', {
     productType: data.type,
     isNotStartup: data.type !== 'startup',
     hasDocTypes: !!data.documentTypes,
@@ -1353,7 +1353,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                         </div>
                         <div className="pt-2 border-t border-blue-200">
                           <p className="text-xs text-blue-700">
-                            ✨ Pricing automatically updated based on your language selection
+                            âœ¨ Pricing automatically updated based on your language selection
                           </p>
                         </div>
                       </div>
@@ -1707,6 +1707,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     </div>
   );
 }
+
 
 
 

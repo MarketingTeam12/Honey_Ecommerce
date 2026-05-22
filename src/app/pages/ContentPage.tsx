@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
-import { useLocation } from 'react-router';
+﻿import { motion } from 'motion/react';
+import { useLocation } from 'react-router-dom';
 import { FileText, Shield, HelpCircle, DollarSign, Scale, Info } from 'lucide-react';
 
 export function ContentPage() {
@@ -245,7 +245,7 @@ export function ContentPage() {
           <div className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-blue-600 transition-all">
             <h3 className="text-xl font-bold text-gray-900 mb-3">How much do your services cost?</h3>
             <p className="text-gray-700 leading-relaxed">
-              Pricing varies based on language pair, document type, and turnaround time. Indian language translations start from ₹400 per page, while foreign language translations start from ₹800 per page. Contact us for a detailed quote.
+              Pricing varies based on language pair, document type, and turnaround time. Indian language translations start from ?400 per page, while foreign language translations start from ?800 per page. Contact us for a detailed quote.
             </p>
           </div>
 
@@ -356,19 +356,19 @@ export function ContentPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white border-2 border-blue-200 rounded-2xl p-8 hover:border-blue-600 hover:shadow-xl transition-all">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Indian Languages</h3>
-              <div className="text-4xl font-bold text-blue-600 mb-4">₹400 - ₹900</div>
+              <div className="text-4xl font-bold text-blue-600 mb-4">?400 - ?900</div>
               <p className="text-gray-600 mb-6">per page</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
-                  <span className="text-gray-700">English ⟷ Hindi, Tamil, Telugu</span>
+                  <span className="text-green-600">âœ“</span>
+                  <span className="text-gray-700">English âŸ· Hindi, Tamil, Telugu</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">Certified translation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">1-3 days turnaround</span>
                 </li>
               </ul>
@@ -376,19 +376,19 @@ export function ContentPage() {
 
             <div className="bg-white border-2 border-purple-200 rounded-2xl p-8 hover:border-purple-600 hover:shadow-xl transition-all">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Foreign Languages</h3>
-              <div className="text-4xl font-bold text-purple-600 mb-4">₹800 - ₹1,800</div>
+              <div className="text-4xl font-bold text-purple-600 mb-4">?800 - ?1,800</div>
               <p className="text-gray-600 mb-6">per page</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">200+ languages supported</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">Certified translation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">2-5 days turnaround</span>
                 </li>
               </ul>
@@ -396,19 +396,19 @@ export function ContentPage() {
 
             <div className="bg-white border-2 border-green-200 rounded-2xl p-8 hover:border-green-600 hover:shadow-xl transition-all">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Apostille Services</h3>
-              <div className="text-4xl font-bold text-green-600 mb-4">₹2,500 - ₹3,500</div>
+              <div className="text-4xl font-bold text-green-600 mb-4">?2,500 - ?3,500</div>
               <p className="text-gray-600 mb-6">per document</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">MEA apostille included</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">Translation + Apostille</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">7-10 days turnaround</span>
                 </li>
               </ul>
@@ -416,19 +416,19 @@ export function ContentPage() {
 
             <div className="bg-white border-2 border-amber-200 rounded-2xl p-8 hover:border-amber-600 hover:shadow-xl transition-all">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">Attestation Services</h3>
-              <div className="text-4xl font-bold text-amber-600 mb-4">₹3,000 - ₹5,000</div>
+              <div className="text-4xl font-bold text-amber-600 mb-4">?3,000 - ?5,000</div>
               <p className="text-gray-600 mb-6">per document</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">Embassy attestation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">HRD, MEA, Embassy</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">✓</span>
+                  <span className="text-green-600">âœ“</span>
                   <span className="text-gray-700">10-15 days turnaround</span>
                 </li>
               </ul>

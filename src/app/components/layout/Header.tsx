@@ -1,5 +1,5 @@
-import { Mail, Phone } from 'lucide-react';
-import { Link } from 'react-router';
+﻿import { Mail, Phone } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Header() {
   return (

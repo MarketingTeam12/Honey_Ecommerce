@@ -1,4 +1,4 @@
-import { useParams, useLocation } from 'react-router';
+﻿import { useParams, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ProductTemplate } from '@/app/components/product/ProductTemplate';
 import { allProductsMap } from '@/app/data/allProductData';

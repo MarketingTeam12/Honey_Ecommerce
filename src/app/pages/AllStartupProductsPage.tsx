@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+﻿import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useWishlist } from '@/app/context/WishlistContext';
@@ -42,7 +42,7 @@ export function AllStartupProductsPage() {
         'https://via.placeholder.com/400/9333EA/FFFFFF?text=Startup+Package',
       );
       
-      console.log('🖼️ [AllStartupProductsPage] Product:', product.name, 'Image URL:', productImage);
+      console.log('ðŸ–¼ [AllStartupProductsPage] Product:', product.name, 'Image URL:', productImage);
       
       return {
         id: product.id,
@@ -78,9 +78,9 @@ export function AllStartupProductsPage() {
   };
 
   const handleAddToCart = (product: StartupProduct) => {
-    console.log('🛒 [AllStartupProductsPage] Adding to cart:', product.name);
-    console.log('🛒 [AllStartupProductsPage] Product image value:', product.image);
-    console.log('🛒 [AllStartupProductsPage] Image type:', typeof product.image);
+    console.log('ðŸ›’ [AllStartupProductsPage] Adding to cart:', product.name);
+    console.log('ðŸ›’ [AllStartupProductsPage] Product image value:', product.image);
+    console.log('ðŸ›’ [AllStartupProductsPage] Image type:', typeof product.image);
     addToCart({
       id: `${product.id}-${Date.now()}`,
       name: product.name,
@@ -179,3 +179,4 @@ export function AllStartupProductsPage() {
 }
 
 export default AllStartupProductsPage;
+

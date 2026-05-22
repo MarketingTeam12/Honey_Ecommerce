@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { useProducts } from '@/app/context/ProductContext';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
@@ -261,3 +261,4 @@ export function ProductPopup() {
 }
 
 export default ProductPopup;
+

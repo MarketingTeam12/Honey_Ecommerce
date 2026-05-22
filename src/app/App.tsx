@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import AdminUpload from "@/app/components/AdminUpload";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { initializeStorageBucket } from "@/app/utils/supabaseStorage";
 import { initializeDemoToken } from "@/app/utils/buildHeaders";
@@ -74,6 +74,7 @@ import AllLanguageProductsPage from "@/app/pages/AllLanguageProductsPage";
 import MyOrdersPage from "@/app/pages/MyOrdersPage";
 import MyProfilePage from "@/app/pages/MyProfilePage";
 import MyAddressPage from "@/app/pages/MyAddressPage";
+import MyDashboardPage from "@/app/pages/MyDashboardPage";
 import NewCartPage from "@/app/pages/NewCartPage";
 import NewCheckoutAddressPage from "@/app/pages/NewCheckoutAddressPage";
 import NewCheckoutReviewPage from "@/app/pages/NewCheckoutReviewPage";
@@ -119,18 +120,18 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log("🚀 App initialization started...");
+        console.log("ðŸš€ App initialization started...");
 
         // Initialize storage bucket (non-blocking)
         initializeStorageBucket()
           .then(({ success }) => {
             if (success) {
-              console.log("✅ Storage bucket initialized");
+              console.log("âœ… Storage bucket initialized");
             }
           })
           .catch((err) => {
             console.log(
-              "ℹ️ Storage bucket initialization failed (non-critical):",
+              "â„¹ Storage bucket initialization failed (non-critical):",
               err,
             );
           });
@@ -138,7 +139,7 @@ function App() {
         // Initialize demo token for mock authentication - Make this non-blocking
         initializeDemoToken()
           .then(() => {
-            console.log("✅ Demo authentication ready");
+            console.log("âœ… Demo authentication ready");
           })
           .catch(async (error) => {
             // Silently handle backend deployment issues
@@ -170,7 +171,7 @@ function App() {
               if (response.ok) {
                 const data = await response.json();
                 if (data.success) {
-                  console.log("✅ Demo users created");
+                  console.log("âœ… Demo users created");
                   await initializeDemoToken().catch(() => {});
                 }
               }
@@ -180,10 +181,10 @@ function App() {
           });
 
         // Mark app as ready immediately - don't wait for demo initialization
-        console.log("✅ App ready!");
+        console.log("âœ… App ready!");
         setAppReady(true);
       } catch (error) {
-        console.error("❌ App initialization error:", error);
+        console.error("âŒ App initialization error:", error);
         setInitError(
           error instanceof Error
             ? error.message
@@ -213,7 +214,7 @@ function App() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <div className="text-red-600 text-4xl mb-4">⚠️</div>
+          <div className="text-red-600 text-4xl mb-4">âš </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Initialization Error
           </h1>
@@ -586,6 +587,14 @@ function App() {
                       element={
                         <PublicLayout>
                           <NewCartPage />
+                        </PublicLayout>
+                      }
+                    />
+                    <Route
+                      path="/my-dashboard"
+                      element={
+                        <PublicLayout>
+                          <MyDashboardPage />
                         </PublicLayout>
                       }
                     />
@@ -1009,3 +1018,4 @@ function App() {
 }
 
 export default App;
+

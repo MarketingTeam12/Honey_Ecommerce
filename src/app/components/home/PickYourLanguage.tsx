@@ -1,5 +1,7 @@
-import { Link } from 'react-router';
+﻿import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useProducts } from '@/app/context/ProductContext';
@@ -18,6 +20,7 @@ const getPromoTag = (seed: string) => {
 export function PickYourLanguage() {
   const { convertPrice } = useCurrency();
   const { products: adminProducts } = useProducts();
+  const [startIndex, setStartIndex] = useState(0);
   const blockedHomeProductName = 'any language to any language';
 
   // Get Translation category products from admin (exclude sworn translations)
@@ -68,7 +71,7 @@ export function PickYourLanguage() {
       originalPrice: 2000,
       tag: getPromoTag('fallback-4'),
       route: '/foreign-language-to-english',
-      icon: '🔄',
+      icon: 'ðŸ”„',
     },
   ];
 
@@ -82,11 +85,31 @@ export function PickYourLanguage() {
         tag: getPromoTag(product.id),
         route: `/product/${product.id}`,
         image: getFirstValidImage(product.images),
-        icon: '📄'
+        icon: 'ðŸ“„'
       }))
     : fallbackProducts.filter(
         product => product.title.toLowerCase() !== blockedHomeProductName
       );
+
+  const visibleProducts = useMemo(() => {
+    const visibleCount = 3;
+    if (products.length <= visibleCount) return products;
+
+    return Array.from({ length: visibleCount }, (_, offset) => {
+      const productIndex = (startIndex + offset) % products.length;
+      return products[productIndex];
+    });
+  }, [products, startIndex]);
+
+  const goPrev = () => {
+    if (products.length <= 3) return;
+    setStartIndex(prev => (prev - 1 + products.length) % products.length);
+  };
+
+  const goNext = () => {
+    if (products.length <= 3) return;
+    setStartIndex(prev => (prev + 1) % products.length);
+  };
 
   return (
     <section className="py-12 bg-white">
@@ -100,8 +123,27 @@ export function PickYourLanguage() {
           Pick Your Language
         </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
-          {products.map((product, index) => (
+        <div className="relative">
+          <button
+            type="button"
+            onClick={goPrev}
+            aria-label="Previous language cards"
+            className="hidden md:flex absolute -left-6 lg:-left-10 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white border border-gray-300 shadow-md hover:bg-gray-50"
+          >
+            <ChevronLeft className="h-6 w-6 text-gray-700" />
+          </button>
+
+          <button
+            type="button"
+            onClick={goNext}
+            aria-label="Next language cards"
+            className="hidden md:flex absolute -right-6 lg:-right-10 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white border border-gray-300 shadow-md hover:bg-gray-50"
+          >
+            <ChevronRight className="h-6 w-6 text-gray-700" />
+          </button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+          {visibleProducts.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 50 }}
@@ -114,13 +156,13 @@ export function PickYourLanguage() {
                 to={product.route}
                 className="group block h-full"
               >
-                <div className="bg-white border-2 border-gray-300 rounded-3xl overflow-hidden shadow-md transition-all hover:border-blue-500 hover:shadow-2xl">
-                  <div className="relative w-full aspect-[3/4] bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 overflow-hidden">
+                <div className="bg-white border-2 border-gray-300 rounded-2xl overflow-hidden shadow-md transition-all hover:border-blue-500 hover:shadow-2xl">
+                  <div className="relative w-full aspect-[4/4.6] bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 overflow-hidden p-2">
                     {product.image ? (
                       <img
                         src={product.image}
                         alt={product.title}
-                        className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -130,8 +172,8 @@ export function PickYourLanguage() {
                   </div>
 
                   {/* Content Below Box */}
-                  <div className="px-5 py-6 space-y-4">
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-3">
+                  <div className="px-4 py-4 space-y-3 min-h-[150px]">
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug break-words line-clamp-2">
                       {product.title}
                     </h3>
                     <div className="flex items-center gap-3 flex-wrap">
@@ -143,7 +185,7 @@ export function PickYourLanguage() {
                       </p>
                     </div>
                     {product.tag && (
-                      <Badge className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-sm px-4 py-1.5 font-bold">
+                      <Badge className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-xs px-3 py-1.5 font-bold">
                         {product.tag}
                       </Badge>
                     )}
@@ -152,8 +194,10 @@ export function PickYourLanguage() {
               </Link>
             </motion.div>
           ))}
+          </div>
         </div>
       </div>
     </section>
   );
 }
+

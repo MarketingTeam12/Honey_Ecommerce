@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, ShoppingCart, Users, TrendingUp,
   Store, BarChart3, Settings, Bell, Search,
@@ -28,8 +28,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   // Load notifications from backend
   const loadNotifications = async () => {
     try {
-      console.log('🔔 [AdminLayout] Loading notifications');
-      console.log('🔔 [AdminLayout] Access Token:', accessToken ? (accessToken.substring(0, 20) + '...') : 'NULL');
+      console.log('ðŸ”” [AdminLayout] Loading notifications');
+      console.log('ðŸ”” [AdminLayout] Access Token:', accessToken ? (accessToken.substring(0, 20) + '...') : 'NULL');
       
       const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications`;
       
@@ -39,7 +39,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         'Authorization': `Bearer ${publicAnonKey}`,
         'apikey': publicAnonKey
       };
-      console.log('🔔 [AdminLayout] Using publicAnonKey for auth');
+      console.log('ðŸ”” [AdminLayout] Using publicAnonKey for auth');
       
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -51,14 +51,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       
       clearTimeout(timeout);
       
-      console.log('🔔 [AdminLayout] Notifications response status:', response.status, response.ok);
+      console.log('ðŸ”” [AdminLayout] Notifications response status:', response.status, response.ok);
       
       if (response.ok) {
         const data = await response.json();
         const notifs = data.notifications || [];
         setNotifications(notifs);
         const unread = notifs.filter((n: any) => !n.read).length;
-        console.log('📬 [AdminLayout] Loaded', notifs.length, 'notifications,', unread, 'unread');
+        console.log('ðŸ“¬ [AdminLayout] Loaded', notifs.length, 'notifications,', unread, 'unread');
       } else {
         // Check if it's a backend deployment issue
         const errorText = await response.text();
@@ -67,18 +67,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                errorText.includes('"code":401');
         
         if (isBackendIssue) {
-          console.log('ℹ️ Backend not deployed - notifications disabled');
+          console.log('â„¹ Backend not deployed - notifications disabled');
         } else {
-          console.log('ℹ️ Notifications endpoint unavailable (non-critical)');
+          console.log('â„¹ Notifications endpoint unavailable (non-critical)');
         }
         // Silently fail in the UI - notifications are not critical
         setNotifications([]);
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('ℹ️ Notifications request timed out (backend not responding)');
+        console.log('â„¹ Notifications request timed out (backend not responding)');
       } else {
-        console.log('ℹ️ Could not load notifications (non-critical)');
+        console.log('â„¹ Could not load notifications (non-critical)');
       }
       // Silently fail - notifications are not critical
       setNotifications([]);
@@ -99,13 +99,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     
     // Listen for new order notifications
     const handleNewOrder = (event: any) => {
-      console.log('🔔 [AdminLayout] New order notification received!', event.detail);
+      console.log('ðŸ”” [AdminLayout] New order notification received!', event.detail);
       loadNotifications(); // Reload notifications
     };
     
     // Listen for notification updates (mark as read, delete, etc.)
     const handleNotificationsUpdated = () => {
-      console.log('🔄 [AdminLayout] Notifications updated, reloading...');
+      console.log('ðŸ”„ [AdminLayout] Notifications updated, reloading...');
       loadNotifications();
     };
     
@@ -415,7 +415,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                               <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
                               {notif.amount && (
                                 <p className="text-xs text-gray-700 font-medium mt-1">
-                                  {notif.currency === 'INR' ? '₹' : '$'}{parseFloat(notif.amount).toLocaleString('en-IN')}
+                                  {notif.currency === 'INR' ? '?' : '$'}{parseFloat(notif.amount).toLocaleString('en-IN')}
                                 </p>
                               )}
                               <p className="text-xs text-gray-400 mt-1">
@@ -544,3 +544,4 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     </div>
   );
 }
+

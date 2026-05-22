@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router';
+﻿import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, Edit, Tag, X } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -41,7 +41,7 @@ export function NewCartPage() {
 
   const loadAvailableCoupons = () => {
     const activeCoupons = couponService.getActiveCoupons();
-    console.log('📦 [NewCartPage] Loaded active coupons:', activeCoupons);
+    console.log('ðŸ“¦ [NewCartPage] Loaded active coupons:', activeCoupons);
     setAvailableCoupons(activeCoupons);
   };
 
@@ -199,7 +199,7 @@ export function NewCartPage() {
                                   <div className="space-y-1">
                                     {docs.map((doc, idx) => (
                                       <p key={idx} className="text-sm text-gray-600 ml-2">
-                                        • {doc.name}
+                                        â€¢ {doc.name}
                                       </p>
                                     ))}
                                   </div>
@@ -312,12 +312,12 @@ export function NewCartPage() {
                               <span className="text-xs text-green-600 font-semibold">
                                 {coupon.discountType === 'percentage' 
                                   ? `${coupon.discountValue}% OFF` 
-                                  : `₹${coupon.discountValue} OFF`}
+                                  : `?${coupon.discountValue} OFF`}
                               </span>
                             </div>
                             {coupon.minOrderValue > 0 && (
                               <p className="text-xs text-gray-600 ml-1">
-                                Min. order: ₹{coupon.minOrderValue}
+                                Min. order: ?{coupon.minOrderValue}
                               </p>
                             )}
                           </div>

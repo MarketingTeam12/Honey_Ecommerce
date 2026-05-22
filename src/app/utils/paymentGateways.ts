@@ -69,7 +69,7 @@ export async function getZohoPaymentsConfig() {
   return {
     client_id: zohoPayments.client_id,
     client_secret: zohoPayments.client_secret,
-    test_mode: zohoPayments.test_mode ?? true
+    test_mode: zohoPayments.test_mode ? true
   };
 }
 

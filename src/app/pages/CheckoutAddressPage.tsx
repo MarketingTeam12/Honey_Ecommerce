@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Plus, Tag, Trash2, Edit2 } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -7,13 +7,13 @@ import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/ph
 
 // Country codes with validation rules
 const countryCodes = [
-  { code: '+91', country: 'India', flag: '🇮🇳', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^[6-9]\d{9}$/, patternMessage: 'Indian mobile numbers must start with 6, 7, 8, or 9' },
-  { code: '+1', country: 'USA', flag: '🇺🇸', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
-  { code: '+44', country: 'UK', flag: '🇬🇧', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
-  { code: '+971', country: 'UAE', flag: '🇦🇪', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
-  { code: '+65', country: 'Singapore', flag: '🇸🇬', digits: 8, minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
-  { code: '+60', country: 'Malaysia', flag: '🇲🇾', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
-  { code: '+61', country: 'Australia', flag: '🇦🇺', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: '+91', country: 'India', flag: 'ðŸ‡®ðŸ‡³', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^[6-9]\d{9}$/, patternMessage: 'Indian mobile numbers must start with 6, 7, 8, or 9' },
+  { code: '+1', country: 'USA', flag: 'ðŸ‡ºðŸ‡¸', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: '+44', country: 'UK', flag: 'ðŸ‡¬ðŸ‡§', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: '+971', country: 'UAE', flag: 'ðŸ‡¦ðŸ‡ª', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: '+65', country: 'Singapore', flag: 'ðŸ‡¸ðŸ‡¬', digits: 8, minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
+  { code: '+60', country: 'Malaysia', flag: 'ðŸ‡²ðŸ‡¾', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: '+61', country: 'Australia', flag: 'ðŸ‡¦ðŸ‡º', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
 ];
 
 // Valid Indian cities
@@ -224,7 +224,7 @@ export function CheckoutAddressPage() {
       if (selectedAddressId === addressId) {
         setSelectedAddressId('');
       }
-      console.log(`🗑️ [CheckoutAddressPage] Address removed: ${addressId}`);
+      console.log(`ðŸ—‘ [CheckoutAddressPage] Address removed: ${addressId}`);
     }
   };
 
@@ -248,7 +248,7 @@ export function CheckoutAddressPage() {
     setEditingAddressId(address.id);
     setShowAddressForm(true);
     setSelectedCountryCode(countryCodes.find(c => c.code === address.phoneCountryCode) || countryCodes[0]);
-    console.log(`✏️ [CheckoutAddressPage] Editing address: ${address.id}`);
+    console.log(`âœ [CheckoutAddressPage] Editing address: ${address.id}`);
   };
 
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -269,7 +269,7 @@ export function CheckoutAddressPage() {
   const handleSaveAddress = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent page refresh
     
-    console.log('📍 [CheckoutAddressPage] Validating new address...');
+    console.log('ðŸ“ [CheckoutAddressPage] Validating new address...');
     
     // Comprehensive validation
     const errors: {[key: string]: string} = {};
@@ -339,11 +339,11 @@ export function CheckoutAddressPage() {
       // Display first error
       const firstError = Object.values(errors)[0];
       alert('Validation Error: ' + firstError);
-      console.log('❌ [CheckoutAddressPage] Validation failed:', errors);
+      console.log('âŒ [CheckoutAddressPage] Validation failed:', errors);
       return;
     }
 
-    console.log('✅ [CheckoutAddressPage] Validation passed, creating address...');
+    console.log('âœ… [CheckoutAddressPage] Validation passed, creating address...');
 
     // Get properly formatted city and state names (case-insensitive match)
     const formattedCity = findMatchingCity(newAddressForm.city) || newAddressForm.city.trim();
@@ -367,7 +367,7 @@ export function CheckoutAddressPage() {
 
       setAddresses(addresses.map(addr => addr.id === editingAddressId ? updatedAddress : addr));
       setSelectedAddressId(editingAddressId);
-      console.log('✅ [CheckoutAddressPage] Address updated successfully:', updatedAddress);
+      console.log('âœ… [CheckoutAddressPage] Address updated successfully:', updatedAddress);
       alert('Address updated successfully!');
       setEditingAddressId(null);
     } else {
@@ -386,14 +386,14 @@ export function CheckoutAddressPage() {
         isDefault: addresses.length === 0 // First address becomes default
       };
 
-      console.log('✅ [CheckoutAddressPage] New address created:', newAddress);
+      console.log('âœ… [CheckoutAddressPage] New address created:', newAddress);
 
       // Add to addresses list
       setAddresses([...addresses, newAddress]);
       
       // Auto-select the newly added address
       setSelectedAddressId(newAddress.id);
-      console.log('✅ [CheckoutAddressPage] Address saved successfully');
+      console.log('âœ… [CheckoutAddressPage] Address saved successfully');
       alert('Address added successfully!');
     }
     
@@ -424,7 +424,7 @@ export function CheckoutAddressPage() {
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center">
-                ✓
+                âœ“
               </div>
               <span className="ml-2 text-sm">Cart</span>
             </div>
@@ -771,12 +771,12 @@ export function CheckoutAddressPage() {
                 </div>
                 {appliedCoupon && (
                   <div className="mt-2 text-sm text-green-600 flex items-center gap-1">
-                    ✓ Coupon "{appliedCoupon.code}" applied successfully
+                    âœ“ Coupon "{appliedCoupon.code}" applied successfully
                   </div>
                 )}
                 {couponError && (
                   <div className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    ✗ {couponError}
+                    âœ— {couponError}
                   </div>
                 )}
                 <div className="mt-2 text-xs text-gray-500">
@@ -941,3 +941,4 @@ export function CheckoutAddressPage() {
     </div>
   );
 }
+

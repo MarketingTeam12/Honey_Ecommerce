@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Download, MessageCircle, Package, ShoppingBag, FileText, Loader2, Receipt, Calendar, CreditCard, Mail, User } from 'lucide-react';
 import { projectId } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
@@ -63,7 +63,7 @@ export function OrderSuccessPage() {
 
   const verifyZohoPayment = async () => {
     try {
-      console.log('🔍 Verifying Razorpayment...');
+      console.log('ðŸ” Verifying Razorpayment...');
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/zoho/verify`,
         {
@@ -78,7 +78,7 @@ export function OrderSuccessPage() {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Razorpayment verified:', data);
+        console.log('âœ… Razorpayment verified:', data);
         if (data.verified) {
           // Refresh order details to get updated payment status
           fetchOrderDetails();
@@ -292,7 +292,7 @@ export function OrderSuccessPage() {
                     <span className="text-sm font-medium text-gray-600">Payment Method</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">{paymentMethodLabel}</p>
-                  <p className="text-sm text-green-600">✓ Verified</p>
+                  <p className="text-sm text-green-600">âœ“ Verified</p>
                 </div>
 
                 {/* Transaction ID */}
@@ -345,8 +345,8 @@ export function OrderSuccessPage() {
                           <p className="font-medium text-gray-900">{item.name}</p>
                           {item.sourceLanguage && item.targetLanguage && (
                             <p className="text-sm text-gray-600 mt-1">
-                              {item.sourceLanguage} → {item.targetLanguage}
-                              {item.pageCount && ` • ${item.pageCount} page(s)`}
+                              {item.sourceLanguage} â†’ {item.targetLanguage}
+                              {item.pageCount && ` â€¢ ${item.pageCount} page(s)`}
                             </p>
                           )}
                         </div>
@@ -436,3 +436,4 @@ export function OrderSuccessPage() {
 }
 
 export default OrderSuccessPage;
+

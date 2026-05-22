@@ -1,5 +1,5 @@
-import { Badge } from '@/app/components/ui/badge';
-import { Link } from 'react-router';
+﻿import { Badge } from '@/app/components/ui/badge';
+import { Link } from 'react-router-dom';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useProducts } from '@/app/context/ProductContext';
 import spanishSwornImg from 'figma:asset/bae6e9023fb7c3265ca71db42883699dd1557abb.png';
@@ -97,7 +97,7 @@ export function ChooseSwornTranslation() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-6xl">📄</span>
+                      <span className="text-6xl">ðŸ“„</span>
                     </div>
                   )}
                 </div>
@@ -125,3 +125,4 @@ export function ChooseSwornTranslation() {
     </section>
   );
 }
+

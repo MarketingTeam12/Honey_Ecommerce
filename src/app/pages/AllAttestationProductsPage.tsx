@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+﻿import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useWishlist } from '@/app/context/WishlistContext';
@@ -245,3 +245,4 @@ export function AllAttestationProductsPage() {
 }
 
 export default AllAttestationProductsPage;
+

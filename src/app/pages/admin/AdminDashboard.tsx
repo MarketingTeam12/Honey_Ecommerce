@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+﻿import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useProducts } from '@/app/context/ProductContext';
 import { projectId } from '@/utils/supabase/info';
@@ -73,7 +73,7 @@ export function AdminDashboard() {
     try {
       // Keep UI interactive while data refreshes in background
       
-      console.log('📊 [Dashboard] Fetching dashboard data...');
+      console.log('ðŸ“Š [Dashboard] Fetching dashboard data...');
       
       // Add timeout to prevent hanging requests
       const controller = new AbortController();
@@ -91,7 +91,7 @@ export function AdminDashboard() {
 
         clearTimeout(timeoutId);
 
-        console.log('📊 [Dashboard] Response status:', response.status);
+        console.log('ðŸ“Š [Dashboard] Response status:', response.status);
         
         // Get response text first to see what we're actually receiving
         const responseText = await response.text();
@@ -103,10 +103,10 @@ export function AdminDashboard() {
                                  responseText.includes('\"code\":401');
           
           if (isBackendIssue) {
-            console.log('ℹ️ [Dashboard] Backend not deployed - using local fallback mode');
+            console.log('â„¹ [Dashboard] Backend not deployed - using local fallback mode');
             // Don't set jwtError, just use fallback data
           } else {
-            console.log('ℹ️ [Dashboard] Backend error - using local fallback mode');
+            console.log('â„¹ [Dashboard] Backend error - using local fallback mode');
           }
           
           // Use fallback data instead of throwing error
@@ -118,19 +118,19 @@ export function AdminDashboard() {
         try {
           data = JSON.parse(responseText);
         } catch (parseError) {
-          console.log('ℹ️ [Dashboard] Could not parse response - using local fallback');
+          console.log('â„¹ [Dashboard] Could not parse response - using local fallback');
           throw new Error('Backend unavailable');
         }
 
         setDashboardData(data);
-        console.log('✅ [Dashboard] Loaded dashboard data from backend');
+        console.log('âœ… [Dashboard] Loaded dashboard data from backend');
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         
         if (fetchError.name === 'AbortError') {
-          console.log('⚠️ [Dashboard] Request timed out - using fallback data');
+          console.log('âš  [Dashboard] Request timed out - using fallback data');
         } else {
-          console.log('⚠️ [Dashboard] Fetch error:', fetchError.message);
+          console.log('âš  [Dashboard] Fetch error:', fetchError.message);
         }
         
         // Use fallback data
@@ -138,7 +138,7 @@ export function AdminDashboard() {
       }
     } catch (error) {
       // Set local fallback data - no error shown to user
-      console.log('ℹ️ [Dashboard] Using local fallback mode (backend not available)');
+      console.log('â„¹ [Dashboard] Using local fallback mode (backend not available)');
       setDashboardData({
         stats: {
           totalProducts: products.length,
@@ -166,7 +166,7 @@ export function AdminDashboard() {
     returnRequests: 0, // Not tracking return requests currently
     pendingCancelRequests: dashboardData.cancellationRequestsCount,
     yetToReceivePayments: dashboardData.pendingPayments.reduce((sum, payment) => {
-      const amount = payment.amount.replace('₹', '').replace(/,/g, '');
+      const amount = payment.amount.replace('?', '').replace(/,/g, '');
       return sum + parseFloat(amount);
     }, 0),
     outOfStockItems: dashboardData.outOfStockCount,
@@ -227,7 +227,7 @@ export function AdminDashboard() {
                       View Setup Guide
                       <ExternalLink className="w-3 h-3" />
                     </Link>
-                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-400">â€¢</span>
                     <a
                       href="https://supabase.com/dashboard"
                       target="_blank"
@@ -296,7 +296,7 @@ export function AdminDashboard() {
               </div>
             </div>
             <h3 className="text-sm font-medium text-gray-600 mb-1">YET TO RECEIVE PAYMENTS</h3>
-            <p className="text-2xl font-bold text-gray-900 mb-1 break-words">₹{stats.yetToReceivePayments.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-gray-900 mb-1 break-words">?{stats.yetToReceivePayments.toFixed(2)}</p>
             <p className="text-xs text-gray-500">To Be Received</p>
           </div>
 
@@ -378,3 +378,4 @@ export function AdminDashboard() {
 }
 
 export default AdminDashboard;
+

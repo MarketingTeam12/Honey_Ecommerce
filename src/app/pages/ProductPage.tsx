@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router';
+﻿import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { ProductTemplate } from '@/app/components/product/ProductTemplate';
 import { productDataMap } from '@/app/data/productData';
 import { startupPackagesData } from '@/app/data/startupPackageData';
@@ -129,13 +129,13 @@ export function ProductPage() {
     };
     
     // Determine which fields to show based on product configuration
-    const showSourceLanguage = productConfig?.showSourceLanguage ?? false;
-    const showTargetLanguage = productConfig?.showTargetLanguage ?? false;
+    const showSourceLanguage = productConfig?.showSourceLanguage ?? true;
+    const showTargetLanguage = productConfig?.showTargetLanguage ?? true;
     // Hide document type for startup packages
     const isStartupPackage = adminProduct.category.toLowerCase() === 'startup';
     const showDocumentType = isStartupPackage ? false : (productConfig?.showDocumentType ?? true);
     
-    console.log('🏪 ProductPage Debug:', {
+    console.log(' ProductPage Debug:', {
       productName: adminProduct.name,
       category: adminProduct.category,
       isStartupPackage,
@@ -158,7 +158,7 @@ export function ProductPage() {
       
       if (startupKey && startupPackagesData[startupKey].highlights) {
         highlights = startupPackagesData[startupKey].highlights;
-        console.log('✅ Using static highlights for startup package:', startupKey);
+        console.log('âœ… Using static highlights for startup package:', startupKey);
       }
     }
     
@@ -254,3 +254,4 @@ export function ProductPage() {
 }
 
 export default ProductPage;
+

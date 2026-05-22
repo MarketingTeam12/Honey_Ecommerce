@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+﻿import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   CheckCircle,
   Copy,
@@ -385,3 +385,4 @@ supabase secrets set SUPABASE_DB_URL=your_database_url_here`,
 }
 
 export default DeploymentGuidePage;
+

@@ -2,7 +2,7 @@
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
@@ -130,13 +130,13 @@ export function OrdersPage() {
           console.log('âœ… [OrdersPage] Backend returned', backendOrders.length, 'orders');
         } else {
           const errorText = await response.text().catch(() => '');
-          console.warn('âš ï¸ [OrdersPage] Backend returned status', response.status);
+          console.warn('âš  [OrdersPage] Backend returned status', response.status);
           if (errorText.includes('relation') || errorText.includes('does not exist') || errorText.includes('kv_store_a67f0635')) {
             setShowSetupBanner(true);
           }
         }
       } catch (backendError: any) {
-        console.warn('âš ï¸ [OrdersPage] Backend fetch failed:', backendError.message);
+        console.warn('âš  [OrdersPage] Backend fetch failed:', backendError.message);
       }
       
       // ===== SOURCE 2: localStorage =====
@@ -230,7 +230,7 @@ export function OrdersPage() {
     setDeleting(true);
     
     try {
-      console.log(`ðŸ—‘ï¸ [OrdersPage] Deleting ${count} selected orders...`);
+      console.log(`ðŸ—‘ [OrdersPage] Deleting ${count} selected orders...`);
       console.log('ðŸ” [Delete] User:', user.email);
       
       let successCount = 0;
@@ -800,6 +800,7 @@ function getDeletedOrderIds(): Set<string> {
   }
   return new Set();
 }
+
 
 
 

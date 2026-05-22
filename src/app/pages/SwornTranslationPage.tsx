@@ -1,5 +1,5 @@
 ﻿import { useState, useRef, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Check, Upload, MessageCircle, Minus, Plus, Heart, Share2, ShoppingCart as ShoppingCartIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
@@ -578,5 +578,6 @@ export function SwornTranslationPage() {
 }
 
 export default SwornTranslationPage;
+
 
 

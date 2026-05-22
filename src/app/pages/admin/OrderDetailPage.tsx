@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Package, User, MapPin, Phone, Mail, Calendar, 
   DollarSign, Eye, Edit, Trash2, MessageSquare, FileText, CheckCircle, Truck,
@@ -115,7 +115,7 @@ export function OrderDetailPage() {
   const fetchOrder = async () => {
     try {
       setLoading(true);
-      console.log('📦 [OrderDetailPage] Fetching order from backend:', orderId);
+      console.log('ðŸ“¦ [OrderDetailPage] Fetching order from backend:', orderId);
       
       // CRITICAL FIX: Supabase Edge Functions require Authorization header
       // Use publicAnonKey as Bearer token to satisfy Supabase infrastructure
@@ -134,7 +134,7 @@ export function OrderDetailPage() {
         const data = await response.json();
         const fetchedOrder = data.order;
         
-        console.log('✅ [OrderDetailPage] Order loaded from backend');
+        console.log('âœ… [OrderDetailPage] Order loaded from backend');
         const localStorageOrder = loadOrderFromLocalStorage(orderId || '');
         const mergedOrder = localStorageOrder
           ? {
@@ -149,7 +149,7 @@ export function OrderDetailPage() {
           : fetchedOrder;
 
         if (localStorageOrder) {
-          console.log('ℹ️ [OrderDetailPage] Merged backend order with local storage shipping details');
+          console.log('â„¹ [OrderDetailPage] Merged backend order with local storage shipping details');
         }
 
         setOrder(mergedOrder);
@@ -158,13 +158,13 @@ export function OrderDetailPage() {
         setShippingCarrier(mergedOrder.shipping_carrier || '');
         setNotes(mergedOrder.notes || '');
       } else {
-        console.log('⚠️ [OrderDetailPage] Backend unavailable, checking localStorage...');
+        console.log('âš  [OrderDetailPage] Backend unavailable, checking localStorage...');
         
         // FALLBACK: Try to load from localStorage
         const localStorageOrder = orderId ? loadOrderFromLocalStorage(orderId) : null;
         
         if (localStorageOrder) {
-          console.log('✅ [OrderDetailPage] Order loaded from localStorage');
+          console.log('âœ… [OrderDetailPage] Order loaded from localStorage');
           setOrder(localStorageOrder);
           setNewStatus(localStorageOrder.status);
           setTrackingNumber(localStorageOrder.tracking_number || '');
@@ -176,19 +176,19 @@ export function OrderDetailPage() {
             duration: 5000
           });
         } else {
-          console.error('❌ [OrderDetailPage] Order not found in backend or localStorage');
+          console.error('âŒ [OrderDetailPage] Order not found in backend or localStorage');
           toast.error('Order not found');
           navigate('/admin/sales/orders');
         }
       }
     } catch (error) {
-      console.error('❌ [OrderDetailPage] Error loading order:', error);
+      console.error('âŒ [OrderDetailPage] Error loading order:', error);
       
       // FALLBACK: Try to load from localStorage on error
       const localStorageOrder = orderId ? loadOrderFromLocalStorage(orderId) : null;
       
       if (localStorageOrder) {
-        console.log('✅ [OrderDetailPage] Order loaded from localStorage (after error)');
+        console.log('âœ… [OrderDetailPage] Order loaded from localStorage (after error)');
         setOrder(localStorageOrder);
         setNewStatus(localStorageOrder.status);
         setTrackingNumber(localStorageOrder.tracking_number || '');
@@ -218,7 +218,7 @@ export function OrderDetailPage() {
       
       const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/status`;
       
-      console.log('📦 [OrderDetailPage] Updating order status to:', newStatus);
+      console.log('ðŸ“¦ [OrderDetailPage] Updating order status to:', newStatus);
       
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -242,7 +242,7 @@ export function OrderDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ [OrderDetailPage] Order status updated:', data);
+        console.log('âœ… [OrderDetailPage] Order status updated:', data);
         
         setOrder(data.order);
         setShowStatusModal(false);
@@ -259,19 +259,19 @@ export function OrderDetailPage() {
                                errorData.message?.includes('Missing authorization header');
         
         if (isBackendIssue) {
-          console.log('ℹ️ Backend not deployed - order updates unavailable');
+          console.log('â„¹ Backend not deployed - order updates unavailable');
           toast.error('Backend not deployed. Order updates require Supabase Edge Functions.');
         } else {
-          console.log('ℹ️ Failed to update order:', errorData);
+          console.log('â„¹ Failed to update order:', errorData);
           toast.error('Failed to update order');
         }
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('ℹ️ Order update request timed out');
+        console.log('â„¹ Order update request timed out');
         toast.error('Request timed out. Please try again.');
       } else {
-        console.log('ℹ️ Error updating order:', error.message);
+        console.log('â„¹ Error updating order:', error.message);
         toast.error('Failed to update order');
       }
     } finally {
@@ -290,7 +290,7 @@ export function OrderDetailPage() {
       
       const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/notes`;
       
-      console.log('📝 [OrderDetailPage] Updating order notes');
+      console.log('ðŸ“ [OrderDetailPage] Updating order notes');
       
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -312,7 +312,7 @@ export function OrderDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ [OrderDetailPage] Order notes updated:', data);
+        console.log('âœ… [OrderDetailPage] Order notes updated:', data);
         
         setOrder(data.order);
         setShowNotesModal(false);
@@ -329,19 +329,19 @@ export function OrderDetailPage() {
                                errorData.message?.includes('Missing authorization header');
         
         if (isBackendIssue) {
-          console.log('ℹ️ Backend not deployed - note updates unavailable');
+          console.log('â„¹ Backend not deployed - note updates unavailable');
           toast.error('Backend not deployed. Order note updates require Supabase Edge Functions.');
         } else {
-          console.log('ℹ️ Failed to update notes:', errorData);
+          console.log('â„¹ Failed to update notes:', errorData);
           toast.error('Failed to update notes');
         }
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('ℹ️ Order note update request timed out');
+        console.log('â„¹ Order note update request timed out');
         toast.error('Request timed out. Please try again.');
       } else {
-        console.log('ℹ️ Error updating notes:', error.message);
+        console.log('â„¹ Error updating notes:', error.message);
         toast.error('Failed to update notes');
       }
     } finally {
@@ -356,22 +356,22 @@ export function OrderDetailPage() {
     }
 
     try {
-      console.log('📄 [OrderDetailPage] Generating invoice PDF for order:', order.order_number);
+      console.log('ðŸ“„ [OrderDetailPage] Generating invoice PDF for order:', order.order_number);
       
       // Generate and download invoice PDF
       await generateInvoicePDF(order);
       
       toast.success('Invoice PDF downloaded successfully');
-      console.log('✅ [OrderDetailPage] Invoice PDF downloaded:', order.order_number);
+      console.log('âœ… [OrderDetailPage] Invoice PDF downloaded:', order.order_number);
     } catch (error) {
-      console.error('❌ [OrderDetailPage] Failed to download invoice PDF:', error);
+      console.error('âŒ [OrderDetailPage] Failed to download invoice PDF:', error);
       toast.error('Failed to generate invoice PDF');
     }
   };
 
   const handleDownloadDocument = async (file: UploadedFile, itemName: string) => {
     try {
-      console.log('📄 [OrderDetailPage] Downloading document:', file.name);
+      console.log('ðŸ“„ [OrderDetailPage] Downloading document:', file.name);
       
       // Check if file has data
       if (!file.data) {
@@ -407,9 +407,9 @@ export function OrderDetailPage() {
       window.URL.revokeObjectURL(url);
       
       toast.success(`Document downloaded successfully as ${file.name.split('.').pop()?.toUpperCase()} format`);
-      console.log('✅ [OrderDetailPage] Document downloaded:', filename);
+      console.log('âœ… [OrderDetailPage] Document downloaded:', filename);
     } catch (error) {
-      console.error('❌ [OrderDetailPage] Failed to download document:', error);
+      console.error('âŒ [OrderDetailPage] Failed to download document:', error);
       toast.error('Failed to download document');
     }
   };
@@ -879,7 +879,7 @@ export function OrderDetailPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-gray-900">
-                            {order.currency === 'INR' ? '₹' : '$'}{item.totalPrice.toFixed(2)}
+                            {order.currency === 'INR' ? '?' : '$'}{item.totalPrice.toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -893,7 +893,7 @@ export function OrderDetailPage() {
                         <div>
                           <p className="text-xs text-gray-500">Rate Per Page</p>
                           <p className="font-medium text-gray-900">
-                            {order.currency === 'INR' ? '₹' : '$'}{item.basePrice.toFixed(2)}
+                            {order.currency === 'INR' ? '?' : '$'}{item.basePrice.toFixed(2)}
                           </p>
                         </div>
                         
@@ -993,35 +993,35 @@ export function OrderDetailPage() {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Subtotal</span>
                         <span className="text-gray-900">
-                          {order.currency === 'INR' ? '₹' : '$'}{parseFloat(order.subtotal).toFixed(2)}
+                          {order.currency === 'INR' ? '?' : '$'}{parseFloat(order.subtotal).toFixed(2)}
                         </span>
                       </div>
                       {parseFloat(order.discount) > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Discount</span>
                           <span className="text-green-600">
-                            -{order.currency === 'INR' ? '₹' : '$'}{parseFloat(order.discount).toFixed(2)}
+                            -{order.currency === 'INR' ? '?' : '$'}{parseFloat(order.discount).toFixed(2)}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Tax (18%)</span>
                         <span className="text-gray-900">
-                          {order.currency === 'INR' ? '₹' : '$'}{parseFloat(order.tax).toFixed(2)}
+                          {order.currency === 'INR' ? '?' : '$'}{parseFloat(order.tax).toFixed(2)}
                         </span>
                       </div>
                       {order.tip && parseFloat(order.tip) > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Tip</span>
                           <span className="text-gray-900">
-                            {order.currency === 'INR' ? '₹' : '$'}{parseFloat(order.tip).toFixed(2)}
+                            {order.currency === 'INR' ? '?' : '$'}{parseFloat(order.tip).toFixed(2)}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
                         <span className="text-gray-900">Total</span>
                         <span className="text-gray-900">
-                          {order.currency === 'INR' ? '₹' : '$'}{parseFloat(order.total_amount).toFixed(2)}
+                          {order.currency === 'INR' ? '?' : '$'}{parseFloat(order.total_amount).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -1549,7 +1549,7 @@ const loadOrderFromLocalStorage = (orderId: string): Order | null => {
     const foundOrder = allOrders.find(o => o.id === orderId);
     
     if (foundOrder) {
-      console.log('📦 [OrderDetailPage] Found order in localStorage:', foundOrder.order_number);
+      console.log('ðŸ“¦ [OrderDetailPage] Found order in localStorage:', foundOrder.order_number);
       return foundOrder;
     }
     
@@ -1559,3 +1559,4 @@ const loadOrderFromLocalStorage = (orderId: string): Order | null => {
     return null;
   }
 };
+

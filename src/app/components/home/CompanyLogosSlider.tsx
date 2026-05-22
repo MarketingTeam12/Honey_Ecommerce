@@ -141,7 +141,7 @@ export function CompanyLogosSlider() {
                     src={logo.image} 
                     alt={logo.name} 
                     className="w-auto max-w-[200px] max-h-[74px] object-contain"
-                    style={logo.imageStyle ?? { mixBlendMode: 'darken' }}
+                      style={logo.imageStyle ? { mixBlendMode: 'darken' } : undefined}
                   />
                 </div>
               </div>

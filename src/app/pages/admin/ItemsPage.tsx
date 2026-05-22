@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Plus, Search, Filter, Edit, Trash2, Eye, RefreshCw, X, DollarSign, Package, Tag, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
@@ -60,7 +60,7 @@ export function ItemsPage() {
     
     // Debug logging for Startup category
     if (filterCategory === 'Startup' && product.category === 'Startup') {
-      console.log('✅ Startup product matched:', product.name, '| Category:', product.category);
+      console.log('âœ… Startup product matched:', product.name, '| Category:', product.category);
     }
     
     return matchesSearch && matchesCategory && matchesStatus && matchesPriceMin && matchesPriceMax && matchesStockMin;
@@ -333,7 +333,7 @@ export function ItemsPage() {
         {showServerNotice && (
           <div className="bg-red-50 border-2 border-red-400 rounded-xl p-6 mt-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-red-900">⚠️ Server Notice</h2>
+              <h2 className="text-xl font-bold text-red-900">âš  Server Notice</h2>
               <button
                 onClick={() => setShowServerNotice(false)}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -343,7 +343,7 @@ export function ItemsPage() {
             </div>
             
             <div className="bg-white p-4 rounded-lg mb-4">
-              <h3 className="font-bold text-red-900 mb-2">⚠️ No Products Found:</h3>
+              <h3 className="font-bold text-red-900 mb-2">âš  No Products Found:</h3>
               <p className="text-sm text-gray-700 mb-3">
                 It seems there are no products available in the server. The system should have automatically initialized default products.
               </p>
@@ -493,7 +493,7 @@ export function ItemsPage() {
                         key={index}
                         className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
                       >
-                        {lang.from} → {lang.to}
+                        {lang.from} â†’ {lang.to}
                       </span>
                     ))}
                   </div>

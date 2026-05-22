@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+﻿import { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 import logoImage from 'figma:asset/c63663e51387c858f000fbba9c714974dbc99e3e.png';
@@ -7,7 +7,9 @@ import { toast } from 'sonner';
 
 export function SignInPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, loginWithGoogle } = useAuth();
+  const isAdminLogin = searchParams.get('role') === 'admin';
   
   const [formData, setFormData] = useState({
     email: '',
@@ -36,7 +38,7 @@ export function SignInPage() {
         if (formData.email === 'admin@honeytranslations.com') {
           navigate('/admin');
         } else {
-          navigate('/');
+          navigate('/my-dashboard');
         }
       }
     } else {
@@ -74,6 +76,25 @@ export function SignInPage() {
     // So we don't set loading to false in success case
   };
 
+  const handleQuickLogin = async (email: string, password: string, targetPath: string) => {
+    setError('');
+    setLoading(true);
+    setFormData({ email, password });
+
+    // Explicit quick login target should override any stale redirect intent
+    sessionStorage.removeItem('redirectAfterLogin');
+
+    const result = await login(email, password);
+    if (result.success) {
+      navigate(targetPath);
+    } else {
+      setError(result.message || 'Login failed');
+      toast.error(result.message || 'Login failed');
+    }
+
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
@@ -82,8 +103,12 @@ export function SignInPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4">
             <img src={logoImage} alt="Honey Translations Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to Honey Translations</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isAdminLogin ? 'Sign In to Your Account' : 'Welcome Back'}
+          </h1>
+          <p className="text-gray-600 mt-2">
+            {isAdminLogin ? 'Enter your detail below' : 'Sign in to Honey Translations'}
+          </p>
         </div>
 
         {/* Sign In Form */}
@@ -126,7 +151,7 @@ export function SignInPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 />
                 <button
                   type="button"
@@ -167,6 +192,25 @@ export function SignInPage() {
                 </>
               )}
             </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('customer@example.com', 'customer123', '/my-dashboard')}
+                disabled={loading || googleLoading}
+                className="w-full bg-indigo-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-indigo-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Quick User Login
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickLogin('admin@honeytranslations.com', 'admin123', '/admin')}
+                disabled={loading || googleLoading}
+                className="w-full bg-[#1a1f5c] text-white py-3 px-4 rounded-lg font-medium hover:bg-[#252b70] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Quick Admin Login
+              </button>
+            </div>
           </form>
 
           {/* Divider */}
@@ -218,7 +262,7 @@ export function SignInPage() {
         {/* Back to Home */}
         <div className="text-center mt-6">
           <Link to="/" className="text-sm text-gray-600 hover:text-gray-900">
-            ← Back to Home
+            â† Back to Home
           </Link>
         </div>
       </div>
@@ -227,3 +271,4 @@ export function SignInPage() {
 }
 
 export default SignInPage;
+

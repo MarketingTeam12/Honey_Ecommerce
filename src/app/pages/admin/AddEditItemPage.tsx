@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, Image as ImageIcon, X, Plus, Trash2, GripVertical, Languages, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
@@ -35,7 +35,7 @@ export function AddEditItemPage() {
 
   // Debug: Log categories to console
   useEffect(() => {
-    console.log('📋 Categories loaded in AddEditItemPage:', categories);
+    console.log('ðŸ“‹ Categories loaded in AddEditItemPage:', categories);
   }, [categories]);
 
   const [formData, setFormData] = useState({
@@ -197,7 +197,7 @@ export function AddEditItemPage() {
       );
 
       if (response.ok) {
-        console.log('✅ Product configuration saved');
+        console.log('âœ… Product configuration saved');
       }
     } catch (error) {
       console.error('Error saving product config:', error);
@@ -433,12 +433,12 @@ export function AddEditItemPage() {
       }
 
       // Upload images to Supabase Storage BEFORE saving product
-      console.log('📤 Uploading images to Supabase Storage...');
+      console.log('ðŸ“¤ Uploading images to Supabase Storage...');
       toast.info('Uploading images...');
       
       const uploadedImageUrls = await uploadImages(imagePreviews);
       
-      console.log('✅ Images uploaded successfully:', uploadedImageUrls);
+      console.log('âœ… Images uploaded successfully:', uploadedImageUrls);
       toast.success(`${uploadedImageUrls.length} image(s) uploaded!`);
 
       const productData = {
@@ -459,7 +459,7 @@ export function AddEditItemPage() {
         images: uploadedImageUrls // Use Supabase Storage URLs instead of base64
       };
 
-      console.log('💾 Saving product with Supabase Storage URLs:', {
+      console.log('ðŸ’¾ Saving product with Supabase Storage URLs:', {
         isEdit,
         productName: productData.name,
         imageCount: productData.images.length,
@@ -1048,7 +1048,7 @@ export function AddEditItemPage() {
                   </select>
                   {categories.length === 0 && (
                     <p className="text-xs text-yellow-600 mt-1">
-                      ⚠️ Using default categories. Categories will load shortly.
+                      âš  Using default categories. Categories will load shortly.
                     </p>
                   )}
                 </div>

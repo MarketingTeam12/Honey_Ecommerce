@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useLocation } from 'react-router';
+﻿import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ProductTemplate } from '@/app/components/product/ProductTemplate';
 import { getProductBySlug } from '@/app/data/directProductsMap';

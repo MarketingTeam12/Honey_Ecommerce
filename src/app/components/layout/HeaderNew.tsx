@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, User, Key, Shield, ChevronDown, Menu, X, ShoppingCart, Heart, Package, MapPin, MessageSquare } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -95,11 +95,11 @@ export function HeaderNew() {
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
           <div className="order-2 sm:order-1 flex items-center gap-3 sm:gap-5 text-[12px] sm:text-[14px] flex-wrap">
             <a href="mailto:salesteam@honeytranslations.com" className="hover:text-gray-300 transition-colors">
-              📧 salesteam@honeytranslations.com
+              salesteam@honeytranslations.com
             </a>
             <div className="flex items-center gap-3">
               <a href="tel:+917299005577" className="hover:text-gray-300 transition-colors">
-                📞 +91 72990 05577
+                +91 72990 05577
               </a>
             </div>
           </div>
@@ -146,11 +146,17 @@ export function HeaderNew() {
                       </Link>
                     </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin" className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      sessionStorage.setItem('redirectAfterLogin', '/admin');
+                      navigate('/signin?role=admin');
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <span className="flex items-center">
                       <Shield className="w-4 h-4 mr-2" />
                       Admin
-                    </Link>
+                    </span>
                   </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -211,7 +217,7 @@ export function HeaderNew() {
                 <DropdownMenuContent className="w-64">
                   <DropdownMenuItem asChild>
                     <Link to="/all-translation-products" className="font-semibold text-blue-600">
-                      📋 View All Translation Services
+                      View All Translation Services
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -249,7 +255,7 @@ export function HeaderNew() {
                 <DropdownMenuContent>
                   <DropdownMenuItem asChild>
                     <Link to="/all-attestation-products" className="font-semibold text-blue-600">
-                      ✅ View All Attestation Services
+                      View All Attestation Services
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -281,7 +287,7 @@ export function HeaderNew() {
                 <DropdownMenuContent>
                   <DropdownMenuItem asChild>
                     <Link to="/all-startup-products" className="font-semibold text-blue-600">
-                      🚀 View All Startup Packages
+                      View All Startup Packages
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -563,4 +569,5 @@ export function HeaderNew() {
     </>
   );
 }
+
 

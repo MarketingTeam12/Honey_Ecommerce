@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 
 export default function EdgeFunctionHelpPage() {
@@ -48,7 +48,7 @@ export default function EdgeFunctionHelpPage() {
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="flex items-center mb-6">
-            <span className="text-4xl mr-4">🔧</span>
+            <span className="text-4xl mr-4">ðŸ”§</span>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Edge Function Troubleshooting
@@ -70,13 +70,13 @@ export default function EdgeFunctionHelpPage() {
             )}
             {!isLoading && error && (
               <div className="text-red-600">
-                <div className="font-semibold">❌ Connection Failed</div>
+                <div className="font-semibold">âŒ Connection Failed</div>
                 <div className="text-sm mt-1">{error}</div>
               </div>
             )}
             {!isLoading && diagnostics && (
               <div className="text-green-600">
-                <div className="font-semibold">✅ Edge Function is Accessible</div>
+                <div className="font-semibold">âœ… Edge Function is Accessible</div>
                 <div className="text-sm mt-2 bg-white p-3 rounded">
                   <pre className="text-xs text-gray-700 overflow-auto">
                     {JSON.stringify(diagnostics, null, 2)}
@@ -276,7 +276,7 @@ export default function EdgeFunctionHelpPage() {
               to="/"
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
-              ← Back to Home
+              â† Back to Home
             </Link>
           </div>
         </div>
@@ -284,3 +284,4 @@ export default function EdgeFunctionHelpPage() {
     </div>
   );
 }
+

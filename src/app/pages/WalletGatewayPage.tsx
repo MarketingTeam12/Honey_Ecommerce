@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, AlertCircle, Smartphone, Wallet, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -15,10 +15,10 @@ const walletColors = {
 };
 
 const walletLogos = {
-  'Paytm': '💳',
-  'Amazon Pay': '🛒',
-  'PhonePe': '📱',
-  'Mobikwik': '💰'
+  'Paytm': 'ðŸ’³',
+  'Amazon Pay': 'ðŸ›’',
+  'PhonePe': 'ðŸ“±',
+  'Mobikwik': 'ðŸ’°'
 };
 
 export function WalletGatewayPage() {
@@ -41,7 +41,7 @@ export function WalletGatewayPage() {
   const [processing, setProcessing] = useState(false);
 
   const walletColor = walletColors[walletName as keyof typeof walletColors] || 'from-blue-600 to-blue-700';
-  const walletLogo = walletLogos[walletName as keyof typeof walletLogos] || '💳';
+  const walletLogo = walletLogos[walletName as keyof typeof walletLogos] || 'ðŸ’³';
 
   // Auto-redirect after success/failure
   useEffect(() => {
@@ -63,11 +63,11 @@ export function WalletGatewayPage() {
             const maxRetries = 3;
             
             // Always send to backend (both demo and real users) so admin can see all orders
-            console.log('📡 [WalletGateway] Sending order to backend for cross-device sync...');
+            console.log('ðŸ“¡ [WalletGateway] Sending order to backend for cross-device sync...');
             
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
               try {
-                console.log(`📡 [WalletGateway] Attempt ${attempt}/${maxRetries} - Sending order to backend...`);
+                console.log(`ðŸ“¡ [WalletGateway] Attempt ${attempt}/${maxRetries} - Sending order to backend...`);
                 
                 // Always use publicAnonKey for all users since endpoint doesn't require auth
                 const orderResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
@@ -95,38 +95,38 @@ export function WalletGatewayPage() {
                 });
 
                 if (orderResponse.ok) {
-                  console.log('✅ [WalletGateway] Order saved to backend successfully!');
+                  console.log('âœ… [WalletGateway] Order saved to backend successfully!');
                   backendSaveSuccess = true;
                   break;
                 } else {
-                  console.error(`❌ [WalletGateway] Backend save failed (Attempt ${attempt}/${maxRetries}):`, orderResponse.status);
+                  console.error(`âŒ [WalletGateway] Backend save failed (Attempt ${attempt}/${maxRetries}):`, orderResponse.status);
                   if (attempt < maxRetries) {
-                    console.log(`⏳ [WalletGateway] Retrying in ${attempt} second(s)...`);
+                    console.log(`â³ [WalletGateway] Retrying in ${attempt} second(s)...`);
                     await new Promise(resolve => setTimeout(resolve, attempt * 1000));
                   }
                 }
               } catch (backendError) {
-                console.error(`❌ [WalletGateway] Exception on attempt ${attempt}/${maxRetries}:`, backendError);
+                console.error(`âŒ [WalletGateway] Exception on attempt ${attempt}/${maxRetries}:`, backendError);
                 
                 // Log detailed error information
                 if (backendError instanceof TypeError && backendError.message === 'Failed to fetch') {
-                  console.error('🔴 [WalletGateway] Network error - backend may not be deployed or CORS issue');
-                  console.error('🔴 [WalletGateway] This is expected in development/preview mode');
-                  console.error('🔴 [WalletGateway] Order is saved locally and will work for demo purposes');
+                  console.error('ðŸ”´ [WalletGateway] Network error - backend may not be deployed or CORS issue');
+                  console.error('ðŸ”´ [WalletGateway] This is expected in development/preview mode');
+                  console.error('ðŸ”´ [WalletGateway] Order is saved locally and will work for demo purposes');
                 }
                 
                 if (attempt < maxRetries) {
-                  console.log(`⏳ [WalletGateway] Retrying in ${attempt} second(s)...`);
+                  console.log(`â³ [WalletGateway] Retrying in ${attempt} second(s)...`);
                   await new Promise(resolve => setTimeout(resolve, attempt * 1000));
                 }
               }
             }
             
             if (!backendSaveSuccess) {
-              console.error('⚠️ [WalletGateway] Order failed to save to backend after all retries!');
-              console.warn('⚠️ Order may not sync across devices.');
+              console.error('âš  [WalletGateway] Order failed to save to backend after all retries!');
+              console.warn('âš  Order may not sync across devices.');
             } else {
-              console.log('🎉 [WalletGateway] Order successfully saved to backend for cross-device sync!');
+              console.log('ðŸŽ‰ [WalletGateway] Order successfully saved to backend for cross-device sync!');
             }
           })();
           
@@ -166,7 +166,7 @@ export function WalletGatewayPage() {
           
           // Increment coupon usage if a coupon was applied
           if (order.coupon_code) {
-            console.log('🎫 [WalletGateway] Incrementing coupon usage for:', order.coupon_code);
+            console.log('ðŸŽ« [WalletGateway] Incrementing coupon usage for:', order.coupon_code);
             incrementCouponUsage(order.coupon_code);
           }
           
@@ -174,10 +174,10 @@ export function WalletGatewayPage() {
           localStorage.removeItem('pending_order');
           clearCart();
           
-          console.log('✅ [WalletGateway] Order completed successfully:', order.order_number);
+          console.log('âœ… [WalletGateway] Order completed successfully:', order.order_number);
         }
       } catch (e) {
-        console.error('❌ [WalletGateway] Failed to save order:', e);
+        console.error('âŒ [WalletGateway] Failed to save order:', e);
       }
       
       const timer = setTimeout(() => {
@@ -195,7 +195,7 @@ export function WalletGatewayPage() {
           localStorage.setItem('pending_order', JSON.stringify(order));
         }
       } catch (e) {
-        console.error('❌ [WalletGateway] Failed to update order status:', e);
+        console.error('âŒ [WalletGateway] Failed to update order status:', e);
       }
       
       const timer = setTimeout(() => {
@@ -288,7 +288,7 @@ export function WalletGatewayPage() {
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
             <div className="flex justify-between items-center">
               <span className="text-sm text-white/90">Amount to Pay</span>
-              <span className="text-2xl font-bold">₹{amount}</span>
+              <span className="text-2xl font-bold">?{amount}</span>
             </div>
             <div className="mt-2 text-xs text-white/80">
               Order: {orderNumber}
@@ -416,7 +416,7 @@ export function WalletGatewayPage() {
                 </div>
                 <div className="flex justify-between pt-2 border-t border-gray-200">
                   <span className="text-gray-900 font-semibold">Amount to Pay</span>
-                  <span className="font-bold text-blue-600">₹{amount}</span>
+                  <span className="font-bold text-blue-600">?{amount}</span>
                 </div>
               </div>
             </div>
@@ -428,7 +428,7 @@ export function WalletGatewayPage() {
                   <Wallet className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-medium text-gray-700">Wallet Balance</span>
                 </div>
-                <span className="font-bold text-green-700">₹{(parseFloat(amount) * 1.5).toFixed(2)}</span>
+                <span className="font-bold text-green-700">?{(parseFloat(amount) * 1.5).toFixed(2)}</span>
               </div>
               <p className="text-xs text-green-600 mt-1">Sufficient balance available</p>
             </div>
@@ -479,7 +479,7 @@ export function WalletGatewayPage() {
                   disabled={processing}
                   className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:bg-gray-400"
                 >
-                  Pay ₹{amount}
+                  Pay ?{amount}
                 </button>
               </div>
             </div>
@@ -500,7 +500,7 @@ export function WalletGatewayPage() {
               <div className="mt-6 bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-                  Debiting ₹{amount} from {walletName}
+                  Debiting ?{amount} from {walletName}
                 </div>
               </div>
             </div>
@@ -533,7 +533,7 @@ export function WalletGatewayPage() {
                   </div>
                   <div className="flex justify-between pt-2 border-t border-green-300">
                     <span className="text-gray-600">Amount Paid</span>
-                    <span className="font-bold text-green-600">₹{amount}</span>
+                    <span className="font-bold text-green-600">?{amount}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Status</span>

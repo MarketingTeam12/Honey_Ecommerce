@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
-import { useNavigate } from 'react-router';
+﻿import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 
 export function BrandMessage() {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export function BrandMessage() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
-              At Honey Translations, every word matters—
+              At Honey Translations, every word mattersâ€”
               <span className="text-gray-900">naturally and perfectly.</span>
             </h2>
             <p className="text-xl text-gray-700">
@@ -58,3 +58,4 @@ export function BrandMessage() {
     </section>
   );
 }
+

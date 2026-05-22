@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+﻿import { useNavigate } from 'react-router-dom';
 import { FileText, Award, MessageSquare } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '@/app/components/figma/ImageWithFallback';

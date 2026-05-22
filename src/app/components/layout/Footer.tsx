@@ -1,5 +1,5 @@
-import { Facebook, Linkedin, Instagram } from 'lucide-react';
-import { Link } from 'react-router';
+﻿import { Facebook, Linkedin, Instagram } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
@@ -19,7 +19,7 @@ export function Footer() {
     setIsSubmitting(true);
     
     try {
-      console.log('📧 Subscribing email:', email);
+      console.log('ðŸ“§ Subscribing email:', email);
       
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/subscribe-email`,
@@ -43,13 +43,13 @@ export function Footer() {
         // Dispatch event for admin panel notification
         window.dispatchEvent(new CustomEvent('notificationsUpdated'));
         
-        console.log('✅ Email subscription successful');
+        console.log('âœ… Email subscription successful');
       } else {
         toast.error(data.message || 'Failed to subscribe. Please try again.');
-        console.error('❌ Subscription failed:', data.message);
+        console.error('âŒ Subscription failed:', data.message);
       }
     } catch (error) {
-      console.error('❌ Subscribe error:', error);
+      console.error('âŒ Subscribe error:', error);
       toast.error('Failed to subscribe. Please check your connection.');
     } finally {
       setIsSubmitting(false);

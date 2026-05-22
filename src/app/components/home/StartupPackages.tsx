@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 type StartupVariant = 'basic' | 'standard' | 'premium';
 
@@ -67,7 +67,7 @@ export function StartupPackages() {
     });
   }, [location.search, location.hash]);
 
-  const selectedPackage = packages.find((pkg) => pkg.variant === selectedVariant) ?? packages[0];
+  const selectedPackage = packages.find((pkg) => pkg.variant === selectedVariant) ? packages[0];
 
   return (
     <section id="startup-packages" ref={sectionRef} className="py-20 bg-gray-50">
@@ -140,3 +140,4 @@ export function StartupPackages() {
     </section>
   );
 }
+

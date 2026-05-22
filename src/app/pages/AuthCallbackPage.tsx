@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+﻿import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/app/utils/supabaseClient';
 
 export function AuthCallbackPage() {
@@ -80,3 +80,4 @@ export function AuthCallbackPage() {
 }
 
 export default AuthCallbackPage;
+

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Edit2, FileText, Tag, ChevronRight, X, Percent, DollarSign, Calendar, Users, Info } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -67,7 +67,7 @@ export function NewCheckoutReviewPage() {
 
   const loadAvailableCoupons = () => {
     const activeCoupons = couponService.getActiveCoupons();
-    console.log('📦 [CheckoutReview] Loaded active coupons:', activeCoupons);
+    console.log('ðŸ“¦ [CheckoutReview] Loaded active coupons:', activeCoupons);
     setAvailableCoupons(activeCoupons);
   };
 
@@ -460,7 +460,7 @@ export function NewCheckoutReviewPage() {
                         </span>
                         <div className="text-right">
                           <p className="text-sm text-gray-500 mb-1">
-                            {convertPrice(item.basePrice)} × {item.pageCount}
+                            {convertPrice(item.basePrice)} Ã— {item.pageCount}
                           </p>
                           <p className="text-xl font-semibold text-gray-900">
                             {convertPrice(item.totalPrice)}
@@ -720,7 +720,7 @@ export function NewCheckoutReviewPage() {
                           <p className="text-2xl font-bold text-blue-600">
                             {coupon.discountType === 'percentage'
                               ? `${coupon.discountValue}% OFF`
-                              : `₹${coupon.discountValue} OFF`}
+                              : `?${coupon.discountValue} OFF`}
                           </p>
                           {canApply && discountAmount > 0 && (
                             <p className="text-sm text-green-600 font-medium mt-1">
@@ -735,10 +735,10 @@ export function NewCheckoutReviewPage() {
                           {coupon.minOrderValue && (
                             <div className="flex items-center gap-2 text-gray-700">
                               <Info className="w-4 h-4 flex-shrink-0" />
-                              <span>Min order: ₹{coupon.minOrderValue}</span>
+                              <span>Min order: ?{coupon.minOrderValue}</span>
                               {subtotal < coupon.minOrderValue && (
                                 <span className="text-red-600 text-xs ml-auto">
-                                  (Need ₹{coupon.minOrderValue - subtotal} more)
+                                  (Need ?{coupon.minOrderValue - subtotal} more)
                                 </span>
                               )}
                             </div>
@@ -748,7 +748,7 @@ export function NewCheckoutReviewPage() {
                           {coupon.maxDiscount && coupon.discountType === 'percentage' && (
                             <div className="flex items-center gap-2 text-gray-700">
                               <Tag className="w-4 h-4 flex-shrink-0" />
-                              <span>Max discount: ₹{coupon.maxDiscount}</span>
+                              <span>Max discount: ?{coupon.maxDiscount}</span>
                             </div>
                           )}
 
@@ -800,7 +800,7 @@ export function NewCheckoutReviewPage() {
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
               <p className="text-sm text-gray-600 text-center">
-                💡 Tip: Coupons are automatically validated based on your cart total and eligibility
+                ðŸ’¡ Tip: Coupons are automatically validated based on your cart total and eligibility
               </p>
             </div>
           </div>
@@ -811,3 +811,4 @@ export function NewCheckoutReviewPage() {
 }
 
 export default NewCheckoutReviewPage;
+

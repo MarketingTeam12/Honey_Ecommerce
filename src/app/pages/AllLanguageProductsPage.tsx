@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+﻿import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useWishlist } from '@/app/context/WishlistContext';
@@ -220,3 +220,4 @@ export function AllLanguageProductsPage() {
 }
 
 export default AllLanguageProductsPage;
+

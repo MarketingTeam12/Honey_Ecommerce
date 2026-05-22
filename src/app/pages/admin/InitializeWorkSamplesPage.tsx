@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router';
+﻿import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
@@ -39,7 +39,7 @@ export function InitializeWorkSamplesPage() {
       setError(null);
       setResult(null);
 
-      console.log('🎬 Initializing work samples...');
+      console.log('ðŸŽ¬ Initializing work samples...');
 
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/init-work-samples-inline`,
@@ -71,16 +71,16 @@ export function InitializeWorkSamplesPage() {
       }
 
       const data: InitResponse = await response.json();
-      console.log('✅ Initialization complete:', data);
+      console.log('âœ… Initialization complete:', data);
       setResult(data);
     } catch (err) {
-      console.error('❌ Initialization error:', err);
+      console.error('âŒ Initialization error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize work samples';
       setError(errorMessage);
       
       // Also log helpful information
       if (errorMessage.includes('Backend not available')) {
-        console.error('💡 [Initialization] To fix this:');
+        console.error('ðŸ’¡ [Initialization] To fix this:');
         console.error('   1. Ensure Supabase Edge Functions are deployed');
         console.error('   2. Check that environment variables are set correctly');
         console.error('   3. Verify the project ID and anon key are correct');
@@ -209,9 +209,9 @@ export function InitializeWorkSamplesPage() {
                       >
                         <span className="font-medium">{item.title || item.id}</span>
                         <span className="text-xs uppercase tracking-wide">
-                          {item.status === 'created' ? '✓ Created' : 
-                           item.status === 'already_exists' ? '○ Exists' : 
-                           '✗ Error'}
+                          {item.status === 'created' ? 'âœ“ Created' : 
+                           item.status === 'already_exists' ? 'â—‹ Exists' : 
+                           'âœ— Error'}
                         </span>
                       </div>
                     ))}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Lock, CreditCard, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -93,7 +93,7 @@ export function PaymentSummaryPage() {
 
       if (data.success && data.paymentUrl) {
         // Redirect to Razorpay\'s hosted checkout page
-        console.log('🔗 Redirecting to Razorpayment URL:', data.paymentUrl);
+        console.log('ðŸ”— Redirecting to Razorpayment URL:', data.paymentUrl);
         window.location.href = data.paymentUrl;
       } else {
         throw new Error(data.error || 'Failed to create payment link');
@@ -117,7 +117,7 @@ export function PaymentSummaryPage() {
   }
 
   const totalAmount = parseFloat(orderDetails.total_amount);
-  const currencySymbol = orderDetails.currency === 'INR' ? '₹' : '$';
+  const currencySymbol = orderDetails.currency === 'INR' ? '?' : '$';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
@@ -162,8 +162,8 @@ export function PaymentSummaryPage() {
                         <p className="text-sm font-medium text-gray-900">{item.name}</p>
                         {item.sourceLanguage && item.targetLanguage && (
                           <p className="text-xs text-gray-600 mt-1">
-                            {item.sourceLanguage} → {item.targetLanguage}
-                            {item.pageCount && ` • ${item.pageCount} page(s)`}
+                            {item.sourceLanguage} â†’ {item.targetLanguage}
+                            {item.pageCount && ` â€¢ ${item.pageCount} page(s)`}
                           </p>
                         )}
                       </div>

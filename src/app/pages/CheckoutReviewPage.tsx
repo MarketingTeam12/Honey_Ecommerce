@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+﻿import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Edit, FileText, Tag } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -76,14 +76,14 @@ export function CheckoutReviewPage() {
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center">
-                ✓
+                âœ“
               </div>
               <span className="ml-2 text-sm">Cart</span>
             </div>
             <div className="w-16 h-0.5 bg-green-600"></div>
             <div className="flex items-center">
               <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center">
-                ✓
+                âœ“
               </div>
               <span className="ml-2 text-sm">Address</span>
             </div>
@@ -237,7 +237,7 @@ export function CheckoutReviewPage() {
                         {/* Page Count and Price */}
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-gray-600">
-                            {item.pageCount} {item.pageCount === 1 ? 'page' : 'pages'} × {formatPrice(item.basePrice)}
+                            {item.pageCount} {item.pageCount === 1 ? 'page' : 'pages'} Ã— {formatPrice(item.basePrice)}
                           </span>
                           <span className="font-medium text-blue-600">
                             {formatPrice(item.totalPrice)}
@@ -466,3 +466,4 @@ export function CheckoutReviewPage() {
     </div>
   );
 }
+

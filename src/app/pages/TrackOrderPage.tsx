@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Package, Mail, Phone, Search, MapPin, Clock, CheckCircle2, Truck, AlertCircle, XCircle, Download, FileText, UserCheck, Edit3, Check, Activity } from 'lucide-react';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
   id: string;
@@ -180,7 +180,7 @@ export function TrackOrderPage() {
     // Call backend API with localStorage fallback
     setIsLoading(true);
     try {
-      console.log('📦 [TrackOrder] Tracking by order number:', orderNumber);
+      console.log('ðŸ“¦ [TrackOrder] Tracking by order number:', orderNumber);
       
       // Determine if input is email or phone
       const isEmail = emailOrPhone.includes('@');
@@ -212,25 +212,25 @@ export function TrackOrderPage() {
         const data = await response.json();
         
         if (data.success && data.order) {
-          console.log('✅ [TrackOrder] Order found in backend:', data.order);
+          console.log('âœ… [TrackOrder] Order found in backend:', data.order);
           {
             const localMatch = getLocalOrderByIdentity(data.order);
             foundOrder = localMatch ? { ...data.order, ...localMatch } : data.order;
           }
         } else {
-          console.log('⚠️ [TrackOrder] Order not found in backend, trying localStorage...');
+          console.log('âš  [TrackOrder] Order not found in backend, trying localStorage...');
         }
       } catch (backendError: any) {
         if (backendError.name === 'AbortError') {
-          console.log('⚠️ [TrackOrder] Backend timed out, trying localStorage...');
+          console.log('âš  [TrackOrder] Backend timed out, trying localStorage...');
         } else {
-          console.log('⚠️ [TrackOrder] Backend error, trying localStorage:', backendError);
+          console.log('âš  [TrackOrder] Backend error, trying localStorage:', backendError);
         }
       }
       
       // FALLBACK: Search in localStorage if not found in backend
       if (!foundOrder) {
-        console.log('🔍 [TrackOrder] Searching localStorage...');
+        console.log('ðŸ” [TrackOrder] Searching localStorage...');
         
         // Search in both user_orders and honey_translation_orders
         const storageKeys = ['user_orders', 'honey_translation_orders'];
@@ -240,7 +240,7 @@ export function TrackOrderPage() {
           if (localOrders) {
             try {
               const orders = JSON.parse(localOrders);
-              console.log(`📦 [TrackOrder] Checking ${orders.length} orders in ${key}`);
+              console.log(`ðŸ“¦ [TrackOrder] Checking ${orders.length} orders in ${key}`);
               
               // Find matching order
               const matchedOrder = orders.find((order: any) => {
@@ -258,12 +258,12 @@ export function TrackOrderPage() {
               });
               
               if (matchedOrder) {
-                console.log(`✅ [TrackOrder] Order found in ${key}:`, matchedOrder);
+                console.log(`âœ… [TrackOrder] Order found in ${key}:`, matchedOrder);
                 foundOrder = matchedOrder;
                 break;
               }
             } catch (e) {
-              console.log(`⚠️ [TrackOrder] Error parsing ${key}:`, e);
+              console.log(`âš  [TrackOrder] Error parsing ${key}:`, e);
             }
           }
         }
@@ -273,12 +273,12 @@ export function TrackOrderPage() {
         setOrderDetails(foundOrder);
         toast.success('Order found successfully!');
       } else {
-        console.log('❌ [TrackOrder] Order not found in backend or localStorage');
+        console.log('âŒ [TrackOrder] Order not found in backend or localStorage');
         setNotFound(true);
         toast.error('Order not found. Please check your details.');
       }
     } catch (error) {
-      console.error('❌ [TrackOrder] Error:', error);
+      console.error('âŒ [TrackOrder] Error:', error);
       toast.error('Failed to track order. Please try again.');
       setNotFound(true);
     } finally {
@@ -307,7 +307,7 @@ export function TrackOrderPage() {
     // Call backend API with localStorage fallback
     setIsLoading(true);
     try {
-      console.log('📦 [TrackOrder] Tracking by tracking number:', trackingNumber);
+      console.log('ðŸ“¦ [TrackOrder] Tracking by tracking number:', trackingNumber);
       let foundOrder: OrderDetails | null = null;
       
       // PRIORITY 1: Try backend first
@@ -334,25 +334,25 @@ export function TrackOrderPage() {
         const data = await response.json();
         
         if (data.success && data.order) {
-          console.log('✅ [TrackOrder] Order found in backend:', data.order);
+          console.log('âœ… [TrackOrder] Order found in backend:', data.order);
           {
             const localMatch = getLocalOrderByIdentity(data.order);
             foundOrder = localMatch ? { ...data.order, ...localMatch } : data.order;
           }
         } else {
-          console.log('⚠️ [TrackOrder] Order not found in backend, trying localStorage...');
+          console.log('âš  [TrackOrder] Order not found in backend, trying localStorage...');
         }
       } catch (backendError: any) {
         if (backendError.name === 'AbortError') {
-          console.log('⚠️ [TrackOrder] Backend timed out, trying localStorage...');
+          console.log('âš  [TrackOrder] Backend timed out, trying localStorage...');
         } else {
-          console.log('⚠️ [TrackOrder] Backend error, trying localStorage:', backendError);
+          console.log('âš  [TrackOrder] Backend error, trying localStorage:', backendError);
         }
       }
       
       // FALLBACK: Search in localStorage if not found in backend
       if (!foundOrder) {
-        console.log('🔍 [TrackOrder] Searching localStorage...');
+        console.log('ðŸ” [TrackOrder] Searching localStorage...');
         
         // Search in both user_orders and honey_translation_orders
         const storageKeys = ['user_orders', 'honey_translation_orders'];
@@ -362,7 +362,7 @@ export function TrackOrderPage() {
           if (localOrders) {
             try {
               const orders = JSON.parse(localOrders);
-              console.log(`📦 [TrackOrder] Checking ${orders.length} orders in ${key}`);
+              console.log(`ðŸ“¦ [TrackOrder] Checking ${orders.length} orders in ${key}`);
               
               // Find matching order by tracking number
               const matchedOrder = orders.find((order: any) => 
@@ -370,12 +370,12 @@ export function TrackOrderPage() {
               );
               
               if (matchedOrder) {
-                console.log(`✅ [TrackOrder] Order found in ${key}:`, matchedOrder);
+                console.log(`âœ… [TrackOrder] Order found in ${key}:`, matchedOrder);
                 foundOrder = matchedOrder;
                 break;
               }
             } catch (e) {
-              console.log(`⚠️ [TrackOrder] Error parsing ${key}:`, e);
+              console.log(`âš  [TrackOrder] Error parsing ${key}:`, e);
             }
           }
         }
@@ -385,12 +385,12 @@ export function TrackOrderPage() {
         setOrderDetails(foundOrder);
         toast.success('Order found successfully!');
       } else {
-        console.log('❌ [TrackOrder] Order not found in backend or localStorage');
+        console.log('âŒ [TrackOrder] Order not found in backend or localStorage');
         setNotFound(true);
         toast.error('Order not found. Please check your tracking number.');
       }
     } catch (error) {
-      console.error('❌ [TrackOrder] Error:', error);
+      console.error('âŒ [TrackOrder] Error:', error);
       toast.error('Failed to track order. Please try again.');
       setNotFound(true);
     } finally {
@@ -1007,7 +1007,7 @@ export function TrackOrderPage() {
                                 <p className="text-xs text-blue-600 mt-1 animate-pulse">In Progress</p>
                               )}
                               {isCompleted && (
-                                <p className="text-xs text-green-600 mt-1">✓ Completed</p>
+                                <p className="text-xs text-green-600 mt-1">âœ“ Completed</p>
                               )}
                             </div>
                           </div>
@@ -1068,3 +1068,4 @@ export function TrackOrderPage() {
 }
 
 export default TrackOrderPage;
+

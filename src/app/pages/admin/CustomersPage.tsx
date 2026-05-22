@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Eye, MoreVertical, Search, Filter } from 'lucide-react';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 
@@ -103,13 +103,13 @@ function CustomersPage() {
         });
         
         setCustomers(customerList);
-        console.log('✅ [CustomersPage] Loaded', customerList.length, 'customers');
+        console.log('âœ… [CustomersPage] Loaded', customerList.length, 'customers');
       } else {
         setCustomers([]);
-        console.log('⚠️ [CustomersPage] No orders found in localStorage');
+        console.log('âš  [CustomersPage] No orders found in localStorage');
       }
     } catch (error) {
-      console.error('❌ [CustomersPage] Error loading customers:', error);
+      console.error('âŒ [CustomersPage] Error loading customers:', error);
       setCustomers([]);
     } finally {
       setLoading(false);
@@ -414,3 +414,4 @@ function CustomersPage() {
 }
 
 export default CustomersPage;
+

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router';
+﻿import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useWishlist } from '@/app/context/WishlistContext';
@@ -270,3 +270,4 @@ export function AllTranslationProductsPage() {
 }
 
 export default AllTranslationProductsPage;
+

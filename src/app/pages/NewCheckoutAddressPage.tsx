@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MapPin, Plus, Tag, ChevronRight, Trash2, Edit2 } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -8,13 +8,13 @@ import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/ph
 
 // Country codes with validation rules
 const countryCodes = [
-  { code: '+91', country: 'India', flag: '🇮🇳', digits: 10 },
-  { code: '+1', country: 'USA', flag: '🇺🇸', digits: 10 },
-  { code: '+44', country: 'UK', flag: '🇬🇧', digits: 10 },
-  { code: '+971', country: 'UAE', flag: '🇦🇪', digits: 9 },
-  { code: '+65', country: 'Singapore', flag: '🇸🇬', digits: 8 },
-  { code: '+60', country: 'Malaysia', flag: '🇲🇾', digits: 9 },
-  { code: '+61', country: 'Australia', flag: '🇦🇺', digits: 9 },
+  { code: '+91', country: 'India', flag: 'ðŸ‡®ðŸ‡³', digits: 10 },
+  { code: '+1', country: 'USA', flag: 'ðŸ‡ºðŸ‡¸', digits: 10 },
+  { code: '+44', country: 'UK', flag: 'ðŸ‡¬ðŸ‡§', digits: 10 },
+  { code: '+971', country: 'UAE', flag: 'ðŸ‡¦ðŸ‡ª', digits: 9 },
+  { code: '+65', country: 'Singapore', flag: 'ðŸ‡¸ðŸ‡¬', digits: 8 },
+  { code: '+60', country: 'Malaysia', flag: 'ðŸ‡²ðŸ‡¾', digits: 9 },
+  { code: '+61', country: 'Australia', flag: 'ðŸ‡¦ðŸ‡º', digits: 9 },
 ];
 
 // Valid Indian cities
@@ -222,7 +222,7 @@ export function NewCheckoutAddressPage() {
       if (selectedAddressId === addressId) {
         setSelectedAddressId('');
       }
-      console.log(`🗑️ [NewCheckoutAddressPage] Address removed: ${addressId}`);
+      console.log(`ðŸ—‘ [NewCheckoutAddressPage] Address removed: ${addressId}`);
     }
   };
 
@@ -246,7 +246,7 @@ export function NewCheckoutAddressPage() {
     setEditingAddressId(address.id);
     setShowAddressForm(true);
     setSelectedCountryCode(countryCodes.find(c => c.code === address.phoneCountryCode) || countryCodes[0]);
-    console.log(`✏️ [NewCheckoutAddressPage] Editing address: ${address.id}`);
+    console.log(`âœ [NewCheckoutAddressPage] Editing address: ${address.id}`);
   };
 
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,7 +278,7 @@ export function NewCheckoutAddressPage() {
   const handleSaveAddress = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent page refresh
     
-    console.log('📍 [NewCheckoutAddressPage] Validating new address...');
+    console.log('ðŸ“ [NewCheckoutAddressPage] Validating new address...');
     
     // Comprehensive validation
     const errors: {[key: string]: string} = {};
@@ -349,11 +349,11 @@ export function NewCheckoutAddressPage() {
       // Display first error
       const firstError = Object.values(errors)[0];
       alert('Validation Error: ' + firstError);
-      console.log('❌ [NewCheckoutAddressPage] Validation failed:', errors);
+      console.log('âŒ [NewCheckoutAddressPage] Validation failed:', errors);
       return;
     }
 
-    console.log('✅ [NewCheckoutAddressPage] Validation passed...');
+    console.log('âœ… [NewCheckoutAddressPage] Validation passed...');
 
     // Get properly formatted city and state names (case-insensitive match)
     const formattedCity = findMatchingCity(newAddressForm.city) || newAddressForm.city.trim();
@@ -377,7 +377,7 @@ export function NewCheckoutAddressPage() {
 
       setAddresses(addresses.map(addr => addr.id === editingAddressId ? updatedAddress : addr));
       setSelectedAddressId(editingAddressId);
-      console.log('✅ [NewCheckoutAddressPage] Address updated successfully:', updatedAddress);
+      console.log('âœ… [NewCheckoutAddressPage] Address updated successfully:', updatedAddress);
       alert('Address updated successfully!');
       setEditingAddressId(null);
     } else {
@@ -396,14 +396,14 @@ export function NewCheckoutAddressPage() {
         isDefault: addresses.length === 0 // First address becomes default
       };
 
-      console.log('✅ [NewCheckoutAddressPage] New address created:', newAddress);
+      console.log('âœ… [NewCheckoutAddressPage] New address created:', newAddress);
 
       // Add to addresses list
       setAddresses([...addresses, newAddress]);
       
       // Auto-select the newly added address
       setSelectedAddressId(newAddress.id);
-      console.log('✅ [NewCheckoutAddressPage] Address saved successfully');
+      console.log('âœ… [NewCheckoutAddressPage] Address saved successfully');
       alert('Address added successfully!');
     }
     
@@ -742,7 +742,7 @@ export function NewCheckoutAddressPage() {
                       <p className="text-sm text-green-700">
                         {appliedCoupon.discountType === 'percentage' 
                           ? `${appliedCoupon.discountValue}% discount` 
-                          : `₹${appliedCoupon.discountValue} discount`}
+                          : `?${appliedCoupon.discountValue} discount`}
                       </p>
                     </div>
                     <div className="bg-green-100 p-2 rounded-full">
@@ -797,3 +797,4 @@ export function NewCheckoutAddressPage() {
 }
 
 export default NewCheckoutAddressPage;
+
