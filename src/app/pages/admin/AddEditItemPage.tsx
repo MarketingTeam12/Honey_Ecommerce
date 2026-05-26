@@ -44,7 +44,6 @@ export function AddEditItemPage() {
     description: '',
     price: '',
     compareAtPrice: '',
-    cost: '',
     sku: '',
     barcode: '',
     stock: '',
@@ -95,7 +94,6 @@ export function AddEditItemPage() {
           description: product.description || '',
           price: product.price.toString(),
           compareAtPrice: product.compareAtPrice?.toString() || '',
-          cost: product.cost?.toString() || '',
           sku: product.sku || '',
           barcode: product.barcode || '',
           stock: product.stock.toString(),
@@ -447,7 +445,6 @@ export function AddEditItemPage() {
         description: formData.description,
         price: parseFloat(formData.price),
         compareAtPrice: formData.compareAtPrice ? parseFloat(formData.compareAtPrice) : undefined,
-        cost: formData.cost ? parseFloat(formData.cost) : undefined,
         sku: formData.sku,
         barcode: formData.barcode,
         stock: parseInt(formData.stock),
@@ -866,7 +863,7 @@ export function AddEditItemPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Price *
@@ -902,22 +899,6 @@ export function AddEditItemPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cost per Item
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={formData.cost}
-                      onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
-                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
 

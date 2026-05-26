@@ -296,7 +296,7 @@ export function AdminDashboard() {
               </div>
             </div>
             <h3 className="text-sm font-medium text-gray-600 mb-1">YET TO RECEIVE PAYMENTS</h3>
-            <p className="text-2xl font-bold text-gray-900 mb-1 break-words">?{stats.yetToReceivePayments.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-gray-900 mb-1 break-words">{stats.yetToReceivePayments.toFixed(2)}</p>
             <p className="text-xs text-gray-500">To Be Received</p>
           </div>
 

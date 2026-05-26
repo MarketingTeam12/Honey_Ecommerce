@@ -6,6 +6,7 @@ import {
   Menu, X, LogOut, ChevronDown, Plus, LayoutGrid, Tag, Trash2, Mail, MessageSquare, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
+import { hasAdminAccess } from '@/app/utils/roleAccess';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import honeyLogo from 'figma:asset/d99fd9d20cac16122a3e457a66e96224eb5ad345.png';
 
@@ -16,7 +17,7 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, accessToken } = useAuth();
+  const { user, logout, accessToken, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [itemsExpanded, setItemsExpanded] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
@@ -24,6 +25,28 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const unreadCount = notifications.filter((n: any) => !n.read).length;
+  const canAccessAdmin = hasAdminAccess(user?.email, user?.role);
+
+  useEffect(() => {
+    if (!loading && !canAccessAdmin) {
+      navigate('/signin?role=admin', { replace: true });
+    }
+  }, [loading, canAccessAdmin, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+          <p className="text-sm text-gray-600">Checking admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canAccessAdmin) {
+    return null;
+  }
 
   // Load notifications from backend
   const loadNotifications = async () => {

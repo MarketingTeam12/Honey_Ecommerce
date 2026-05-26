@@ -1,10 +1,15 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Settings } from 'lucide-react';
+import { useAuth } from '@/app/context/AuthContext';
+import { hasAdminAccess } from '@/app/utils/roleAccess';
 
 export function AdminAccessButton() {
+  const { user } = useAuth();
+  const canAccessAdmin = hasAdminAccess(user?.email, user?.role);
+
   return (
     <Link
-      to="/admin"
+      to={canAccessAdmin ? '/admin' : '/signin?role=admin'}
       className="fixed bottom-24 left-6 z-50 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:shadow-purple-500/50 hover:scale-110 transition-all duration-300 group"
       title="Admin Panel"
     >

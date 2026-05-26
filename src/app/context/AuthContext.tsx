@@ -7,8 +7,126 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'customer';
+  role: 'admin' | 'sales_manager' | 'customer';
 }
+
+type UserRole = User['role'];
+
+const USER_ROLES_STORAGE_KEY = 'honey_translation_user_roles';
+const REGISTERED_USERS_STORAGE_KEY = 'registered_users';
+const ADMIN_EMAILS = new Set(['admin@honeytranslations.com', 'swetha@gmail.com']);
+const normalizeEmail = (email?: string | null) => String(email || '').trim().toLowerCase();
+
+const normalizeRole = (role: unknown): UserRole => {
+  const value = String(role || '').trim().toLowerCase();
+
+  if (value === 'admin') return 'admin';
+  if (value === 'sales_manager' || value === 'sales manager' || value === 'manager') return 'sales_manager';
+  if (value === 'customer' || value === 'user') return 'customer';
+
+  return 'customer';
+};
+
+const getStoredRole = (email?: string | null): UserRole | null => {
+  if (typeof window === 'undefined' || !email) {
+    return null;
+  }
+  const emailKey = normalizeEmail(email);
+  if (!emailKey) return null;
+
+  try {
+    const raw = localStorage.getItem(USER_ROLES_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const matchKey = Object.keys(parsed).find((key) => normalizeEmail(key) === emailKey);
+    return matchKey ? normalizeRole(parsed[matchKey]) : null;
+  } catch (error) {
+    console.error('Failed to read stored roles:', error);
+    return null;
+  }
+};
+
+const getRegisteredUserRole = (email?: string | null): UserRole | null => {
+  if (typeof window === 'undefined' || !email) {
+    return null;
+  }
+  const emailKey = normalizeEmail(email);
+  if (!emailKey) return null;
+
+  try {
+    const raw = localStorage.getItem(REGISTERED_USERS_STORAGE_KEY);
+    if (!raw) return null;
+
+    const registeredUsers = JSON.parse(raw) as Array<{ email?: string; role?: unknown }>;
+    const match = registeredUsers.find((user) => normalizeEmail(user.email) === emailKey);
+    return match?.role ? normalizeRole(match.role) : null;
+  } catch (error) {
+    console.error('Failed to read registered user roles:', error);
+    return null;
+  }
+};
+
+const resolveUserRole = (email: string | undefined | null, fallback: UserRole, backendRole?: unknown): UserRole => {
+  const emailKey = normalizeEmail(email);
+  const storedRole = getStoredRole(emailKey);
+  const registeredRole = getRegisteredUserRole(emailKey);
+
+  if (storedRole) {
+    return storedRole;
+  }
+
+  if (registeredRole) {
+    return registeredRole;
+  }
+
+  if (emailKey && ADMIN_EMAILS.has(emailKey)) {
+    return 'admin';
+  }
+
+  return normalizeRole(
+    backendRole ??
+    fallback
+  );
+};
+
+const upsertRegisteredUserRecord = (
+  user: { id: string; email: string; name: string; role: UserRole },
+  extras?: { phone?: string; password?: string; source?: string; lastLoginAt?: string },
+) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const raw = localStorage.getItem(REGISTERED_USERS_STORAGE_KEY);
+    const registeredUsers = raw ? JSON.parse(raw) : [];
+    const now = new Date().toISOString();
+    const userEmailKey = normalizeEmail(user.email);
+    const index = registeredUsers.findIndex((entry: any) => normalizeEmail(entry.email) === userEmailKey);
+    const existing = index >= 0 ? registeredUsers[index] : {};
+    const nextUser = {
+      ...existing,
+      id: user.id,
+      email: userEmailKey,
+      name: user.name,
+      phone: extras?.phone ?? existing.phone ?? 'N/A',
+      role: normalizeRole(getStoredRole(userEmailKey) ?? user.role ?? existing.role),
+      password: extras?.password ?? existing.password,
+      source: extras?.source ?? existing.source ?? 'Auth',
+      createdAt: existing.createdAt || now,
+      lastLoginAt: extras?.lastLoginAt ?? now,
+    };
+
+    if (index >= 0) {
+      registeredUsers[index] = nextUser;
+    } else {
+      registeredUsers.push(nextUser);
+    }
+
+    localStorage.setItem(REGISTERED_USERS_STORAGE_KEY, JSON.stringify(registeredUsers));
+  } catch (error) {
+    console.error('Failed to upsert registered user record:', error);
+  }
+};
 
 interface AuthContextType {
   user: User | null;
@@ -151,7 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             supabaseUser.user_metadata?.name ||
             supabaseUser.email?.split('@')[0] ||
             'User',
-      role: 'customer' as const
+      role: resolveUserRole(supabaseUser.email, 'customer')
     };
     setUser(fallbackUser);
     setAccessToken(token);
@@ -214,7 +332,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: supabaseUser.id,
             email: supabaseUser.email,
             name: name,
-            role: 'customer' as const
+            role: resolveUserRole(supabaseUser.email, 'customer')
           };
         }
       }
@@ -224,12 +342,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: userProfile.id,
         email: userProfile.email,
         name: userProfile.name,
-        role: (userProfile.role || 'customer') as 'admin' | 'customer'
+        role: resolveUserRole(userProfile.email, 'customer', userProfile.role)
       };
       
       setUser(userObj);
       setAccessToken(token);
       setIsMockAuth(false);
+      upsertRegisteredUserRecord(userObj, {
+        phone: supabaseUser.user_metadata?.phone || 'N/A',
+        source: 'Google OAuth',
+        lastLoginAt: new Date().toISOString(),
+      });
       
       console.log('✅ [OAuth] Google sign-in complete');
     } catch (error) {
@@ -242,11 +365,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               supabaseUser.user_metadata?.name || 
               supabaseUser.email?.split('@')[0] || 
               'User',
-        role: 'customer' as const
+        role: resolveUserRole(supabaseUser.email, 'customer')
       };
       setUser(userObj);
       setAccessToken(token);
       setIsMockAuth(false);
+      upsertRegisteredUserRecord(userObj, {
+        source: 'Google OAuth',
+        lastLoginAt: new Date().toISOString(),
+      });
     }
   };
 
@@ -276,6 +403,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mockUser) {
         try {
           const parsedUser = JSON.parse(mockUser);
+          const restoredUser = {
+            ...parsedUser,
+            role: resolveUserRole(parsedUser.email, normalizeRole(parsedUser.role || 'customer'))
+          };
           console.log('✅ Mock user found in localStorage:', parsedUser.email);
           
           // IMPORTANT: Ensure mock auth flag is set for existing sessions
@@ -285,7 +416,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           
           setIsMockAuth(true); // Set this BEFORE setting user
-          setUser(parsedUser);
+          setUser(restoredUser);
+          localStorage.setItem('mock_user', JSON.stringify(restoredUser));
           
           // Check if we have a stored demo token (real JWT)
           const storedDemoToken = localStorage.getItem('demo_access_token');
@@ -293,8 +425,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('✅ Restoring demo access token for admin');
             setAccessToken(storedDemoToken);
           } else {
-            setAccessToken('mock-token-' + parsedUser.id);
+            setAccessToken('mock-token-' + restoredUser.id);
           }
+
+          upsertRegisteredUserRecord(restoredUser, {
+            lastLoginAt: new Date().toISOString(),
+          });
           
           setLoading(false);
           console.log('✅ Mock user session restored successfully');
@@ -357,11 +493,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: session.user.id,
         email: session.user.email || '',
         name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-        role: 'customer' as const
+        role: resolveUserRole(session.user.email, 'customer')
       };
       
       setUser(userObj);
       setAccessToken(session.access_token);
+      upsertRegisteredUserRecord(userObj, {
+        source: session.user.app_metadata?.provider === 'google' ? 'Google OAuth' : 'Supabase',
+        lastLoginAt: new Date().toISOString(),
+      });
       
       // Optionally try to sync with backend for persistence (non-blocking)
       try {
@@ -440,7 +580,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: mockUser.id,
         email: mockUser.email,
         name: mockUser.name,
-        role: mockUser.role
+        role: resolveUserRole(mockUser.email, mockUser.role)
       };
       
       // CRITICAL: For demo admin, fetch a real JWT token from the backend
@@ -481,6 +621,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (realToken) {
         localStorage.setItem('demo_access_token', realToken);
       }
+      upsertRegisteredUserRecord(userObj, {
+        password: mockUser.password,
+        source: 'Demo Login',
+        lastLoginAt: new Date().toISOString(),
+      });
       
       setIsMockAuth(true); // Mark as mock authentication
       setLoading(false);
@@ -499,13 +644,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: registeredUser.id,
             email: registeredUser.email,
             name: registeredUser.name,
-            role: registeredUser.role
+            role: resolveUserRole(registeredUser.email, normalizeRole(registeredUser.role))
           };
           setUser(userObj);
           setAccessToken('mock-token-' + registeredUser.id);
           localStorage.setItem('mock_user', JSON.stringify(userObj));
           localStorage.setItem('is_mock_auth', 'true'); // Set mock auth flag
           setIsMockAuth(true); // Mark as mock authentication
+          upsertRegisteredUserRecord(userObj, {
+            password: registeredUser.password,
+            phone: registeredUser.phone,
+            source: 'Registered User Login',
+            lastLoginAt: new Date().toISOString(),
+          });
           setLoading(false);
           console.log('✅ Login successful for registered user:', email);
           return { success: true };
@@ -574,7 +725,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: data.userId,
           email: email,
           name: name,
-          role: 'customer' as const
+          role: resolveUserRole(email, 'customer')
         };
         
         console.log('👤 [AuthContext] Setting user in state:', userObj);
@@ -596,6 +747,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem('is_mock_auth', 'true');
         }
         
+        upsertRegisteredUserRecord(userObj, {
+          phone: phone || 'N/A',
+          source: 'Signup',
+          lastLoginAt: new Date().toISOString(),
+        });
+
         setLoading(false);
         
         
@@ -655,7 +812,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: password, // Store password for authentication
       name: name,
       phone: phone || 'N/A',
-      role: 'customer' as const
+      role: resolveUserRole(email, 'customer')
     };
 
     // Set user immediately (don't expose password in user state)
@@ -675,7 +832,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const registeredUsersStr = localStorage.getItem('registered_users');
       let registeredUsers: any[] = registeredUsersStr ? JSON.parse(registeredUsersStr) : [];
-      registeredUsers.push(newUser); // Store with password and phone for authentication and admin view
+      registeredUsers.push({
+        ...newUser,
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+      }); // Store with password and phone for authentication and admin view
       localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
       localStorage.setItem('mock_user', JSON.stringify(userObj)); // Store without password
       localStorage.setItem('is_mock_auth', 'true'); // Set mock auth flag
@@ -750,7 +911,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
+    isAdmin: user?.role === 'admin' || user?.role === 'sales_manager',
     accessToken,
     login,
     signup,

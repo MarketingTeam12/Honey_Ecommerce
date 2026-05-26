@@ -12,6 +12,7 @@ export interface CartItem {
   certificateType?: string;
   uploadedDocument?: File | null; // Keep for backward compatibility
   uploadedDocuments?: File[]; // Support multiple documents
+  driveLink?: string;
   documentPreview?: string;
   pageCount: number;
   totalPrice: number;

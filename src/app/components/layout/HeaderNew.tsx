@@ -19,6 +19,7 @@ import honeyLogo from '@/assets/honey-log.png';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { startupProducts } from '@/app/data/startupProductsList';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
+import { hasAdminAccess } from '@/app/utils/roleAccess';
 
 interface Product {
   id: string;
@@ -44,6 +45,7 @@ export function HeaderNew() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const canAccessAdmin = hasAdminAccess(user?.email, user?.role);
 
 
   // Build dynamic categories from admin products
@@ -145,19 +147,22 @@ export function HeaderNew() {
                         My Address
                       </Link>
                     </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      sessionStorage.setItem('redirectAfterLogin', '/admin');
-                      navigate('/signin?role=admin');
-                    }}
-                    className="cursor-pointer"
-                  >
-                    <span className="flex items-center">
-                      <Shield className="w-4 h-4 mr-2" />
-                      Admin
-                    </span>
-                  </DropdownMenuItem>
+                    {canAccessAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            navigate('/admin');
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <span className="flex items-center">
+                            <Shield className="w-4 h-4 mr-2" />
+                            Admin Panel
+                          </span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -478,6 +483,16 @@ export function HeaderNew() {
                       <MapPin className="w-4 h-4" />
                       My Address
                     </Link>
+                    {canAccessAdmin && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Shield className="w-4 h-4" />
+                        Admin Panel
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         logout();

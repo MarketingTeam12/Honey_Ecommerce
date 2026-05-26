@@ -12,6 +12,7 @@ import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Check, Heart, ChevronLeft, ChevronRight, Upload, Minus, Plus, MessageCircle, Share2 } from 'lucide-react';
@@ -373,8 +374,12 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const inWishlist = isInWishlist(productId);
 
   // Form state for product configuration
-  const [sourceLanguage, setSourceLanguage] = useState('');
-  const [targetLanguage, setTargetLanguage] = useState('');
+  const [sourceLanguages, setSourceLanguages] = useState<string[]>([]);
+  const [targetLanguages, setTargetLanguages] = useState<string[]>([]);
+  const [sourceLanguageSearch, setSourceLanguageSearch] = useState('');
+  const [targetLanguageSearch, setTargetLanguageSearch] = useState('');
+  const [sourceLanguageOpen, setSourceLanguageOpen] = useState(false);
+  const [targetLanguageOpen, setTargetLanguageOpen] = useState(false);
   const [destination, setDestination] = useState('');
   const [apostilleDocumentType, setApostilleDocumentType] = useState('');
   const [needTranslation, setNeedTranslation] = useState('');
@@ -382,6 +387,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const [translateToLanguage, setTranslateToLanguage] = useState('');
   const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [driveLink, setDriveLink] = useState('');
   const [pageCount, setPageCount] = useState(1);
   const [packageDuration, setPackageDuration] = useState<'full-package' | '1-year' | '2-year'>('full-package');
   const [showAllProductDetails, setShowAllProductDetails] = useState(false);
@@ -395,13 +401,55 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const editCartItem = location.state?.editCartItem;
   const isEditMode = !!editCartItem;
 
+  const sourceLanguageOptions = useMemo(
+    () =>
+      (data.sourceLanguages && data.sourceLanguages.length > 0 ? data.sourceLanguages : ALL_LANGUAGE_OPTIONS).filter(
+        (lang) => lang && lang.value && lang.label
+      ),
+    [data.sourceLanguages]
+  );
+
+  const targetLanguageOptions = useMemo(
+    () =>
+      (data.targetLanguages && data.targetLanguages.length > 0 ? data.targetLanguages : ALL_LANGUAGE_OPTIONS).filter(
+        (lang) => lang && lang.value && lang.label
+      ),
+    [data.targetLanguages]
+  );
+
+  const filteredSourceLanguageOptions = useMemo(() => {
+    const query = sourceLanguageSearch.trim().toLowerCase();
+    if (!query) return sourceLanguageOptions;
+    return sourceLanguageOptions.filter((lang) => lang.label.toLowerCase().includes(query));
+  }, [sourceLanguageOptions, sourceLanguageSearch]);
+
+  const filteredTargetLanguageOptions = useMemo(() => {
+    const query = targetLanguageSearch.trim().toLowerCase();
+    if (!query) return targetLanguageOptions;
+    return targetLanguageOptions.filter((lang) => lang.label.toLowerCase().includes(query));
+  }, [targetLanguageOptions, targetLanguageSearch]);
+
   // Pre-fill form if in edit mode
   useEffect(() => {
     if (isEditMode && editCartItem) {
       console.log('ðŸ“ Edit mode detected, pre-filling form with:', editCartItem);
       
-      if (editCartItem.sourceLanguage) setSourceLanguage(editCartItem.sourceLanguage);
-      if (editCartItem.targetLanguage) setTargetLanguage(editCartItem.targetLanguage);
+      if (editCartItem.sourceLanguage) {
+        setSourceLanguages(
+          editCartItem.sourceLanguage
+            .split(',')
+            .map((lang: string) => lang.trim())
+            .filter(Boolean)
+        );
+      }
+      if (editCartItem.targetLanguage) {
+        setTargetLanguages(
+          editCartItem.targetLanguage
+            .split(',')
+            .map((lang: string) => lang.trim())
+            .filter(Boolean)
+        );
+      }
       if (editCartItem.certificateType) {
         const docTypes = editCartItem.certificateType.split(', ');
         setSelectedDocTypes(docTypes);
@@ -411,6 +459,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
       } else if (editCartItem.uploadedDocument) {
         setUploadedFiles([editCartItem.uploadedDocument]);
       }
+      if (editCartItem.driveLink) setDriveLink(editCartItem.driveLink);
       if (editCartItem.pageCount) setPageCount(editCartItem.pageCount);
     }
   }, [isEditMode]);
@@ -426,8 +475,10 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Reset all form fields when product changes
   useEffect(() => {
     console.log('ðŸ”„ Product changed, resetting all form fields:', productId);
-    setSourceLanguage('');
-    setTargetLanguage('');
+    setSourceLanguages([]);
+    setTargetLanguages([]);
+    setSourceLanguageSearch('');
+    setTargetLanguageSearch('');
     setDestination('');
     setApostilleDocumentType('');
     setNeedTranslation('');
@@ -435,6 +486,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     setTranslateToLanguage('');
     setSelectedDocTypes([]);
     setUploadedFiles([]);
+    setDriveLink('');
     setPageCount(1);
     setPackageDuration('full-package');
     setIsZoomed(false);
@@ -531,126 +583,8 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     }
   };
 
-  // Calculate dynamic price based on product type, source and target languages
-  const getDynamicPrice = () => {
-    const source = sourceLanguage.toLowerCase();
-    const target = targetLanguage.toLowerCase();
-    
-    // 1. TRANSLATION SERVICES
-    if (data.type === 'translation' && source && target) {
-      // Check if this is sworn translation (title contains "sworn")
-      const isSwornTranslation = data.title.toLowerCase().includes('sworn');
-      
-      if (isSwornTranslation) {
-        // Sworn translation pricing
-        const pairKey = `${source}-${target}`;
-        const swornPrice = SWORN_TRANSLATION_PRICING[pairKey];
-        if (swornPrice) {
-          return swornPrice;
-        }
-      } else {
-        // Standard translation pricing
-        const indianLanguages = Object.keys(INDIAN_TO_ENGLISH);
-        const foreignLanguages = Object.keys(FOREIGN_TO_ENGLISH);
-        
-        // Check if source is Indian language going to English
-        if (indianLanguages.includes(source) && target === 'english') {
-          return INDIAN_TO_ENGLISH[source];
-        }
-        
-        // Check if source is English going to Indian language
-        if (source === 'english' && indianLanguages.includes(target)) {
-          return ENGLISH_TO_INDIAN[target];
-        }
-        
-        // Check if source is foreign language going to English
-        if (foreignLanguages.includes(source) && target === 'english') {
-          return FOREIGN_TO_ENGLISH[source];
-        }
-        
-        // Check if source is English going to foreign language
-        if (source === 'english' && foreignLanguages.includes(target)) {
-          return ENGLISH_TO_FOREIGN[target];
-        }
-      }
-    }
-    
-    // 2. APOSTILLE SERVICES
-    if (data.type === 'apostille') {
-      return APOSTILLE_OFFER;
-    }
-    
-    // 3. ATTESTATION SERVICES
-    if (data.type === 'attestation') {
-      // Extract country from title or selected doc types
-      const titleLower = data.title.toLowerCase();
-      
-      for (const country in ATTESTATION_PRICING) {
-        if (titleLower.includes(country)) {
-          return ATTESTATION_PRICING[country].offer;
-        }
-      }
-    }
-    
-    // 4. STARTUP PACKAGE
-    if (data.type === 'startup') {
-      const packageType = data.title.toLowerCase().split(' ')[0];
-      
-      if (STARTUP_PACKAGE_PRICING[packageType]) {
-        return STARTUP_PACKAGE_PRICING[packageType][packageDuration].offer;
-      }
-    }
-    
-    // Fallback to default product price
-    return data.price;
-  };
-
-  const getDynamicOriginalPrice = () => {
-    const source = sourceLanguage.toLowerCase();
-    const target = targetLanguage.toLowerCase();
-    
-    // 1. TRANSLATION SERVICES
-    if (data.type === 'translation' && source && target) {
-      const isSwornTranslation = data.title.toLowerCase().includes('sworn');
-      
-      if (isSwornTranslation) {
-        return SWORN_TRANSLATION_ORIGINAL;
-      } else {
-        return STANDARD_TRANSLATION_ORIGINAL;
-      }
-    }
-    
-    // 2. APOSTILLE SERVICES
-    if (data.type === 'apostille') {
-      return APOSTILLE_ORIGINAL;
-    }
-    
-    // 3. ATTESTATION SERVICES
-    if (data.type === 'attestation') {
-      const titleLower = data.title.toLowerCase();
-      
-      for (const country in ATTESTATION_PRICING) {
-        if (titleLower.includes(country)) {
-          return ATTESTATION_PRICING[country].original;
-        }
-      }
-    }
-    
-    // 4. STARTUP PACKAGE
-    if (data.type === 'startup') {
-      const packageType = data.title.toLowerCase().split(' ')[0];
-      
-      if (STARTUP_PACKAGE_PRICING[packageType]) {
-        return STARTUP_PACKAGE_PRICING[packageType][packageDuration].original;
-      }
-    }
-    
-    // Fallback to default original price
-    return data.originalPrice;
-  };
-
-  const currentPrice = getDynamicPrice();
-  const currentOriginalPrice = getDynamicOriginalPrice();
+  const currentPrice = data.price;
+  const currentOriginalPrice = data.originalPrice;
   const isApostilleService = data.type === 'apostille';
   const destinationOptions = useMemo(() => {
     try {
@@ -725,6 +659,21 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         : [...prev, docTypeId]
     );
   };
+
+  const toggleSourceLanguage = (language: string) => {
+    setSourceLanguages((prev) =>
+      prev.includes(language) ? prev.filter((item) => item !== language) : [...prev, language]
+    );
+  };
+
+  const toggleTargetLanguage = (language: string) => {
+    setTargetLanguages((prev) =>
+      prev.includes(language) ? prev.filter((item) => item !== language) : [...prev, language]
+    );
+  };
+
+  const sourceLanguageDisplay = sourceLanguages.length > 0 ? sourceLanguages.join(', ') : '';
+  const targetLanguageDisplay = targetLanguages.length > 0 ? targetLanguages.join(', ') : '';
 
   const incrementPages = () => setPageCount(prev => prev + 1);
   const decrementPages = () => setPageCount(prev => Math.max(1, prev - 1));
@@ -1002,12 +951,6 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   {convertPrice(currentOriginalPrice)}
                 </span>
               </div>
-              {/* Show dynamic pricing message for translation services */}
-              {data.type === 'translation' && !data.title.toLowerCase().includes('sworn') && (
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold">Price varies by language selection</span> - Select source and target languages to see the exact price
-                </p>
-              )}
               <Badge className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-1.5 font-bold">
                 {getPromoTag(data.id || data.title || 'product')}
               </Badge>
@@ -1245,120 +1188,94 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                     <Label htmlFor="source-lang" className="text-base md:text-lg font-semibold">
                       Source Language <span className="text-red-600">*</span>
                     </Label>
-                    <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                      <SelectTrigger id="source-lang" className="w-full mt-1 h-11 text-base md:text-lg">
-                        <SelectValue placeholder="Select source language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(data.sourceLanguages && data.sourceLanguages.length > 0
-                          ? data.sourceLanguages
-                          : [
-                              { value: 'english', label: 'English' },
-                              { value: 'spanish', label: 'Spanish' },
-                              { value: 'french', label: 'French' },
-                              { value: 'german', label: 'German' },
-                              { value: 'italian', label: 'Italian' },
-                              { value: 'portuguese', label: 'Portuguese' },
-                              { value: 'dutch', label: 'Dutch' },
-                              { value: 'russian', label: 'Russian' },
-                              { value: 'chinese', label: 'Chinese' },
-                              { value: 'japanese', label: 'Japanese' },
-                              { value: 'korean', label: 'Korean' },
-                              { value: 'arabic', label: 'Arabic' },
-                              { value: 'hindi', label: 'Hindi' },
-                              { value: 'bengali', label: 'Bengali' },
-                              { value: 'tamil', label: 'Tamil' },
-                              { value: 'telugu', label: 'Telugu' },
-                              { value: 'marathi', label: 'Marathi' },
-                              { value: 'gujarati', label: 'Gujarati' },
-                              { value: 'kannada', label: 'Kannada' },
-                              { value: 'malayalam', label: 'Malayalam' },
-                              { value: 'punjabi', label: 'Punjabi' },
-                              { value: 'urdu', label: 'Urdu' },
-                            ]
-                        )
-                          .filter(lang => lang && lang.value && lang.label)
-                          .map(lang => (
-                            <SelectItem key={lang.value} value={lang.value}>
-                              {lang.label}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={sourceLanguageOpen} onOpenChange={setSourceLanguageOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          id="source-lang"
+                          type="button"
+                          className="w-full mt-1 h-11 px-3 rounded-md border border-gray-200 bg-white text-left text-base md:text-lg flex items-center justify-between"
+                        >
+                          <span className={sourceLanguages.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
+                            {sourceLanguages.length > 0
+                              ? `Source: ${sourceLanguageDisplay}`
+                              : 'Select source language(s)'}
+                          </span>
+                          <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${sourceLanguageOpen ? 'rotate-90' : ''}`} />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+                        <input
+                          type="text"
+                          value={sourceLanguageSearch}
+                          onChange={(e) => setSourceLanguageSearch(e.target.value)}
+                          placeholder="Type to search language..."
+                          className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                        />
+                        <div className="max-h-56 overflow-y-auto space-y-1">
+                          {filteredSourceLanguageOptions.length > 0 ? (
+                            filteredSourceLanguageOptions.map((lang) => (
+                              <label key={lang.value} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
+                                <Checkbox
+                                  checked={sourceLanguages.includes(lang.label)}
+                                  onCheckedChange={() => toggleSourceLanguage(lang.label)}
+                                />
+                                <span className="text-sm">{lang.label}</span>
+                              </label>
+                            ))
+                          ) : (
+                            <div className="px-2 py-2 text-sm text-gray-500">No matching language found.</div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div>
                     <Label htmlFor="target-lang" className="text-base md:text-lg font-semibold">
                       Target Language <span className="text-red-600">*</span>
                     </Label>
-                    <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                      <SelectTrigger id="target-lang" className="w-full mt-1 h-11 text-base md:text-lg">
-                        <SelectValue placeholder="Select target language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(data.targetLanguages && data.targetLanguages.length > 0
-                          ? data.targetLanguages
-                          : [
-                              { value: 'english', label: 'English' },
-                              { value: 'spanish', label: 'Spanish' },
-                              { value: 'french', label: 'French' },
-                              { value: 'german', label: 'German' },
-                              { value: 'italian', label: 'Italian' },
-                              { value: 'portuguese', label: 'Portuguese' },
-                              { value: 'dutch', label: 'Dutch' },
-                              { value: 'russian', label: 'Russian' },
-                              { value: 'chinese', label: 'Chinese' },
-                              { value: 'japanese', label: 'Japanese' },
-                              { value: 'korean', label: 'Korean' },
-                              { value: 'arabic', label: 'Arabic' },
-                              { value: 'hindi', label: 'Hindi' },
-                              { value: 'bengali', label: 'Bengali' },
-                              { value: 'tamil', label: 'Tamil' },
-                              { value: 'telugu', label: 'Telugu' },
-                              { value: 'marathi', label: 'Marathi' },
-                              { value: 'gujarati', label: 'Gujarati' },
-                              { value: 'kannada', label: 'Kannada' },
-                              { value: 'malayalam', label: 'Malayalam' },
-                              { value: 'punjabi', label: 'Punjabi' },
-                              { value: 'urdu', label: 'Urdu' },
-                            ]
-                        )
-                          .filter(lang => lang && lang.value && lang.label)
-                          .map(lang => (
-                            <SelectItem key={lang.value} value={lang.value}>
-                              {lang.label}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={targetLanguageOpen} onOpenChange={setTargetLanguageOpen}>
+                      <PopoverTrigger asChild>
+                        <button
+                          id="target-lang"
+                          type="button"
+                          className="w-full mt-1 h-11 px-3 rounded-md border border-gray-200 bg-white text-left text-base md:text-lg flex items-center justify-between"
+                        >
+                          <span className={targetLanguages.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
+                            {targetLanguages.length > 0
+                              ? `Target: ${targetLanguageDisplay}`
+                              : 'Select target language(s)'}
+                          </span>
+                          <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${targetLanguageOpen ? 'rotate-90' : ''}`} />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+                        <input
+                          type="text"
+                          value={targetLanguageSearch}
+                          onChange={(e) => setTargetLanguageSearch(e.target.value)}
+                          placeholder="Type to search language..."
+                          className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                        />
+                        <div className="max-h-56 overflow-y-auto space-y-1">
+                          {filteredTargetLanguageOptions.length > 0 ? (
+                            filteredTargetLanguageOptions.map((lang) => (
+                              <label key={lang.value} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
+                                <Checkbox
+                                  checked={targetLanguages.includes(lang.label)}
+                                  onCheckedChange={() => toggleTargetLanguage(lang.label)}
+                                />
+                                <span className="text-sm">{lang.label}</span>
+                              </label>
+                            ))
+                          ) : (
+                            <div className="px-2 py-2 text-sm text-gray-500">No matching language found.</div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   
-                  {/* Dynamic Pricing Indicator */}
-                  {sourceLanguage && targetLanguage && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-semibold text-blue-900">Selected Language Pricing</span>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-blue-800">Original Price:</span>
-                          <span className="text-sm text-blue-800 line-through">{convertPrice(currentOriginalPrice)}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-blue-900">Offer Price:</span>
-                          <span className="text-lg font-bold text-red-600">{convertPrice(currentPrice)}</span>
-                        </div>
-                        <div className="pt-2 border-t border-blue-200">
-                          <p className="text-xs text-blue-700">
-                            âœ¨ Pricing automatically updated based on your language selection
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </>
               )}
 
@@ -1461,6 +1378,22 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                       ))}
                     </div>
                   )}
+                  <div className="mt-3">
+                    <Label htmlFor="drive-link" className="mb-2 block text-sm md:text-base font-medium text-gray-700">
+                      Drive Link (for files larger than 7 MB)
+                    </Label>
+                    <input
+                      id="drive-link"
+                      type="url"
+                      value={driveLink}
+                      onChange={(e) => setDriveLink(e.target.value)}
+                      placeholder="Paste Google Drive / OneDrive / Dropbox link"
+                      className="w-full h-11 rounded-lg border border-gray-300 px-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      If file size is too large, share a public download link here.
+                    </p>
+                  </div>
                 </div>
               )}
               {/* Add to Cart Button */}
@@ -1479,10 +1412,10 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
                   // Check for translation services (but NOT for sworn translations)
                   if (data.type === 'translation' && !data.title.toLowerCase().includes('sworn')) {
-                    if (!sourceLanguage) {
+                    if (sourceLanguages.length === 0) {
                       errors.push('Please select a source language');
                     }
-                    if (!targetLanguage) {
+                    if (targetLanguages.length === 0) {
                       errors.push('Please select a target language');
                     }
                   }
@@ -1502,8 +1435,8 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   }
 
                   // Check file upload - skip for startup packages
-                  if (data.type !== 'startup' && uploadedFiles.length === 0) {
-                    errors.push('Please upload at least one document');
+                  if (data.type !== 'startup' && uploadedFiles.length === 0 && !driveLink.trim()) {
+                    errors.push('Please upload at least one document or provide a Drive link');
                   }
 
                   // Show errors if any
@@ -1523,11 +1456,12 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                     category: data.type,
                     url: window.location.pathname,
                     image: getFirstValidImage(productImages, getFirstValidImage(data.images)),
-                    sourceLanguage: sourceLanguage || undefined,
-                    targetLanguage: targetLanguage || undefined,
+                    sourceLanguage: sourceLanguageDisplay || undefined,
+                    targetLanguage: targetLanguageDisplay || undefined,
                     certificateType: selectedDocTypes.join(', ') || undefined,
                     uploadedDocument: uploadedFiles[0] || null,
                     uploadedDocuments: uploadedFiles.length > 0 ? uploadedFiles : undefined,
+                    driveLink: driveLink.trim() || undefined,
                     documentPreview: undefined,
                     pageCount: pageCount,
                     totalPrice: currentPrice * pageCount,

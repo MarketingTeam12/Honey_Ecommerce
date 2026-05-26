@@ -338,7 +338,7 @@ export function SignUpPage() {
         {/* Back to Home */}
         <div className="text-center mt-6">
           <Link to="/" className="text-sm text-gray-600 hover:text-gray-900">
-            â† Back to Home
+             Back to Home
           </Link>
         </div>
       </div>

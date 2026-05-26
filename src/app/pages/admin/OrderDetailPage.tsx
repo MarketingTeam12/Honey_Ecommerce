@@ -35,6 +35,7 @@ interface OrderItem {
   certificateType?: string;
   documentType?: string;
   category?: string;
+  driveLink?: string;
   uploadedFile?: UploadedFile | null; // Keep for backward compatibility
   uploadedFiles?: UploadedFile[]; // Support multiple files
 }
@@ -412,6 +413,23 @@ export function OrderDetailPage() {
       console.error('âŒ [OrderDetailPage] Failed to download document:', error);
       toast.error('Failed to download document');
     }
+  };
+
+  const getDownloadableDriveLink = (rawLink: string) => {
+    const link = rawLink.trim();
+    if (!link) return '';
+
+    const fileMatch = link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (fileMatch?.[1]) {
+      return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}`;
+    }
+
+    const openIdMatch = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (openIdMatch?.[1]) {
+      return `https://drive.google.com/uc?export=download&id=${openIdMatch[1]}`;
+    }
+
+    return link;
   };
 
   const convertFileToBase64 = (file: File): Promise<string> =>
@@ -928,13 +946,16 @@ export function OrderDetailPage() {
                         {/* Display all uploaded documents */}
                         {(() => {
                           const files = item.uploadedFiles || (item.uploadedFile ? [item.uploadedFile] : []);
-                          if (files.length === 0) return null;
+                          const hasDriveLink = Boolean(item.driveLink?.trim());
+                          if (files.length === 0 && !hasDriveLink) return null;
                           
                           return (
                             <div className="col-span-2">
-                              <p className="text-xs text-gray-500 mb-2">
-                                Uploaded Document{files.length > 1 ? 's' : ''} ({files.length})
-                              </p>
+                              {files.length > 0 && (
+                                <p className="text-xs text-gray-500 mb-2">
+                                  Uploaded Document{files.length > 1 ? 's' : ''} ({files.length})
+                                </p>
+                              )}
                               <div className="space-y-2">
                                 {files.map((file, fileIndex) => {
                                   // Extract file extension
@@ -977,6 +998,26 @@ export function OrderDetailPage() {
                                     </div>
                                   );
                                 })}
+                                {hasDriveLink && (
+                                  <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded px-3 py-2">
+                                    <FileText className="w-4 h-4 text-indigo-600 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-sm text-indigo-900 font-medium block">Drive Link</span>
+                                      <span className="text-xs text-indigo-700 truncate block">
+                                        {item.driveLink}
+                                      </span>
+                                    </div>
+                                    <a
+                                      href={getDownloadableDriveLink(item.driveLink || '')}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1.5 font-medium text-sm flex-shrink-0"
+                                    >
+                                      <Download className="w-4 h-4" />
+                                      Open
+                                    </a>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );

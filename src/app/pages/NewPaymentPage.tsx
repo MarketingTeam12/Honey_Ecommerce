@@ -372,6 +372,7 @@ export function NewPaymentPage() {
             certificateType: item.certificateType,
             documentType: item.certificateType,
             category: item.category,
+            driveLink: item.driveLink || undefined,
             uploadedFile: filesData[0] || null,
             uploadedFiles: filesData.length > 0 ? filesData : undefined,
           };

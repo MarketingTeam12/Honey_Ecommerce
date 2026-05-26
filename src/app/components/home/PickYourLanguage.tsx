@@ -17,6 +17,19 @@ const getPromoTag = (seed: string) => {
   return PROMO_TAGS[hash % PROMO_TAGS.length];
 };
 
+const getOriginalPriceByRange = (offerPrice: number) => {
+  if (offerPrice <= 500) return Math.round(offerPrice * 1.7);
+  if (offerPrice <= 1000) return Math.round(offerPrice * 1.6);
+  if (offerPrice <= 2000) return Math.round(offerPrice * 1.5);
+  if (offerPrice <= 4000) return Math.round(offerPrice * 1.4);
+  return Math.round(offerPrice * 1.3);
+};
+
+const getDiscountPercent = (offerPrice: number, originalPrice: number) => {
+  if (originalPrice <= offerPrice || originalPrice <= 0) return null;
+  return Math.max(1, Math.round(((originalPrice - offerPrice) / originalPrice) * 100));
+};
+
 export function PickYourLanguage() {
   const { convertPrice } = useCurrency();
   const { products: adminProducts } = useProducts();
@@ -77,16 +90,22 @@ export function PickYourLanguage() {
 
   // Use admin products if available, otherwise fallback
   const products = translationProducts.length > 0
-    ? translationProducts.map(product => ({
-        id: product.id,
-        title: product.name,
-        offerPrice: product.price,
-        originalPrice: product.price * 2.5, // Calculate original price (2.5x offer)
-        tag: getPromoTag(product.id),
-        route: `/product/${product.id}`,
-        image: getFirstValidImage(product.images),
-        icon: 'ðŸ“„'
-      }))
+    ? translationProducts.map(product => {
+        const offerPrice = product.price;
+        const adminOriginal = typeof product.compareAtPrice === 'number' ? product.compareAtPrice : 0;
+        const originalPrice = adminOriginal > offerPrice ? adminOriginal : getOriginalPriceByRange(offerPrice);
+
+        return {
+          id: product.id,
+          title: product.name,
+          offerPrice,
+          originalPrice,
+          tag: getPromoTag(product.id),
+          route: `/product/${product.id}`,
+          image: getFirstValidImage(product.images),
+          icon: 'ðŸ“„'
+        };
+      })
     : fallbackProducts.filter(
         product => product.title.toLowerCase() !== blockedHomeProductName
       );
@@ -152,17 +171,14 @@ export function PickYourLanguage() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               {/* Image Box - Only contains image */}
-              <Link
-                to={product.route}
-                className="group block h-full"
-              >
-                <div className="bg-white border-2 border-gray-300 rounded-2xl overflow-hidden shadow-md transition-all hover:border-blue-500 hover:shadow-2xl">
-                  <div className="relative w-full aspect-[4/4.6] bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 overflow-hidden p-2">
+              <Link to={product.route} className="group block h-full">
+                <div className="h-full bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-md transition-all hover:border-blue-500 hover:shadow-xl flex flex-col">
+                  <div className="relative w-full aspect-square overflow-hidden bg-white">
                     {product.image ? (
                       <img
                         src={product.image}
                         alt={product.title}
-                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        className="absolute inset-0 w-full h-full object-cover object-center scale-[1.06] transition-transform duration-300 group-hover:scale-110"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -172,23 +188,30 @@ export function PickYourLanguage() {
                   </div>
 
                   {/* Content Below Box */}
-                  <div className="px-4 py-4 space-y-3 min-h-[150px]">
+                  <div className="p-3 space-y-2 min-h-[130px] flex-1">
                     <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug break-words line-clamp-2">
                       {product.title}
                     </h3>
                     <div className="flex items-center gap-3 flex-wrap">
-                      <p className="text-2xl font-bold text-red-600">
+                      <p className="text-4xl font-bold text-red-600 leading-none">
                         {convertPrice(product.offerPrice)}
                       </p>
                       <p className="text-sm text-gray-500 line-through">
                         {convertPrice(product.originalPrice)}
                       </p>
                     </div>
-                    {product.tag && (
-                      <Badge className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-xs px-3 py-1.5 font-bold">
-                        {product.tag}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {product.tag && (
+                        <Badge className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
+                          {product.tag}
+                        </Badge>
+                      )}
+                      {getDiscountPercent(product.offerPrice, product.originalPrice) && (
+                        <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
+                          {getDiscountPercent(product.offerPrice, product.originalPrice)}% OFF
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Link>

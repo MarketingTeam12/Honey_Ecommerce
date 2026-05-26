@@ -7,10 +7,10 @@ import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/ph
 
 // Country codes with validation rules
 const countryCodes = [
-  { code: '+91', country: 'India', flag: 'ðŸ‡®ðŸ‡³', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^[6-9]\d{9}$/, patternMessage: 'Indian mobile numbers must start with 6, 7, 8, or 9' },
-  { code: '+1', country: 'USA', flag: 'ðŸ‡ºðŸ‡¸', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
-  { code: '+44', country: 'UK', flag: 'ðŸ‡¬ðŸ‡§', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
-  { code: '+971', country: 'UAE', flag: 'ðŸ‡¦ðŸ‡ª', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
+  { code: '+91', country: 'India', flag: 'IN', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^[6-9]\d{9}$/, patternMessage: 'Indian mobile numbers must start with 6, 7, 8, or 9' },
+  { code: '+1', country: 'USA', flag: 'US', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: '+44', country: 'UK', flag: 'GB', digits: 10, minDigits: 10, maxDigits: 10, pattern: /^\d{10}$/ },
+  { code: '+971', country: 'UAE', flag: 'AE', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
   { code: '+65', country: 'Singapore', flag: 'ðŸ‡¸ðŸ‡¬', digits: 8, minDigits: 8, maxDigits: 8, pattern: /^\d{8}$/ },
   { code: '+60', country: 'Malaysia', flag: 'ðŸ‡²ðŸ‡¾', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },
   { code: '+61', country: 'Australia', flag: 'ðŸ‡¦ðŸ‡º', digits: 9, minDigits: 9, maxDigits: 9, pattern: /^\d{9}$/ },

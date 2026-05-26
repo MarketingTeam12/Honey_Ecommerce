@@ -8,13 +8,13 @@ import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/ph
 
 // Country codes with validation rules
 const countryCodes = [
-  { code: '+91', country: 'India', flag: 'ðŸ‡®ðŸ‡³', digits: 10 },
-  { code: '+1', country: 'USA', flag: 'ðŸ‡ºðŸ‡¸', digits: 10 },
-  { code: '+44', country: 'UK', flag: 'ðŸ‡¬ðŸ‡§', digits: 10 },
-  { code: '+971', country: 'UAE', flag: 'ðŸ‡¦ðŸ‡ª', digits: 9 },
-  { code: '+65', country: 'Singapore', flag: 'ðŸ‡¸ðŸ‡¬', digits: 8 },
-  { code: '+60', country: 'Malaysia', flag: 'ðŸ‡²ðŸ‡¾', digits: 9 },
-  { code: '+61', country: 'Australia', flag: 'ðŸ‡¦ðŸ‡º', digits: 9 },
+  { code: '+91', country: 'India', flag: 'IN', digits: 10 },
+  { code: '+1', country: 'USA', flag: 'US', digits: 10 },
+  { code: '+44', country: 'UK', flag: 'GB', digits: 10 },
+  { code: '+971', country: 'UAE', flag: 'AE', digits: 9 },
+  { code: '+65', country: 'Singapore', flag: 'SG', digits: 8 },
+  { code: '+60', country: 'Malaysia', flag: 'MY', digits: 9 },
+  { code: '+61', country: 'Australia', flag: 'AU', digits: 9 },
 ];
 
 // Valid Indian cities

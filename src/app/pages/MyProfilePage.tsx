@@ -458,9 +458,11 @@ export function MyProfilePage() {
                     <input
                       type={showOldPassword ? 'text' : 'password'}
                       name="oldPassword"
+                      autoComplete="current-password"
                       value={passwordData.oldPassword}
                       onChange={handlePasswordChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter current password"
                       required
                     />
                     <button
@@ -481,9 +483,11 @@ export function MyProfilePage() {
                     <input
                       type={showNewPassword ? 'text' : 'password'}
                       name="newPassword"
+                      autoComplete="new-password"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter new password"
                       required
                     />
                     <button
@@ -504,9 +508,11 @@ export function MyProfilePage() {
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       name="confirmPassword"
+                      autoComplete="new-password"
                       value={passwordData.confirmPassword}
                       onChange={handlePasswordChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Confirm new password"
                       required
                     />
                     <button

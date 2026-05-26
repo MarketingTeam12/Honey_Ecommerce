@@ -179,10 +179,11 @@ export function UnifiedAuthPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete={isSignUp ? 'new-password' : 'current-password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="Enter password"
                 />
                 <button
                   type="button"
@@ -283,11 +284,10 @@ export function UnifiedAuthPage() {
         {/* Back to Home */}
         <div className="text-center mt-6">
           <Link to="/" className="text-sm text-gray-600 hover:text-gray-900">
-            â† Back to Home
+             Back to Home
           </Link>
         </div>
       </div>
     </div>
   );
 }
-
