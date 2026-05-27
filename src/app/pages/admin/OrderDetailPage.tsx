@@ -12,6 +12,7 @@ import { useAuth } from '@/app/context/AuthContext';
 import { OrderTrackingManager } from '@/app/components/admin/OrderTrackingManager';
 import { OrderManagementVisual } from '@/app/components/admin/OrderManagementVisual';
 import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
+import axios from 'axios';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 
@@ -555,10 +556,26 @@ export function OrderDetailPage() {
           ...data.order,
           completed_files: pendingCompletedFiles,
         };
+
+        console.log("MAIL API CALLING");
+
+        try {
+          await axios.post("http://localhost:3000/send-document", {
+            customerEmail: (order as any).email,
+            filePath: "./uploads/mail.pdf",
+            fileName: "mail.pdf"
+          });
+
+          console.log("MAIL SENT SUCCESS");
+        } catch (err) {
+          console.error("MAIL ERROR", err);
+        }
+
         setOrder(submittedOrder);
         syncOrderInLocalStorage(submittedOrder);
         setPendingCompletedFiles([]);
         toast.success('Final translated file submitted successfully');
+
         return;
       }
 

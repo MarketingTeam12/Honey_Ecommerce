@@ -4,6 +4,7 @@ import { TrendingUp, Users, DollarSign, Package, Download, Calendar, Award, Shop
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
+import { isSalesManager } from '@/app/utils/roleAccess';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 
@@ -39,10 +40,24 @@ interface Order {
   status: string;
   created_at: string;
   payment_status: string;
+  assigned_to?: string;
 }
 
+const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
+
+const canSalesManagerSeeOrder = (
+  order: Order,
+  user?: { id?: string; email?: string } | null,
+) => {
+  if (!user) return false;
+  const email = normalize(user.email);
+  const userId = normalize(user.id);
+  const assignedTo = normalize(order.assigned_to);
+  return !!assignedTo && (assignedTo === email || assignedTo === userId);
+};
+
 export function ReportsPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [dateRange, setDateRange] = useState('this-month');
   const [orders, setOrders] = useState<Order[]>([]);
   const [topBuyers, setTopBuyers] = useState<TopBuyer[]>([]);
@@ -163,14 +178,18 @@ export function ReportsPage() {
         console.log('⚠️ [ReportsPage] No orders found in localStorage');
       }
       
+      const roleFilteredOrders = isSalesManager(user?.email, user?.role)
+        ? allOrders.filter((order) => canSalesManagerSeeOrder(order, user))
+        : allOrders;
+
       console.log('📊 [ReportsPage] Loading analytics for', dateRange);
-      console.log('📊 [ReportsPage] Total orders in system:', allOrders.length);
+      console.log('📊 [ReportsPage] Total orders in system:', roleFilteredOrders.length);
 
       // Get date range
       const { start, end } = getDateRange(dateRange);
       
       // Filter orders by date range
-      const filteredOrders = allOrders.filter(order => {
+      const filteredOrders = roleFilteredOrders.filter(order => {
         const orderDate = new Date(order.created_at);
         return orderDate >= start && orderDate <= end;
       });
@@ -239,7 +258,7 @@ export function ReportsPage() {
         prevEnd.setMonth(prevEnd.getMonth(), 0);
         prevEnd.setHours(23, 59, 59, 999);
 
-        const prevMonthOrders = allOrders.filter(order => {
+        const prevMonthOrders = roleFilteredOrders.filter(order => {
           const orderDate = new Date(order.created_at);
           return orderDate >= prevStart && orderDate <= prevEnd;
         });

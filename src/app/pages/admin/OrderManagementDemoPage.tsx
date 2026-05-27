@@ -24,7 +24,7 @@ export function OrderManagementDemoPage() {
     setSaving(false);
     toast.success(`Status updated to: ${newStatus}`);
     
-    console.log('âœ… Order Management Demo - Status changed to:', newStatus);
+    console.log('[OK] Order Management Demo - Status changed to:', newStatus);
   };
 
   return (
@@ -56,17 +56,17 @@ export function OrderManagementDemoPage() {
           {/* Info Banner */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
             <h2 className="text-lg font-semibold text-blue-900 mb-2">
-              ðŸŽ¯ Interactive Order Management System
+              Interactive Order Management System
             </h2>
             <p className="text-blue-700 text-sm mb-3">
               This page demonstrates the complete order management flow in your application:
             </p>
             <ul className="text-blue-700 text-sm space-y-1 ml-4">
-              <li>âœ… <strong>Customer Order</strong> â†’ Stored in centralized KV database</li>
-              <li>âœ… <strong>Admin Panel</strong> â†’ View and update order status via dropdown</li>
-              <li>âœ… <strong>Database Update</strong> â†’ Changes saved instantly to KV store</li>
-              <li>âœ… <strong>Tracking Page</strong> â†’ Real-time status fetched and displayed</li>
-              <li>âœ… <strong>Progress Timeline</strong> â†’ Horizontal stages with color indicators</li>
+              <li>[OK] <strong>Customer Order</strong> -&gt; Stored in centralized KV database</li>
+              <li>[OK] <strong>Admin Panel</strong> -&gt; View and update order status via dropdown</li>
+              <li>[OK] <strong>Database Update</strong> -&gt; Changes saved instantly to KV store</li>
+              <li>[OK] <strong>Tracking Page</strong> -&gt; Real-time status fetched and displayed</li>
+              <li>[OK] <strong>Progress Timeline</strong> -&gt; Horizontal stages with color indicators</li>
             </ul>
           </div>
 
@@ -136,30 +136,30 @@ export function OrderManagementDemoPage() {
                 <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
                   <h4 className="font-semibold text-purple-900 mb-2">Backend</h4>
                   <ul className="text-xs text-purple-700 space-y-1">
-                    <li>â€¢ Supabase Edge Functions</li>
-                    <li>â€¢ KV Store (JSONB)</li>
-                    <li>â€¢ RESTful API</li>
-                    <li>â€¢ PATCH /orders/:id/status</li>
+                    <li>- Supabase Edge Functions</li>
+                    <li>- KV Store (JSONB)</li>
+                    <li>- RESTful API</li>
+                    <li>- PATCH /orders/:id/status</li>
                   </ul>
                 </div>
                 
                 <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <h4 className="font-semibold text-blue-900 mb-2">Frontend</h4>
                   <ul className="text-xs text-blue-700 space-y-1">
-                    <li>â€¢ React + TypeScript</li>
-                    <li>â€¢ Tailwind CSS</li>
-                    <li>â€¢ React Router</li>
-                    <li>â€¢ Lucide Icons</li>
+                    <li>- React + TypeScript</li>
+                    <li>- Tailwind CSS</li>
+                    <li>- React Router</li>
+                    <li>- Lucide Icons</li>
                   </ul>
                 </div>
                 
                 <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                   <h4 className="font-semibold text-green-900 mb-2">Features</h4>
                   <ul className="text-xs text-green-700 space-y-1">
-                    <li>â€¢ Real-time updates</li>
-                    <li>â€¢ Progress tracking</li>
-                    <li>â€¢ Status validation</li>
-                    <li>â€¢ Toast notifications</li>
+                    <li>- Real-time updates</li>
+                    <li>- Progress tracking</li>
+                    <li>- Status validation</li>
+                    <li>- Toast notifications</li>
                   </ul>
                 </div>
               </div>

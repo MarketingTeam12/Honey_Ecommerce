@@ -423,11 +423,31 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     return sourceLanguageOptions.filter((lang) => lang.label.toLowerCase().includes(query));
   }, [sourceLanguageOptions, sourceLanguageSearch]);
 
+  const isEnglishOnlySource = useMemo(() => {
+    if (data.type !== 'translation') return false;
+    const normalizedTitle = data.title.trim().toLowerCase();
+    const normalizedKey = (productKey || '').trim().toLowerCase();
+    const isEnglishToFlow =
+      normalizedTitle.startsWith('english to ') ||
+      normalizedKey.startsWith('english-to-') ||
+      normalizedKey === 'english-to-foreign-language' ||
+      normalizedKey === 'english-to-any-indian-language';
+    if (!isEnglishToFlow) return false;
+    if (sourceLanguageOptions.length !== 1) return false;
+    return sourceLanguageOptions[0].label.trim().toLowerCase() === 'english';
+  }, [data.type, data.title, productKey, sourceLanguageOptions]);
+
   const filteredTargetLanguageOptions = useMemo(() => {
     const query = targetLanguageSearch.trim().toLowerCase();
     if (!query) return targetLanguageOptions;
     return targetLanguageOptions.filter((lang) => lang.label.toLowerCase().includes(query));
   }, [targetLanguageOptions, targetLanguageSearch]);
+
+  const isEnglishOnlyTarget = useMemo(() => {
+    if (data.type !== 'translation') return false;
+    if (targetLanguageOptions.length !== 1) return false;
+    return targetLanguageOptions[0].label.trim().toLowerCase() === 'english';
+  }, [data.type, targetLanguageOptions]);
 
   // Pre-fill form if in edit mode
   useEffect(() => {
@@ -492,6 +512,19 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     setIsZoomed(false);
     setShowAllProductDetails(false);
   }, [productId]);
+
+  // Auto-fix target language to English when product allows only English target.
+  useEffect(() => {
+    if (!isEnglishOnlyTarget) return;
+    setTargetLanguages(['English']);
+    setTargetLanguageSearch('');
+  }, [isEnglishOnlyTarget, productId]);
+
+  useEffect(() => {
+    if (!isEnglishOnlySource) return;
+    setSourceLanguages(['English']);
+    setSourceLanguageSearch('');
+  }, [isEnglishOnlySource, productId]);
 
   // Fetch product images from database on component mount
   useEffect(() => {
@@ -661,12 +694,22 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   };
 
   const toggleSourceLanguage = (language: string) => {
+    if (isEnglishOnlySource) {
+      setSourceLanguages(['English']);
+      return;
+    }
+
     setSourceLanguages((prev) =>
       prev.includes(language) ? prev.filter((item) => item !== language) : [...prev, language]
     );
   };
 
   const toggleTargetLanguage = (language: string) => {
+    if (isEnglishOnlyTarget) {
+      setTargetLanguages(['English']);
+      return;
+    }
+
     setTargetLanguages((prev) =>
       prev.includes(language) ? prev.filter((item) => item !== language) : [...prev, language]
     );

@@ -45,16 +45,16 @@ export function CartPage() {
   const loadCouponsFromStorage = () => {
     try {
       const storedCoupons = localStorage.getItem(STORAGE_KEY);
-      console.log('ðŸ“¦ [CartPage] ========== LOADING COUPONS ==========');
-      console.log('ðŸ“¦ [CartPage] Storage key:', STORAGE_KEY);
-      console.log('ðŸ“¦ [CartPage] Raw localStorage data:', storedCoupons);
-      console.log('ðŸ“¦ [CartPage] Data length:', storedCoupons?.length || 0);
+        console.log('[CartPage] ========== LOADING COUPONS ==========');
+        console.log('[CartPage] Storage key:', STORAGE_KEY);
+        console.log('[CartPage] Raw localStorage data:', storedCoupons);
+        console.log('[CartPage] Data length:', storedCoupons?.length || 0);
       
       if (storedCoupons) {
         const allCoupons = JSON.parse(storedCoupons);
-        console.log('ðŸ“¦ [CartPage] Parsed coupons (array):', allCoupons);
-        console.log('ðŸ“¦ [CartPage] Is array?:', Array.isArray(allCoupons));
-        console.log('ðŸ“¦ [CartPage] Total coupons found:', allCoupons.length);
+        console.log('[CartPage] Parsed coupons (array):', allCoupons);
+        console.log('[CartPage] Is array?:', Array.isArray(allCoupons));
+        console.log('[CartPage] Total coupons found:', allCoupons.length);
         
         // Filter only active and valid coupons
         const today = new Date();
@@ -64,7 +64,7 @@ export function CartPage() {
           const isNotExpired = !validUntil || validUntil >= today;
           const hasUsageLeft = !c.usageLimit || c.usedCount < c.usageLimit;
           
-          console.log('ðŸ“¦ [CartPage] Checking coupon:', c.code, {
+          console.log('[CartPage] Checking coupon:', c.code, {
             isActive,
             isNotExpired,
             hasUsageLeft,
@@ -75,50 +75,50 @@ export function CartPage() {
           
           return isActive && isNotExpired && hasUsageLeft;
         });
-        console.log('ðŸ“¦ [CartPage] Active coupons after filtering:', activeCoupons);
-        console.log('ðŸ“¦ [CartPage] Active coupons count:', activeCoupons.length);
+        console.log('[CartPage] Active coupons after filtering:', activeCoupons);
+        console.log('[CartPage] Active coupons count:', activeCoupons.length);
         
-        console.log('ðŸ“¦ [CartPage] Setting coupons to state...');
+        console.log('[CartPage] Setting coupons to state...');
         setCoupons(activeCoupons);
-        console.log('ðŸ“¦ [CartPage] âœ… State updated!');
+        console.log('[CartPage] [OK] State updated!');
       } else {
-        console.log('âš  [CartPage] No coupons found in localStorage with key:', STORAGE_KEY);
-        console.log('ðŸ“¦ [CartPage] All localStorage keys:', Object.keys(localStorage));
+        console.log('[WARN] [CartPage] No coupons found in localStorage with key:', STORAGE_KEY);
+        console.log('[CartPage] All localStorage keys:', Object.keys(localStorage));
         setCoupons([]);
       }
     } catch (error) {
-      console.error('âŒ [CartPage] Error loading coupons:', error);
+      console.error('[ERROR] [CartPage] Error loading coupons:', error);
       setCoupons([]);
     }
   };
 
   const handleApplyCoupon = (code: string) => {
     setCouponError('');
-    console.log('ðŸŽ¯ [CartPage] Attempting to apply coupon:', code);
-    console.log('ðŸŽ¯ [CartPage] Available coupons:', coupons);
-    console.log('ðŸŽ¯ [CartPage] Subtotal:', subtotal);
+    console.log('[CartPage] Attempting to apply coupon:', code);
+    console.log('[CartPage] Available coupons:', coupons);
+    console.log('[CartPage] Subtotal:', subtotal);
     
     const coupon = coupons.find(c => c.code.toUpperCase() === code.toUpperCase());
     
     if (!coupon) {
-      console.error('âŒ [CartPage] Coupon not found in available coupons');
-      console.log('ðŸ” [CartPage] Searched for:', code.toUpperCase());
-      console.log('ðŸ” [CartPage] Available codes:', coupons.map(c => c.code));
+      console.error('[ERROR] [CartPage] Coupon not found in available coupons');
+      console.log('[CartPage] Searched for:', code.toUpperCase());
+      console.log('[CartPage] Available codes:', coupons.map(c => c.code));
       setCouponError('Invalid coupon code');
       return;
     }
 
-    console.log('âœ… [CartPage] Coupon found:', coupon);
+    console.log('[OK] [CartPage] Coupon found:', coupon);
 
     if (!coupon.isActive) {
-      console.error('âŒ [CartPage] Coupon is not active');
+      console.error('[ERROR] [CartPage] Coupon is not active');
       setCouponError('This coupon is not active');
       return;
     }
 
     // Check minimum order value
     if (coupon.minOrderValue && subtotal < coupon.minOrderValue) {
-      console.error('âŒ [CartPage] Order value too low. Subtotal:', subtotal, 'Min:', coupon.minOrderValue);
+      console.error('[ERROR] [CartPage] Order value too low. Subtotal:', subtotal, 'Min:', coupon.minOrderValue);
       const minRequired = formatPrice(coupon.minOrderValue);
       const currentValue = formatPrice(subtotal);
       setCouponError(`This coupon requires a minimum order of ${minRequired}. Your current subtotal is ${currentValue}. Add ${formatPrice(coupon.minOrderValue - subtotal)} more to use this coupon.`);
@@ -127,7 +127,7 @@ export function CartPage() {
 
     // Check usage limit
     if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
-      console.error('âŒ [CartPage] Usage limit reached. Used:', coupon.usedCount, 'Limit:', coupon.usageLimit);
+      console.error('[ERROR] [CartPage] Usage limit reached. Used:', coupon.usedCount, 'Limit:', coupon.usageLimit);
       setCouponError('This coupon has reached its usage limit');
       return;
     }
@@ -140,7 +140,7 @@ export function CartPage() {
       const validFrom = new Date(coupon.validFrom);
       validFrom.setHours(0, 0, 0, 0);
       if (today < validFrom) {
-        console.error('âŒ [CartPage] Coupon not yet valid. Valid from:', validFrom);
+        console.error('[ERROR] [CartPage] Coupon not yet valid. Valid from:', validFrom);
         setCouponError(`This coupon will be valid from ${coupon.validFrom}`);
         return;
       }
@@ -150,13 +150,13 @@ export function CartPage() {
       const validUntil = new Date(coupon.validUntil);
       validUntil.setHours(23, 59, 59, 999); // End of day
       if (today > validUntil) {
-        console.error('âŒ [CartPage] Coupon expired. Valid until:', validUntil);
+        console.error('[ERROR] [CartPage] Coupon expired. Valid until:', validUntil);
         setCouponError('This coupon has expired');
         return;
       }
     }
 
-    console.log('ðŸŽ‰ [CartPage] All validations passed! Applying coupon...');
+    console.log('[CartPage] All validations passed! Applying coupon...');
     
     // Apply coupon with maxDiscount if applicable
     let finalDiscountValue = coupon.discountValue;
@@ -164,7 +164,7 @@ export function CartPage() {
       const calculatedDiscount = (subtotal * coupon.discountValue) / 100;
       if (calculatedDiscount > coupon.maxDiscount) {
         finalDiscountValue = coupon.maxDiscount;
-        console.log('ðŸ’° [CartPage] Max discount applied:', coupon.maxDiscount);
+        console.log('[CartPage] Max discount applied:', coupon.maxDiscount);
       }
     }
     
@@ -207,7 +207,7 @@ export function CartPage() {
           {/* Debug Panel */}
           {showDebug && (
             <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="font-semibold text-yellow-900 mb-2">ðŸ”§ Debug Information</h3>
+              <h3 className="font-semibold text-yellow-900 mb-2">Debug Information</h3>
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="font-medium text-yellow-900">Coupons in state:</span>{' '}
@@ -365,7 +365,7 @@ export function CartPage() {
 
                           <div className="text-right">
                             <p className="text-sm text-gray-500">
-                              {formatPrice(item.basePrice)} Ã— {item.pageCount}
+                              {formatPrice(item.basePrice)} x {item.pageCount}
                             </p>
                             <p className="text-xl text-blue-600 font-medium">
                               {formatPrice(item.totalPrice)}

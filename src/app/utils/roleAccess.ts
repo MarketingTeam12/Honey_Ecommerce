@@ -51,6 +51,9 @@ export const resolveAppRole = (
   runtimeRole?: unknown,
 ): AppRole => {
   const emailKey = normalizeEmail(email);
+  if (emailKey && ADMIN_EMAILS.has(emailKey)) {
+    return 'admin';
+  }
   const storedRole = getStoredRole(emailKey);
   const registeredRole = getRegisteredRole(emailKey);
 
@@ -60,10 +63,6 @@ export const resolveAppRole = (
 
   if (registeredRole) {
     return registeredRole;
-  }
-
-  if (emailKey && ADMIN_EMAILS.has(emailKey)) {
-    return 'admin';
   }
 
   return normalizeAppRole(
@@ -78,4 +77,18 @@ export const hasAdminAccess = (
 ): boolean => {
   const role = resolveAppRole(email, runtimeRole);
   return role === 'admin' || role === 'sales_manager';
+};
+
+export const isFullAdmin = (
+  email?: string | null,
+  runtimeRole?: unknown,
+): boolean => {
+  return resolveAppRole(email, runtimeRole) === 'admin';
+};
+
+export const isSalesManager = (
+  email?: string | null,
+  runtimeRole?: unknown,
+): boolean => {
+  return resolveAppRole(email, runtimeRole) === 'sales_manager';
 };

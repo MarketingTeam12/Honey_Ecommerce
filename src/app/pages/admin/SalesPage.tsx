@@ -6,6 +6,7 @@ import { EnhancedOrderRow } from '@/app/components/admin/EnhancedOrderRow';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
+import { isSalesManager } from '@/app/utils/roleAccess';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 
@@ -73,8 +74,21 @@ interface Order {
   isNew?: boolean; // For highlight animation
 }
 
+const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
+
+const canSalesManagerSeeOrder = (
+  order: Order,
+  user?: { id?: string; email?: string } | null,
+) => {
+  if (!user) return false;
+  const email = normalize(user.email);
+  const userId = normalize(user.id);
+  const assignedTo = normalize(order.assigned_to);
+  return !!assignedTo && (assignedTo === email || assignedTo === userId);
+};
+
 export function SalesPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
@@ -119,7 +133,7 @@ export function SalesPage() {
       window.removeEventListener('newOrderNotification', handleNewOrderEvent);
       clearInterval(interval);
     };
-  }, [liveUpdatesEnabled]);
+  }, [liveUpdatesEnabled, user?.id, user?.email, user?.role]);
 
   // Helper function to calculate progress percentage based on current stage
   const getProgressPercentage = (status: string): number => {
@@ -292,10 +306,13 @@ export function SalesPage() {
       
       // Sort by created_at descending
       mergedOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const visibleOrders = isSalesManager(user?.email, user?.role)
+        ? mergedOrders.filter((order) => canSalesManagerSeeOrder(order, user))
+        : mergedOrders;
       
-      console.log(`✅ [SalesPage] Total orders to display: ${mergedOrders.length} (${backendOrders.length} from backend, ${mergedOrders.length - backendOrders.length} from localStorage only)`);
-      if (mergedOrders.length > 0) {
-        console.log('👥 [SalesPage] Customers in orders:', [...new Set(mergedOrders.map(o => o.customer_name || o.customer_email || 'Unknown'))]);
+      console.log(`✅ [SalesPage] Total orders to display: ${visibleOrders.length} (${backendOrders.length} from backend, ${mergedOrders.length - backendOrders.length} from localStorage only)`);
+      if (visibleOrders.length > 0) {
+        console.log('👥 [SalesPage] Customers in orders:', [...new Set(visibleOrders.map(o => o.customer_name || o.customer_email || 'Unknown'))]);
       }
       
       // Highlight new orders
@@ -303,7 +320,7 @@ export function SalesPage() {
       const newOrderIds = new Set(previousOrders.map(o => o.id));
       
       // Mark new orders with isNew flag
-      mergedOrders.forEach(order => {
+      visibleOrders.forEach(order => {
         if (!newOrderIds.has(order.id)) {
           order.isNew = true;
           // Remove isNew flag after 3 seconds
@@ -315,11 +332,11 @@ export function SalesPage() {
         }
       });
       
-      setOrders(mergedOrders);
-      previousOrdersRef.current = mergedOrders;
+      setOrders(visibleOrders);
+      previousOrdersRef.current = visibleOrders;
       
       // Check for status changes and show notifications
-      const statusChanges = mergedOrders.filter(order => {
+      const statusChanges = visibleOrders.filter(order => {
         const previousOrder = previousOrders.find(prevOrder => prevOrder.id === order.id);
         return previousOrder && previousOrder.status !== order.status;
       });
@@ -339,7 +356,10 @@ export function SalesPage() {
       if (localOrders) {
         const parsedOrders = JSON.parse(localOrders);
         console.log(`✅ [SalesPage] Loaded ${parsedOrders.length} orders from localStorage (final fallback)`);
-        setOrders(parsedOrders);
+        const visibleOrders = isSalesManager(user?.email, user?.role)
+          ? parsedOrders.filter((order: Order) => canSalesManagerSeeOrder(order, user))
+          : parsedOrders;
+        setOrders(visibleOrders);
       } else {
         setOrders([]);
       }

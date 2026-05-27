@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -30,10 +30,17 @@ const getDiscountPercent = (offerPrice: number, originalPrice: number) => {
   return Math.max(1, Math.round(((originalPrice - offerPrice) / originalPrice) * 100));
 };
 
+const promoTextAnimation = {
+  initial: { opacity: 0.82, y: 0 },
+  animate: { opacity: [0.82, 1, 0.82], y: [0, -1, 0] },
+  transition: { duration: 1.4, repeat: Infinity, ease: 'easeInOut' as const }
+};
+
 export function PickYourLanguage() {
   const { convertPrice } = useCurrency();
   const { products: adminProducts } = useProducts();
   const [startIndex, setStartIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const blockedHomeProductName = 'any language to any language';
 
   // Get Translation category products from admin (exclude sworn translations)
@@ -84,7 +91,7 @@ export function PickYourLanguage() {
       originalPrice: 2000,
       tag: getPromoTag('fallback-4'),
       route: '/foreign-language-to-english',
-      icon: 'ðŸ”„',
+      icon: '🔄',
     },
   ];
 
@@ -103,7 +110,7 @@ export function PickYourLanguage() {
           tag: getPromoTag(product.id),
           route: `/product/${product.id}`,
           image: getFirstValidImage(product.images),
-          icon: 'ðŸ“„'
+          icon: '📄'
         };
       })
     : fallbackProducts.filter(
@@ -130,6 +137,16 @@ export function PickYourLanguage() {
     setStartIndex(prev => (prev + 1) % products.length);
   };
 
+  useEffect(() => {
+    if (products.length <= 3 || isPaused) return;
+
+    const intervalId = window.setInterval(() => {
+      setStartIndex((prev) => (prev + 1) % products.length);
+    }, 3200);
+
+    return () => window.clearInterval(intervalId);
+  }, [products.length, isPaused]);
+
   return (
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
@@ -142,7 +159,11 @@ export function PickYourLanguage() {
           Pick Your Language
         </motion.h2>
 
-        <div className="relative">
+        <div
+          className="relative"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
           <button
             type="button"
             onClick={goPrev}
@@ -203,12 +224,26 @@ export function PickYourLanguage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       {product.tag && (
                         <Badge className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
-                          {product.tag}
+                          <motion.span
+                            className="inline-block"
+                            initial={promoTextAnimation.initial}
+                            animate={promoTextAnimation.animate}
+                            transition={promoTextAnimation.transition}
+                          >
+                            {product.tag}
+                          </motion.span>
                         </Badge>
                       )}
                       {getDiscountPercent(product.offerPrice, product.originalPrice) && (
                         <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
-                          {getDiscountPercent(product.offerPrice, product.originalPrice)}% OFF
+                          <motion.span
+                            className="inline-block"
+                            initial={promoTextAnimation.initial}
+                            animate={promoTextAnimation.animate}
+                            transition={promoTextAnimation.transition}
+                          >
+                            {getDiscountPercent(product.offerPrice, product.originalPrice)}% OFF
+                          </motion.span>
                         </Badge>
                       )}
                     </div>
@@ -223,4 +258,6 @@ export function PickYourLanguage() {
     </section>
   );
 }
+
+
 

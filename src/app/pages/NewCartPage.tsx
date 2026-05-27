@@ -199,7 +199,7 @@ export function NewCartPage() {
                                   <div className="space-y-1">
                                     {docs.map((doc, idx) => (
                                       <p key={idx} className="text-sm text-gray-600 ml-2">
-                                        â€¢ {doc.name}
+                                        {doc.name}
                                       </p>
                                     ))}
                                   </div>

@@ -69,6 +69,9 @@ const getRegisteredUserRole = (email?: string | null): UserRole | null => {
 
 const resolveUserRole = (email: string | undefined | null, fallback: UserRole, backendRole?: unknown): UserRole => {
   const emailKey = normalizeEmail(email);
+  if (emailKey && ADMIN_EMAILS.has(emailKey)) {
+    return 'admin';
+  }
   const storedRole = getStoredRole(emailKey);
   const registeredRole = getRegisteredUserRole(emailKey);
 
@@ -78,10 +81,6 @@ const resolveUserRole = (email: string | undefined | null, fallback: UserRole, b
 
   if (registeredRole) {
     return registeredRole;
-  }
-
-  if (emailKey && ADMIN_EMAILS.has(emailKey)) {
-    return 'admin';
   }
 
   return normalizeRole(

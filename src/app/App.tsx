@@ -52,7 +52,6 @@ import DebugOrdersPage from "@/app/pages/admin/DebugOrdersPage";
 import { OrdersDiagnosticsPage } from "@/app/pages/admin/OrdersDiagnosticsPage";
 import { APIKeysPage } from "@/app/pages/admin/APIKeysPage";
 import { PaymentSettingsPage } from "@/app/pages/admin/PaymentSettingsPage";
-import { InventoryPage } from "@/app/pages/admin/InventoryPage";
 import { ItemReviewsPage } from "@/app/pages/admin/ItemReviewsPage";
 import { DataCleanupPage } from "@/app/pages/admin/DataCleanupPage";
 import OrdersSetupPage from "@/app/pages/admin/OrdersSetupPage";
@@ -325,10 +324,6 @@ function App() {
                     <Route
                       path="/admin/item-reviews"
                       element={<ItemReviewsPage />}
-                    />
-                    <Route
-                      path="/admin/inventory"
-                      element={<InventoryPage />}
                     />
                     <Route
                       path="/admin/collections"

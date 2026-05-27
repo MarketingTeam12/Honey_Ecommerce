@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
+import { isSalesManager } from '@/app/utils/roleAccess';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 const DELETED_ORDERS_KEY = 'honey_translation_deleted_orders';
@@ -60,9 +61,23 @@ interface Order {
   delivered_at?: string;
   notes?: string;
   tip?: number;
+  assigned_to?: string;
   created_at: string;
   updated_at: string;
 }
+
+const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
+
+const canSalesManagerSeeOrder = (
+  order: Order,
+  user?: { id?: string; email?: string } | null,
+) => {
+  if (!user) return false;
+  const email = normalize(user.email);
+  const userId = normalize(user.id);
+  const assignedTo = normalize(order.assigned_to);
+  return !!assignedTo && (assignedTo === email || assignedTo === userId);
+};
 
 export function OrdersPage() {
   const navigate = useNavigate();
@@ -76,7 +91,10 @@ export function OrdersPage() {
   const [showSetupBanner, setShowSetupBanner] = useState(false);
 
   useEffect(() => {
-    const cachedOrders = getSortedActiveOrders(loadOrdersFromLocalStorage());
+    const cachedOrdersRaw = getSortedActiveOrders(loadOrdersFromLocalStorage());
+    const cachedOrders = isSalesManager(user?.email, user?.role)
+      ? cachedOrdersRaw.filter((order) => canSalesManagerSeeOrder(order, user))
+      : cachedOrdersRaw;
     if (cachedOrders.length > 0) {
       setOrders(cachedOrders);
       setLoading(false);
@@ -95,7 +113,7 @@ export function OrdersPage() {
     return () => {
       window.removeEventListener('newOrderNotification', handleNewOrder);
     };
-  }, []);
+  }, [user?.id, user?.email, user?.role]);
 
   const fetchOrders = async ({ background = false }: { background?: boolean } = {}) => {
     try {
@@ -170,16 +188,22 @@ export function OrdersPage() {
       
       // ===== FINAL: Sort and set =====
       const sortedOrders = getSortedActiveOrders(Array.from(orderMap.values()));
+      const visibleOrders = isSalesManager(user?.email, user?.role)
+        ? sortedOrders.filter((order) => canSalesManagerSeeOrder(order, user))
+        : sortedOrders;
       
-      setOrders(sortedOrders);
-      console.log('âœ… [OrdersPage] Total orders displayed:', sortedOrders.length, 
+      setOrders(visibleOrders);
+      console.log('âœ… [OrdersPage] Total orders displayed:', visibleOrders.length, 
         `(${backendOrders.length} backend + ${unsyncedOrders.length} local-only)`);
       
     } catch (error: any) {
       console.error('âŒ [OrdersPage] Critical error fetching orders:', error);
       
       // Last resort: try localStorage only
-      const localOrders = getSortedActiveOrders(loadOrdersFromLocalStorage());
+      const localOrdersRaw = getSortedActiveOrders(loadOrdersFromLocalStorage());
+      const localOrders = isSalesManager(user?.email, user?.role)
+        ? localOrdersRaw.filter((order) => canSalesManagerSeeOrder(order, user))
+        : localOrdersRaw;
       if (localOrders.length > 0) {
         setOrders(localOrders);
         if (!background) {

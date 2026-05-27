@@ -2,12 +2,11 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, ShoppingCart, Users, TrendingUp,
-  Store, BarChart3, Settings, Bell, Search,
-  Menu, X, LogOut, ChevronDown, Plus, LayoutGrid, Tag, Trash2, Mail, MessageSquare, AlertCircle
+  Store, BarChart3, Settings, Search,
+  Menu, X, LogOut, ChevronDown, LayoutGrid, Tag, Mail, MessageSquare, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import { hasAdminAccess } from '@/app/utils/roleAccess';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { hasAdminAccess, isFullAdmin } from '@/app/utils/roleAccess';
 import honeyLogo from 'figma:asset/d99fd9d20cac16122a3e457a66e96224eb5ad345.png';
 
 interface AdminLayoutProps {
@@ -17,21 +16,36 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, accessToken, loading } = useAuth();
+  const { user, logout, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [itemsExpanded, setItemsExpanded] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const unreadCount = notifications.filter((n: any) => !n.read).length;
   const canAccessAdmin = hasAdminAccess(user?.email, user?.role);
+  const fullAdmin = isFullAdmin(user?.email, user?.role);
 
   useEffect(() => {
     if (!loading && !canAccessAdmin) {
       navigate('/signin?role=admin', { replace: true });
     }
   }, [loading, canAccessAdmin, navigate]);
+
+  useEffect(() => {
+    if (loading || !canAccessAdmin || fullAdmin) return;
+    const allowedForSalesManager = [
+      '/admin',
+      '/admin/sales/orders',
+      '/admin/sales/orders/',
+      '/admin/reports',
+      '/admin/notifications',
+    ];
+    const isAllowed = allowedForSalesManager.some((path) =>
+      path.endsWith('/') ? location.pathname.startsWith(path) : location.pathname === path
+    );
+    if (!isAllowed) {
+      navigate('/admin/sales/orders', { replace: true });
+    }
+  }, [loading, canAccessAdmin, fullAdmin, location.pathname, navigate]);
 
   if (loading) {
     return (
@@ -48,168 +62,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return null;
   }
 
-  // Load notifications from backend
-  const loadNotifications = async () => {
-    try {
-      console.log('ðŸ”” [AdminLayout] Loading notifications');
-      console.log('ðŸ”” [AdminLayout] Access Token:', accessToken ? (accessToken.substring(0, 20) + '...') : 'NULL');
-      
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications`;
-      
-      // CRITICAL FIX: Use publicAnonKey as Bearer token to satisfy Supabase infrastructure
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${publicAnonKey}`,
-        'apikey': publicAnonKey
-      };
-      console.log('ðŸ”” [AdminLayout] Using publicAnonKey for auth');
-      
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      const response = await fetch(url, { 
-        headers,
-        signal: controller.signal 
-      });
-      
-      clearTimeout(timeout);
-      
-      console.log('ðŸ”” [AdminLayout] Notifications response status:', response.status, response.ok);
-      
-      if (response.ok) {
-        const data = await response.json();
-        const notifs = data.notifications || [];
-        setNotifications(notifs);
-        const unread = notifs.filter((n: any) => !n.read).length;
-        console.log('ðŸ“¬ [AdminLayout] Loaded', notifs.length, 'notifications,', unread, 'unread');
-      } else {
-        // Check if it's a backend deployment issue
-        const errorText = await response.text();
-        const isBackendIssue = errorText.includes('Missing authorization header') || 
-                               errorText.includes('Invalid JWT') || 
-                               errorText.includes('"code":401');
-        
-        if (isBackendIssue) {
-          console.log('â„¹ Backend not deployed - notifications disabled');
-        } else {
-          console.log('â„¹ Notifications endpoint unavailable (non-critical)');
-        }
-        // Silently fail in the UI - notifications are not critical
-        setNotifications([]);
-      }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('â„¹ Notifications request timed out (backend not responding)');
-      } else {
-        console.log('â„¹ Could not load notifications (non-critical)');
-      }
-      // Silently fail - notifications are not critical
-      setNotifications([]);
-    }
-  };
-
-  // Initial load
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
+  }, []);
 
-    // Only load notifications if we have a valid access token or user
-    // This prevents 401 errors on initial load before auth is ready
-    if (user || accessToken) {
-      loadNotifications();
-    }
-    
-    // Listen for new order notifications
-    const handleNewOrder = (event: any) => {
-      console.log('ðŸ”” [AdminLayout] New order notification received!', event.detail);
-      loadNotifications(); // Reload notifications
-    };
-    
-    // Listen for notification updates (mark as read, delete, etc.)
-    const handleNotificationsUpdated = () => {
-      console.log('ðŸ”„ [AdminLayout] Notifications updated, reloading...');
-      loadNotifications();
-    };
-    
-    window.addEventListener('newOrderNotification', handleNewOrder);
-    window.addEventListener('notificationsUpdated', handleNotificationsUpdated);
-    
-    // Poll for new notifications with visibility check
-    let interval: NodeJS.Timeout | null = null;
-
-    const startInterval = () => {
-      interval = setInterval(() => {
-        if (!document.hidden && (user || accessToken)) {
-          loadNotifications();
-        }
-      }, 10000);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (interval) {
-          clearInterval(interval);
-          interval = null;
-        }
-      } else {
-        if (!interval && (user || accessToken)) {
-          startInterval();
-        }
-      }
-    };
-
-    if (user || accessToken) {
-      startInterval();
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('newOrderNotification', handleNewOrder);
-      window.removeEventListener('notificationsUpdated', handleNotificationsUpdated);
-      if (interval) {
-        clearInterval(interval);
-      }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [accessToken, user]); // Re-run when accessToken or user changes
-
-  const markNotificationAsRead = async (notificationId: string) => {
-    // Optimistic UI update so the badge decreases immediately.
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === notificationId ? { ...notif, read: true } : notif
-      )
-    );
-
-    try {
-      const isMock = accessToken?.startsWith('mock-token-');
-      const bearerToken = (!isMock && accessToken) ? accessToken : publicAnonKey;
-
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/${notificationId}/read`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${bearerToken}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        console.log('Notification marked as read:', notificationId);
-        window.dispatchEvent(new CustomEvent('notificationsUpdated'));
-      } else {
-        loadNotifications();
-      }
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-      loadNotifications();
-    }
-  };
-
-  const navigation = [
+  const fullNavigation = [
     { name: 'Home', href: '/admin', icon: Home },
     { 
       name: 'Items', 
@@ -224,13 +83,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         { name: 'Item Reviews', href: '/admin/item-reviews' }
       ]
     },
-    { name: 'Inventory', href: '/admin/inventory', icon: Users },
     { name: 'User Management', href: '/admin/customers', icon: Users },
     { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart },
     { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
     { name: 'Customer Emails', href: '/admin/customer-emails', icon: Mail },
     { name: 'Customer Queries', href: '/admin/customer-queries', icon: MessageSquare }
   ];
+  const salesManagerNavigation = [
+    { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+  ];
+  const navigation = fullAdmin ? fullNavigation : salesManagerNavigation;
 
   const handleLogout = async () => {
     await logout();
@@ -370,112 +233,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 hidden xl:block">
               Honey Translation Services
             </Link>
-            <button className="p-2 hover:bg-gray-100 rounded-lg relative">
-              <Plus className="w-5 h-5 text-white bg-red-600 rounded" />
-            </button>
-            
-            {/* Notifications Dropdown */}
-            <div className="relative">
-              <button
-                className="p-2 hover:bg-gray-100 rounded-lg relative"
-                onClick={() => {
-                  setNotificationsOpen(!notificationsOpen);
-                  setProfileDropdownOpen(false);
-                }}
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 flex items-center justify-center min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full px-1">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {/* Notifications Panel */}
-              {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900">Notifications</h3>
-                    {unreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </div>
-                  <div className="max-h-96 overflow-y-auto">
-                    {notifications.length > 0 ? (
-                      notifications.slice(0, 10).map((notif) => (
-                        <div 
-                          key={notif.id} 
-                          className={`p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer ${
-                            !notif.read ? 'bg-blue-50' : ''
-                          }`}
-                          onClick={() => {
-                            if (notif.type === 'new_order' && notif.order_id) {
-                              navigate(`/admin/sales/orders/${notif.order_id}`);
-                              setNotificationsOpen(false);
-                            } else if (notif.type === 'customer_query') {
-                              navigate('/admin/customer-queries');
-                              setNotificationsOpen(false);
-                            } else if (notif.type === 'email_subscription') {
-                              navigate('/admin/customer-emails');
-                              setNotificationsOpen(false);
-                            }
-                            markNotificationAsRead(notif.id);
-                          }}
-                        >
-                          <div className="flex gap-3">
-                            {/* Blue dot - only show for unread notifications */}
-                            {!notif.read && (
-                              <div className="w-2 h-2 rounded-full mt-2 bg-blue-500"></div>
-                            )}
-                            {/* Spacer for read notifications to maintain alignment */}
-                            {notif.read && (
-                              <div className="w-2 h-2 mt-2"></div>
-                            )}
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-900 font-medium">{notif.title}</p>
-                              <p className="text-xs text-gray-500 mt-1">{notif.message}</p>
-                              {notif.amount && (
-                                <p className="text-xs text-gray-700 font-medium mt-1">
-                                  {notif.currency === 'INR' ? '?' : '$'}{parseFloat(notif.amount).toLocaleString('en-IN')}
-                                </p>
-                              )}
-                              <p className="text-xs text-gray-400 mt-1">
-                                {new Date(notif.created_at).toLocaleString('en-IN', {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-8 text-center text-gray-500">
-                        <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                        <p className="text-sm">No notifications yet</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-3 border-t border-gray-200 text-center">
-                    <button 
-                      onClick={() => {
-                        setNotificationsOpen(false);
-                        navigate('/admin/notifications');
-                      }}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      View all notifications
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Settings Button */}
             <button 
               className="p-2 hover:bg-gray-100 rounded-lg"
               onClick={() => navigate('/admin/product-fields-config')}
@@ -483,12 +240,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Settings className="w-5 h-5 text-gray-600" />
             </button>
-
             {/* Profile Dropdown */}
             <div className="relative">
               <div className="flex items-center gap-2 cursor-pointer" onClick={() => {
                 setProfileDropdownOpen(!profileDropdownOpen);
-                setNotificationsOpen(false);
               }}>
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
                   {user?.name?.[0] || 'A'}
@@ -512,16 +267,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       <Home className="w-4 h-4" />
                       Dashboard
                     </Link>
-                    <button
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
-                      onClick={() => {
-                        setProfileDropdownOpen(false);
-                        navigate('/admin/product-fields-config');
-                      }}
-                    >
-                      <Settings className="w-4 h-4" />
-                      Settings
-                    </button>
                     <Link
                       to="/"
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
@@ -530,16 +275,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       <Store className="w-4 h-4" />
                       View Store
                     </Link>
-                    <button
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 rounded-lg"
-                      onClick={() => {
-                        setProfileDropdownOpen(false);
-                        navigate('/admin/data-cleanup');
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Clear All Data
-                    </button>
                   </div>
                   <div className="p-2 border-t border-gray-200">
                     <button
