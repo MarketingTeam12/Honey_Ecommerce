@@ -17,6 +17,18 @@ interface BillingAddress {
   country: string;
 }
 
+const formatAddress = (address: BillingAddress | null) => {
+  if (!address) return '';
+
+  return [
+    address.name,
+    [address.addressLine1, address.addressLine2].filter(Boolean).join(', '),
+    `${address.city}, ${address.state} - ${address.pincode}`,
+    address.country,
+    `Phone: ${address.phone}`,
+  ].filter(Boolean).join('\n');
+};
+
 export function NewCheckoutReviewPage() {
   const { convertPrice } = useCurrency();
   const { 
@@ -32,10 +44,14 @@ export function NewCheckoutReviewPage() {
   const [notes, setNotes] = useState('');
   const [billingAddress, setBillingAddress] = useState<BillingAddress | null>(null);
   const [shippingMethod, setShippingMethod] = useState<'email' | 'physical'>('email');
+  const [physicalAddressType, setPhysicalAddressType] = useState<'residential' | 'delivery'>('residential');
   const [deliveryEmail, setDeliveryEmail] = useState('');
   const [deliveryWhatsappNumber, setDeliveryWhatsappNumber] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [shippingError, setShippingError] = useState('');
+  const [customerType, setCustomerType] = useState<'individual' | 'company'>('individual');
+  const [gstNumber, setGstNumber] = useState('');
+  const [paymentDetailsError, setPaymentDetailsError] = useState('');
   
   // Coupon states
   const [couponCode, setCouponCode] = useState('');
@@ -135,6 +151,7 @@ export function NewCheckoutReviewPage() {
 
   const handleSaveDeliveryDetails = () => {
     setShippingError('');
+    setPaymentDetailsError('');
 
     if (shippingMethod === 'email') {
       const email = deliveryEmail.trim();
@@ -161,6 +178,11 @@ export function NewCheckoutReviewPage() {
         setShippingError('Please enter a valid WhatsApp number (10-15 digits).');
         return false;
       }
+    } else if (physicalAddressType === 'residential') {
+      if (!billingAddress) {
+        setShippingError('Please add or select your residential address in Step 1.');
+        return false;
+      }
     } else {
       if (!deliveryAddress.trim()) {
         setShippingError('Please enter your full delivery address for courier delivery.');
@@ -168,14 +190,29 @@ export function NewCheckoutReviewPage() {
       }
     }
 
+    if (customerType === 'company' && !gstNumber.trim()) {
+      setPaymentDetailsError('Please enter your GST Number for company billing.');
+      return false;
+    }
+
     const savedDetails = {
       email: shippingMethod === 'email' ? deliveryEmail.trim() : '',
       whatsappNumber: shippingMethod === 'email' ? deliveryWhatsappNumber.trim() : '',
-      address: shippingMethod === 'physical' ? deliveryAddress.trim() : '',
+      address: shippingMethod === 'physical'
+        ? physicalAddressType === 'residential'
+          ? formatAddress(billingAddress)
+          : deliveryAddress.trim()
+        : '',
+      addressType: shippingMethod === 'physical' ? physicalAddressType : '',
+    };
+    const paymentDetails = {
+      customerType,
+      gstNumber: customerType === 'company' ? gstNumber.trim().toUpperCase() : '',
     };
 
     localStorage.setItem('shippingMethod', shippingMethod);
     localStorage.setItem('shippingDetails', JSON.stringify(savedDetails));
+    localStorage.setItem('paymentCustomerDetails', JSON.stringify(paymentDetails));
     toast.success('Delivery details submitted successfully.');
     return true;
   };
@@ -279,7 +316,7 @@ export function NewCheckoutReviewPage() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-gray-900">Email Delivery + Whatsapp Delivery</span>
+                      <span className="font-semibold text-gray-900">Mail/WhatsApp Delivery</span>
                       <span className="text-green-600 font-semibold">FREE</span>
                     </div>
                     <p className="text-sm text-gray-600">
@@ -354,18 +391,94 @@ export function NewCheckoutReviewPage() {
                   </div>
                 ) : (
                   <div className="space-y-3 p-4 border border-blue-200 rounded-xl bg-blue-50">
-                    <label className="block text-sm font-semibold text-gray-900">Delivery Address</label>
-                    <textarea
-                      value={deliveryAddress}
-                      onChange={(e) => {
-                        setDeliveryAddress(e.target.value);
-                        setShippingError('');
-                      }}
-                      placeholder="Enter your full delivery address, including house number, street, city, state, pincode, and country"
-                      rows={4}
-                      onKeyDown={handleDeliveryDetailsKeyDown}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        physicalAddressType === 'residential'
+                          ? 'border-blue-600 bg-white'
+                          : 'border-blue-200 bg-blue-50 hover:border-blue-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="physicalAddressType"
+                          value="residential"
+                          checked={physicalAddressType === 'residential'}
+                          onChange={() => {
+                            setPhysicalAddressType('residential');
+                            setShippingError('');
+                          }}
+                          className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-900">Residential Address</p>
+                          <p className="text-sm text-gray-600">Use the address saved in Step 1.</p>
+                        </div>
+                      </label>
+
+                      <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        physicalAddressType === 'delivery'
+                          ? 'border-blue-600 bg-white'
+                          : 'border-blue-200 bg-blue-50 hover:border-blue-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="physicalAddressType"
+                          value="delivery"
+                          checked={physicalAddressType === 'delivery'}
+                          onChange={() => {
+                            setPhysicalAddressType('delivery');
+                            setShippingError('');
+                          }}
+                          className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-900">Delivery Address</p>
+                          <p className="text-sm text-gray-600">Enter a different courier address.</p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {physicalAddressType === 'residential' ? (
+                      <div className="bg-white border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 mb-2">Selected Residential Address</p>
+                            <div className="text-gray-700 space-y-1">
+                              <p className="font-semibold text-gray-900">{billingAddress?.name}</p>
+                              <p>
+                                {billingAddress?.addressLine1}
+                                {billingAddress?.addressLine2 && `, ${billingAddress.addressLine2}`}
+                              </p>
+                              <p>{billingAddress?.city}, {billingAddress?.state} - {billingAddress?.pincode}</p>
+                              <p>{billingAddress?.country}</p>
+                              <p className="text-gray-600 text-sm">Phone: {billingAddress?.phone}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => navigate('/checkout/address')}
+                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm shrink-0"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <label className="block text-sm font-semibold text-gray-900">Delivery Address</label>
+                        <textarea
+                          value={deliveryAddress}
+                          onChange={(e) => {
+                            setDeliveryAddress(e.target.value);
+                            setShippingError('');
+                          }}
+                          placeholder="Enter your full delivery address, including house number, street, city, state, pincode, and country"
+                          rows={4}
+                          onKeyDown={handleDeliveryDetailsKeyDown}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
+                        />
+                      </>
+                    )}
                     <p className="text-sm text-gray-600">
                       This address will be used for courier delivery of your documents.
                     </p>
@@ -386,6 +499,76 @@ export function NewCheckoutReviewPage() {
                   <p className="mt-3 text-sm text-red-600 font-medium">{shippingError}</p>
                 )}
               </div>
+            </div>
+
+            {/* Payment Details */}
+            <div className="border border-gray-200 rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  customerType === 'individual'
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="customerType"
+                    value="individual"
+                    checked={customerType === 'individual'}
+                    onChange={() => {
+                      setCustomerType('individual');
+                      setPaymentDetailsError('');
+                    }}
+                    className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="font-semibold text-gray-900">Individual</p>
+                    <p className="text-sm text-gray-600">Continue without GST details.</p>
+                  </div>
+                </label>
+
+                <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  customerType === 'company'
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}>
+                  <input
+                    type="radio"
+                    name="customerType"
+                    value="company"
+                    checked={customerType === 'company'}
+                    onChange={() => {
+                      setCustomerType('company');
+                      setPaymentDetailsError('');
+                    }}
+                    className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="font-semibold text-gray-900">Company</p>
+                    <p className="text-sm text-gray-600">Add GST number for company billing.</p>
+                  </div>
+                </label>
+              </div>
+
+              {customerType === 'company' && (
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">GST Number</label>
+                  <input
+                    type="text"
+                    value={gstNumber}
+                    onChange={(e) => {
+                      setGstNumber(e.target.value.toUpperCase());
+                      setPaymentDetailsError('');
+                    }}
+                    placeholder="Enter GST Number"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none uppercase"
+                  />
+                </div>
+              )}
+
+              {paymentDetailsError && (
+                <p className="mt-3 text-sm text-red-600 font-medium">{paymentDetailsError}</p>
+              )}
             </div>
 
             {/* Order Items */}
@@ -460,7 +643,7 @@ export function NewCheckoutReviewPage() {
                         </span>
                         <div className="text-right">
                           <p className="text-sm text-gray-500 mb-1">
-                            {convertPrice(item.basePrice)} Ã— {item.pageCount}
+                            {convertPrice(item.basePrice)} x {item.pageCount}
                           </p>
                           <p className="text-xl font-semibold text-gray-900">
                             {convertPrice(item.totalPrice)}

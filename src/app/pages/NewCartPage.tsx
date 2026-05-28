@@ -207,15 +207,6 @@ export function NewCartPage() {
                               );
                             })()}
 
-                            {/* Document Preview Illustration */}
-                            <div className="mt-4">
-                              <img
-                                src="https://img.icons8.com/fluency/96/business-contact.png"
-                                alt="Document"
-                                className="w-16 h-16"
-                              />
-                            </div>
-
                             {/* Action Buttons */}
                             <div className="flex gap-3 mt-4">
                               <button

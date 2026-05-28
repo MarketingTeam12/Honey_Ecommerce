@@ -2,14 +2,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
-  Building,
-  CheckCircle,
   ChevronRight,
-  CreditCard,
   Lock,
-  Shield,
-  Smartphone,
-  Wallet,
 } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
@@ -71,6 +65,15 @@ type PaymentCreateOrderResponse = {
   zohoHostedpageId?: string | null;
   gateway?: string;
   message?: string;
+};
+
+type PaymentVerificationPayload = {
+  orderId: string;
+  paymentId?: string;
+  razorpay_payment_id?: string;
+  razorpay_order_id?: string;
+  razorpay_signature?: string;
+  customer: Record<string, any>;
 };
 
 declare global {
@@ -178,6 +181,10 @@ const parseApiError = async (response: Response) => {
   }
 };
 
+const isLocalDevelopment = () =>
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 export function NewPaymentPage() {
   const {
     getCartTotal,
@@ -186,7 +193,7 @@ export function NewPaymentPage() {
     appliedCoupon,
     getDiscountAmount,
   } = useCart();
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth();
   const { currency, convertPrice } = useCurrency();
   const navigate = useNavigate();
   const location = useLocation();
@@ -229,60 +236,121 @@ export function NewPaymentPage() {
     return data.invoicePath as string;
   };
 
+  const validateRazorpayOrder = (order: RazorpayOrderResponse | null | undefined) => {
+    if (!order?.id || !order?.amount) {
+      throw new Error('Payment order was not created correctly. Please try again.');
+    }
+
+    return order;
+  };
+
+  const createLocalRazorpayOrder = async (
+    amount: number,
+    orderNumber: string,
+  ): Promise<RazorpayOrderResponse> => {
+    const localResponse = await fetch(`${LOCAL_BACKEND_BASE}/create-order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: Number(amount.toFixed(2)),
+        currency: currencyCode,
+        receipt: orderNumber,
+      }),
+    });
+
+    if (localResponse.ok) {
+      return validateRazorpayOrder(await localResponse.json());
+    }
+
+    const localError = await parseApiError(localResponse);
+    throw new Error(localError || 'Failed to create Razorpay order from local backend.');
+  };
+
   const createRazorpayOrder = async (
     amount: number,
     orderNumber: string,
   ): Promise<RazorpayOrderResponse> => {
     const requestBody = {
-      amount,
+      amount: Number(amount.toFixed(2)),
       currency: currencyCode,
       orderNumber,
       receipt: orderNumber,
     };
 
-    const response = await fetch(RAZORPAY_ORDER_API, {
-      method: 'POST',
-      headers: buildPublicFunctionHeaders(),
-      body: JSON.stringify(requestBody),
-    });
-
-    if (response.ok) {
-      return response.json();
+    if (isLocalDevelopment()) {
+      try {
+        return await createLocalRazorpayOrder(amount, orderNumber);
+      } catch (localError) {
+        console.warn('Local Razorpay order creation failed, trying remote backend fallback:', localError);
+      }
     }
 
-    if (response.status === 404) {
-      throw new Error(
-        'The live payment backend does not have the Razorpay order API yet. Deploy the latest Supabase function code, then try again.',
-      );
-    }
-
-    const responseError = await parseApiError(response);
-    const isLocalDevelopment =
-      typeof window !== 'undefined' &&
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-    if (isLocalDevelopment) {
-      console.warn('Remote Razorpay order creation failed, trying local backend fallback:', responseError);
-
-      const localResponse = await fetch(`${LOCAL_BACKEND_BASE}/create-order`, {
+    try {
+      const response = await fetch(RAZORPAY_ORDER_API, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: Number(amount.toFixed(2)),
-        }),
+        headers: buildPublicFunctionHeaders(),
+        body: JSON.stringify(requestBody),
       });
 
-      if (localResponse.ok) {
-        return localResponse.json();
+      if (response.ok) {
+        return validateRazorpayOrder(await response.json());
       }
 
-      const localError = await parseApiError(localResponse);
-      throw new Error(localError || 'Failed to create Razorpay order.');
+      const responseError = await parseApiError(response);
+
+      throw new Error(responseError || 'Failed to create Razorpay order.');
+    } catch (remoteError) {
+      if (!isLocalDevelopment()) {
+        throw remoteError;
+      }
+
+      console.warn('Remote Razorpay order creation unavailable after local fallback failed:', remoteError);
+      throw remoteError;
+    }
+  };
+
+  const verifyPayment = async (payload: PaymentVerificationPayload) => {
+    try {
+      const verifyResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/verify`, {
+        method: 'POST',
+        headers: buildPublicFunctionHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      if (verifyResponse.ok) {
+        return verifyResponse.json();
+      }
+
+      const verifyError = await parseApiError(verifyResponse);
+      if (!isLocalDevelopment()) {
+        throw new Error(verifyError || 'Payment verification failed.');
+      }
+
+      console.warn('Remote payment verification failed, trying local backend fallback:', verifyError);
+    } catch (remoteError) {
+      if (!isLocalDevelopment()) {
+        throw remoteError;
+      }
+
+      console.warn('Remote payment verification unavailable, trying local backend fallback:', remoteError);
     }
 
-    throw new Error(responseError || 'Failed to create Razorpay order.');
+    const localVerifyResponse = await fetch(`${LOCAL_BACKEND_BASE}/api/verify-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!localVerifyResponse.ok) {
+      const localError = await parseApiError(localVerifyResponse);
+      throw new Error(localError || 'Payment verification failed.');
+    }
+
+    return localVerifyResponse.json();
   };
 
   const handlePayment = async () => {
@@ -311,19 +379,28 @@ export function NewPaymentPage() {
       const parsedShippingAddress = shippingAddress ? JSON.parse(shippingAddress) : null;
       const rawShippingDetails = localStorage.getItem('shippingDetails');
       const parsedShippingDetails = rawShippingDetails ? JSON.parse(rawShippingDetails) : {};
+      const rawPaymentCustomerDetails = localStorage.getItem('paymentCustomerDetails');
+      const paymentCustomerDetails = rawPaymentCustomerDetails ? JSON.parse(rawPaymentCustomerDetails) : {};
       const orderNotes = localStorage.getItem('orderNotes') || '';
       const orderTip = localStorage.getItem('orderTip') || '0';
       const shippingMethod = (localStorage.getItem('shippingMethod') || 'email') as 'email' | 'physical';
 
       const deliveryEmail = (parsedShippingDetails?.email || '').trim();
       const deliveryAddressText = (parsedShippingDetails?.address || '').trim();
+      const physicalAddressType = parsedShippingDetails?.addressType || '';
+      const customerType = paymentCustomerDetails?.customerType || 'individual';
+      const gstNumber = (paymentCustomerDetails?.gstNumber || '').trim();
       const finalDeliveryEmail = shippingMethod === 'email' ? (deliveryEmail || user.email || '') : '';
       const finalShippingAddress = shippingMethod === 'physical'
-        ? (deliveryAddressText ? { address1: deliveryAddressText } : parsedShippingAddress)
+        ? physicalAddressType === 'residential'
+          ? parsedShippingAddress
+          : (deliveryAddressText ? { address1: deliveryAddressText } : parsedShippingAddress)
         : parsedShippingAddress;
       const shippingDetails = {
         email: shippingMethod === 'email' ? finalDeliveryEmail : undefined,
         address: shippingMethod === 'physical' ? (deliveryAddressText || undefined) : undefined,
+        whatsappNumber: shippingMethod === 'email' ? parsedShippingDetails?.whatsappNumber : undefined,
+        addressType: shippingMethod === 'physical' ? physicalAddressType : undefined,
       };
 
       const orderId = `ORD-${Date.now()}`;
@@ -405,6 +482,8 @@ export function NewPaymentPage() {
         notes: orderNotes,
         tip: parseFloat(orderTip),
         shipping_method: shippingMethod,
+        customer_type: customerType,
+        gst_number: customerType === 'company' ? gstNumber : '',
       };
 
       try {
@@ -471,6 +550,8 @@ export function NewPaymentPage() {
             notes: orderNotes,
             tip: parseFloat(orderTip),
             shippingMethod,
+            customerType,
+            gstNumber: customerType === 'company' ? gstNumber : '',
           }),
         });
 
@@ -488,15 +569,15 @@ export function NewPaymentPage() {
 
       let razorpayOrder = paymentCreateResponse?.razorpayOrder || null;
 
-      if (!razorpayOrder && paymentCreateResponse) {
-        throw new Error(
-          'The live payment backend is still on the older version and did not return a Razorpay order. Deploy the latest Supabase function code, then try again.',
-        );
-      }
-
       if (!razorpayOrder) {
+        if (paymentCreateResponse) {
+          console.warn('Payment backend response did not include a Razorpay order, creating one directly.');
+        }
+
         razorpayOrder = await createRazorpayOrder(Number(total.toFixed(2)), orderNumber);
       }
+
+      razorpayOrder = validateRazorpayOrder(razorpayOrder);
 
       const options = {
         key: RAZORPAY_KEY_ID,
@@ -523,62 +604,54 @@ export function NewPaymentPage() {
           console.log(razorpayResponse);
 
           try {
-            const verifyResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/verify`, {
-              method: 'POST',
-              headers: buildPublicFunctionHeaders(),
-              body: JSON.stringify({
-                orderId,
-                paymentId: razorpayResponse.razorpay_payment_id,
-                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
-                razorpay_order_id: razorpayResponse.razorpay_order_id,
-                razorpay_signature: razorpayResponse.razorpay_signature,
-                customer: {
-                  name: user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
-                  email: user.email || '',
-                  phone: parsedShippingAddress?.phone || user.user_metadata?.phone || '',
-                  sourceLanguage: cart[0]?.sourceLanguage || '',
-                  targetLanguage: cart[0]?.targetLanguage || '',
-                  amount: total,
-                  items: cart.map(item => ({
-                    description: item.name,
-                    quantity: item.uploadedDocuments?.length || 1,
-                    pages: item.pageCount,
-                    rate: item.basePrice,
-                    amount: item.totalPrice,
-                    sourceLanguage: item.sourceLanguage,
-                    targetLanguage: item.targetLanguage,
-                    documentType: item.documentType,
-                    certificateType: item.certificateType,
-                    files: item.uploadedDocuments?.map(document => document.name) || [],
-                  })),
-                },
-              }),
+            const verifyData = await verifyPayment({
+              orderId,
+              paymentId: razorpayResponse.razorpay_payment_id,
+              razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+              razorpay_order_id: razorpayResponse.razorpay_order_id,
+              razorpay_signature: razorpayResponse.razorpay_signature,
+              customer: {
+                name: user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
+                email: user.email || '',
+                phone: parsedShippingAddress?.phone || user.user_metadata?.phone || '',
+                customerType,
+                gstNumber: customerType === 'company' ? gstNumber : '',
+                sourceLanguage: cart[0]?.sourceLanguage || '',
+                targetLanguage: cart[0]?.targetLanguage || '',
+                amount: total,
+                items: cart.map(item => ({
+                  description: item.name,
+                  quantity: item.uploadedDocuments?.length || 1,
+                  pages: item.pageCount,
+                  rate: item.basePrice,
+                  amount: item.totalPrice,
+                  sourceLanguage: item.sourceLanguage,
+                  targetLanguage: item.targetLanguage,
+                  documentType: item.documentType,
+                  certificateType: item.certificateType,
+                  files: item.uploadedDocuments?.map(document => document.name) || [],
+                })),
+              },
             });
 
-            const verifyData = await verifyResponse.json();
+            console.log('Payment Verified Successfully');
+            let resolvedInvoicePath: string | null = verifyData.invoicePath || null;
 
-            if (verifyResponse.ok) {
-              console.log('Payment Verified Successfully');
-              let resolvedInvoicePath: string | null = verifyData.invoicePath || null;
+            try {
+              const templateInvoicePath = await generateTemplateInvoice({
+                ...order,
+                payment_status: 'paid',
+                status: 'confirmed',
+                transaction_id: razorpayResponse.razorpay_payment_id || '',
+              });
+              resolvedInvoicePath = templateInvoicePath;
+            } catch (templateError) {
+              console.warn('Template invoice generation failed on payment page:', templateError);
+            }
 
-              try {
-                const templateInvoicePath = await generateTemplateInvoice({
-                  ...order,
-                  payment_status: 'paid',
-                  status: 'confirmed',
-                  transaction_id: razorpayResponse.razorpay_payment_id || '',
-                });
-                resolvedInvoicePath = templateInvoicePath;
-              } catch (templateError) {
-                console.warn('Template invoice generation failed on payment page:', templateError);
-              }
-
-              if (resolvedInvoicePath) {
-                setInvoicePath(resolvedInvoicePath);
-                localStorage.setItem(`invoicePath_${orderId}`, resolvedInvoicePath);
-              }
-            } else {
-              console.error('Payment verification failed:', verifyData);
+            if (resolvedInvoicePath) {
+              setInvoicePath(resolvedInvoicePath);
+              localStorage.setItem(`invoicePath_${orderId}`, resolvedInvoicePath);
             }
           } catch (verifyError) {
             console.error('Payment verification request failed:', verifyError);
@@ -690,19 +763,10 @@ export function NewPaymentPage() {
             </div>
             <ChevronRight className="w-5 h-5 text-gray-400" />
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-gray-600">Review Order</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-gray-400" />
-            <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">
-                3
+                2
               </div>
-              <span className="font-medium text-blue-600">Payment</span>
+              <span className="font-medium text-blue-600">Review Order & Payment</span>
             </div>
           </div>
 
@@ -712,121 +776,7 @@ export function NewPaymentPage() {
 
       <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <div className="border border-gray-200 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Lock className="w-6 h-6 text-green-600" />
-                <div>
-                  <h2 className="text-xl font-semibold">Razorpay - Secure Checkout</h2>
-                  <p className="text-sm text-gray-600">All transactions are processed securely via Razorpay</p>
-                </div>
-              </div>
-
-              <div className="mb-6 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-xl p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <Shield className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold">Razorpay</h3>
-                    <p className="text-white/80 text-sm">Fast, secure payment processing</p>
-                  </div>
-                </div>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  Click the pay button below to open the Razorpay checkout widget and pay using your preferred method
-                  including Credit/Debit Cards, UPI, Net Banking, and Digital Wallets.
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Supported Payment Methods</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-blue-300 transition-colors">
-                    <CreditCard className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-gray-900">Credit/Debit Card</p>
-                    <p className="text-xs text-gray-500 mt-1">Visa, MC, Amex, RuPay</p>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-blue-300 transition-colors">
-                    <Smartphone className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-gray-900">UPI</p>
-                    <p className="text-xs text-gray-500 mt-1">GPay, PhonePe, Paytm</p>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-blue-300 transition-colors">
-                    <Building className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-gray-900">Net Banking</p>
-                    <p className="text-xs text-gray-500 mt-1">All Major Banks</p>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-4 text-center hover:border-blue-300 transition-colors">
-                    <Wallet className="w-8 h-8 text-orange-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-gray-900">Digital Wallets</p>
-                    <p className="text-xs text-gray-500 mt-1">Paytm, Amazon Pay</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                <h4 className="font-semibold text-blue-900 mb-3">How it works:</h4>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</div>
-                    <p className="text-sm text-blue-800">Click "Pay with Razorpay" below to proceed</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</div>
-                    <p className="text-sm text-blue-800">The Razorpay widget opens on top of this page</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</div>
-                    <p className="text-sm text-blue-800">Choose your preferred payment method and complete the payment</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                      <CheckCircle className="w-4 h-4" />
-                    </div>
-                    <p className="text-sm text-blue-800">After payment, you'll be redirected back with order confirmation</p>
-                  </div>
-                </div>
-              </div>
-
-              {processing && (
-                <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-5">
-                  <h4 className="font-semibold text-yellow-900 mb-3">Processing your payment...</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                        paymentStep === 'creating' ? 'bg-yellow-500 animate-pulse' :
-                        paymentStep === 'saving' || paymentStep === 'opening' ? 'bg-green-500' : 'bg-gray-300'
-                      }`}>
-                        {(paymentStep === 'saving' || paymentStep === 'opening') && (
-                          <CheckCircle className="w-3 h-3 text-white" />
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-700">Creating your order...</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                        paymentStep === 'saving' ? 'bg-yellow-500 animate-pulse' :
-                        paymentStep === 'opening' ? 'bg-green-500' : 'bg-gray-300'
-                      }`}>
-                        {paymentStep === 'opening' && (
-                          <CheckCircle className="w-3 h-3 text-white" />
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-700">Saving order to server...</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                        paymentStep === 'opening' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-300'
-                      }`} />
-                      <span className="text-sm text-gray-700">Opening Razorpay Checkout...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 lg:col-start-2">
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 sticky top-8">
               <h2 className="text-xl font-semibold mb-6">Payment Summary</h2>
 
@@ -855,14 +805,6 @@ export function NewPaymentPage() {
                 <div className="flex justify-between text-lg">
                   <span className="font-semibold">Amount to Pay</span>
                   <span className="font-bold text-blue-600 text-2xl">{convertPrice(total)}</span>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm font-medium text-gray-700 mb-3">Payment Gateway</p>
-                <div className="p-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg font-semibold text-center shadow-lg flex items-center justify-center gap-2">
-                  <Shield className="w-5 h-5" />
-                  Razorpay
                 </div>
               </div>
 

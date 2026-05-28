@@ -12,9 +12,9 @@ import { useAuth } from '@/app/context/AuthContext';
 import { OrderTrackingManager } from '@/app/components/admin/OrderTrackingManager';
 import { OrderManagementVisual } from '@/app/components/admin/OrderManagementVisual';
 import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
-import axios from 'axios';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
+const LOCAL_BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
 interface UploadedFile {
   name: string;
@@ -466,6 +466,47 @@ export function OrderDetailPage() {
     return [];
   };
 
+  const getDeliveryEmail = (currentOrder: Order) => {
+    return (
+      currentOrder.shipping_details?.email ||
+      currentOrder.customer_email ||
+      ''
+    ).trim();
+  };
+
+  const sendCompletedFilesByEmail = async (files: UploadedFile[]) => {
+    if (!order) return;
+
+    const deliveryEmail = getDeliveryEmail(order);
+
+    if (!deliveryEmail) {
+      throw new Error('Delivery email is not available for this order');
+    }
+
+    const attachments = files.map((file) => ({
+      name: file.name,
+      content: file.data,
+    }));
+
+    const response = await fetch(`${LOCAL_BACKEND_BASE}/api/send-document`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: deliveryEmail,
+        orderNumber: order.order_number,
+        attachments,
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || data.success === false) {
+      throw new Error(data.message || 'Failed to email completed document');
+    }
+  };
+
   const handleUploadCompletedFile = async (files: FileList | File[]) => {
     try {
       setUploadingCompletedFile(true);
@@ -514,6 +555,7 @@ export function OrderDetailPage() {
           ...file,
           uploaded_at: submittedAt,
         }));
+        await sendCompletedFilesByEmail(localFiles);
         const fallbackOrder: Order = {
           ...order,
           completed_files: localFiles,
@@ -525,11 +567,13 @@ export function OrderDetailPage() {
         setOrder(fallbackOrder);
         syncOrderInLocalStorage(fallbackOrder);
         setPendingCompletedFiles([]);
-        toast.success('Files submitted locally. Customer can now download them on this browser.');
+        toast.success('Files submitted locally and emailed to the delivery address.');
         return;
       }
 
       const [pendingCompletedFile] = pendingCompletedFiles;
+      await sendCompletedFilesByEmail(pendingCompletedFiles);
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/completed-file`,
         {
@@ -557,24 +601,10 @@ export function OrderDetailPage() {
           completed_files: pendingCompletedFiles,
         };
 
-        console.log("MAIL API CALLING");
-
-        try {
-          await axios.post("http://localhost:3000/send-document", {
-            customerEmail: (order as any).email,
-            filePath: "./uploads/mail.pdf",
-            fileName: "mail.pdf"
-          });
-
-          console.log("MAIL SENT SUCCESS");
-        } catch (err) {
-          console.error("MAIL ERROR", err);
-        }
-
         setOrder(submittedOrder);
         syncOrderInLocalStorage(submittedOrder);
         setPendingCompletedFiles([]);
-        toast.success('Final translated file submitted successfully');
+        toast.success('Final translated file submitted and emailed successfully');
 
         return;
       }
@@ -593,23 +623,10 @@ export function OrderDetailPage() {
       setOrder(fallbackOrder);
       syncOrderInLocalStorage(fallbackOrder);
       setPendingCompletedFiles([]);
-      toast.success('File submitted locally. Customer can now download it on this browser.');
+      toast.success('File submitted locally and emailed to the delivery address.');
     } catch (error) {
       console.error('Error submitting completed file:', error);
-
-      const [pendingCompletedFile] = pendingCompletedFiles;
-      const fallbackOrder: Order = {
-        ...(order as Order),
-        completed_files: pendingCompletedFiles,
-        completed_file: pendingCompletedFile,
-        completed_file_name: pendingCompletedFile.name,
-        completed_at: pendingCompletedFile.uploaded_at || new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setOrder(fallbackOrder);
-      syncOrderInLocalStorage(fallbackOrder);
-      setPendingCompletedFiles([]);
-      toast.success('File submitted locally. Customer can now download it on this browser.');
+      toast.error(error instanceof Error ? error.message : 'Failed to email completed document');
     } finally {
       setUploadingCompletedFile(false);
     }

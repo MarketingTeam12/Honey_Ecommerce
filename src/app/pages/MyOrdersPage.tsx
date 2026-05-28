@@ -535,7 +535,7 @@ export function MyOrdersPage() {
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900">{item.name}</h3>
                         <p className="text-sm text-gray-600">Pages: {item.pageCount}</p>
-                        <p className="text-sm text-gray-600">Price: ?{item.basePrice} Ã— {item.pageCount} = ?{item.totalPrice.toLocaleString('en-IN')}</p>
+                        <p className="text-sm text-gray-600">Price: ?{item.basePrice} x {item.pageCount} = ?{item.totalPrice.toLocaleString('en-IN')}</p>
                       </div>
                     </div>
                   ))}
@@ -870,7 +870,7 @@ export function MyOrdersPage() {
                       <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium text-gray-900">{item.name}</p>
-                          <p className="text-sm text-gray-600">Pages: {item.pageCount} Ã— ?{item.basePrice}</p>
+                          <p className="text-sm text-gray-600">Pages: {item.pageCount} x ?{item.basePrice}</p>
                         </div>
                         <p className="font-semibold text-gray-900">?{item.totalPrice.toLocaleString('en-IN')}</p>
                       </div>

@@ -378,8 +378,10 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const [targetLanguages, setTargetLanguages] = useState<string[]>([]);
   const [sourceLanguageSearch, setSourceLanguageSearch] = useState('');
   const [targetLanguageSearch, setTargetLanguageSearch] = useState('');
+  const [destinationSearch, setDestinationSearch] = useState('');
   const [sourceLanguageOpen, setSourceLanguageOpen] = useState(false);
   const [targetLanguageOpen, setTargetLanguageOpen] = useState(false);
+  const [destinationOpen, setDestinationOpen] = useState(false);
   const [destination, setDestination] = useState('');
   const [apostilleDocumentType, setApostilleDocumentType] = useState('');
   const [needTranslation, setNeedTranslation] = useState('');
@@ -499,6 +501,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     setTargetLanguages([]);
     setSourceLanguageSearch('');
     setTargetLanguageSearch('');
+    setDestinationSearch('');
     setDestination('');
     setApostilleDocumentType('');
     setNeedTranslation('');
@@ -635,6 +638,12 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
       return FALLBACK_DESTINATIONS;
     }
   }, []);
+
+  const filteredDestinationOptions = useMemo(() => {
+    const query = destinationSearch.trim().toLowerCase();
+    if (!query) return destinationOptions;
+    return destinationOptions.filter((country) => country.toLowerCase().includes(query));
+  }, [destinationOptions, destinationSearch]);
 
   // Don't set default language values automatically - let user select them
   // This ensures validation works properly
@@ -1086,18 +1095,50 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   <Label htmlFor="destination" className="text-base md:text-lg font-semibold">
                     Destination <span className="text-red-600">*</span>
                   </Label>
-                  <Select value={destination} onValueChange={setDestination}>
-                    <SelectTrigger id="destination" className="w-full mt-1 h-11 text-base md:text-lg">
-                      <SelectValue placeholder="Select destination country" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {destinationOptions.map((country) => (
-                        <SelectItem key={country} value={country}>
-                          {country}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={destinationOpen} onOpenChange={setDestinationOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        id="destination"
+                        type="button"
+                        className="w-full mt-1 h-11 px-3 rounded-md border border-gray-200 bg-white text-left text-base md:text-lg flex items-center justify-between"
+                      >
+                        <span className={`truncate ${destination ? 'text-gray-900' : 'text-gray-500'}`}>
+                          {destination || 'Select destination country'}
+                        </span>
+                        <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${destinationOpen ? 'rotate-90' : ''}`} />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+                      <input
+                        type="text"
+                        value={destinationSearch}
+                        onChange={(e) => setDestinationSearch(e.target.value)}
+                        placeholder="Type to search country..."
+                        className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                      />
+                      <div className="max-h-56 overflow-y-auto space-y-1">
+                        {filteredDestinationOptions.length > 0 ? (
+                          filteredDestinationOptions.map((country) => (
+                            <button
+                              key={country}
+                              type="button"
+                              onClick={() => {
+                                setDestination(country);
+                                setDestinationSearch('');
+                                setDestinationOpen(false);
+                              }}
+                              className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded text-left text-sm hover:bg-gray-50"
+                            >
+                              <span>{country}</span>
+                              {destination === country && <Check className="w-4 h-4 text-blue-600" />}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-2 py-2 text-sm text-gray-500">No matching country found.</div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div>
                   <Label htmlFor="apostille-document-type" className="text-base md:text-lg font-semibold">
