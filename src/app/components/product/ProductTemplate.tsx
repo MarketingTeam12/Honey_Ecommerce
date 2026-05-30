@@ -815,10 +815,10 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
         {/* Main 2-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)] gap-8 lg:gap-12 lg:items-start">
           
           {/* LEFT COLUMN - Product Images */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
             {/* Main Product Image with Zoom */}
             <div
               ref={imageRef}

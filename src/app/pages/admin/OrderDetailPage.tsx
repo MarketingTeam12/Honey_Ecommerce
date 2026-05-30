@@ -15,12 +15,14 @@ import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 const LOCAL_BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+const COMPLETED_FILE_SUBMIT_TIMEOUT_MS = 8000;
 
 interface UploadedFile {
   name: string;
   type: string;
   size: number;
   data?: string; // base64 - Optional, excluded in list view for performance
+  localFile?: File; // Pending upload only; never persisted
   hasFile?: boolean; // Flag to indicate file exists (used in list view)
   uploaded_at?: string;
 }
@@ -101,6 +103,7 @@ export function OrderDetailPage() {
   const [notes, setNotes] = useState('');
   const [updating, setUpdating] = useState(false);
   const [uploadingCompletedFile, setUploadingCompletedFile] = useState(false);
+  const [submittingCompletedFile, setSubmittingCompletedFile] = useState(false);
   const [pendingCompletedFiles, setPendingCompletedFiles] = useState<UploadedFile[]>([]);
   const completedFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -467,11 +470,7 @@ export function OrderDetailPage() {
   };
 
   const getDeliveryEmail = (currentOrder: Order) => {
-    return (
-      currentOrder.shipping_details?.email ||
-      currentOrder.customer_email ||
-      ''
-    ).trim();
+    return (currentOrder.shipping_details?.email || '').trim();
   };
 
   const sendCompletedFilesByEmail = async (files: UploadedFile[]) => {
@@ -480,11 +479,42 @@ export function OrderDetailPage() {
     const deliveryEmail = getDeliveryEmail(order);
 
     if (!deliveryEmail) {
-      throw new Error('Delivery email is not available for this order');
+      throw new Error('Delivery address email is not available for this order');
+    }
+
+    const localFiles = files
+      .map((file) => file.localFile)
+      .filter((file): file is File => Boolean(file));
+
+    if (localFiles.length === files.length && localFiles.length > 0) {
+      const formData = new FormData();
+      formData.append('email', deliveryEmail);
+      formData.append('orderNumber', order.order_number);
+      localFiles.forEach((file) => {
+        formData.append(localFiles.length === 1 ? 'document' : 'documents', file, file.name);
+      });
+
+      const response = await fetch(`${LOCAL_BACKEND_BASE}/api/send-document`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || data.success === false) {
+        const message = data.message || data.providerMessage || 'Failed to email completed document';
+        const providerDetails = data.providerMessage && data.providerMessage !== message
+          ? ` Resend details: ${data.providerMessage}`
+          : '';
+        throw new Error(`${getFriendlyEmailErrorMessage(message)}${providerDetails}`);
+      }
+
+      return;
     }
 
     const attachments = files.map((file) => ({
-      name: file.name,
+      filename: file.name,
+      type: file.type || 'application/octet-stream',
       content: file.data,
     }));
 
@@ -503,8 +533,29 @@ export function OrderDetailPage() {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok || data.success === false) {
-      throw new Error(data.message || 'Failed to email completed document');
+      const message = data.message || data.providerMessage || 'Failed to email completed document';
+      const providerDetails = data.providerMessage && data.providerMessage !== message
+        ? ` Resend details: ${data.providerMessage}`
+        : '';
+      throw new Error(`${getFriendlyEmailErrorMessage(message)}${providerDetails}`);
     }
+  };
+
+  const getFriendlyEmailErrorMessage = (message: string) => {
+    const normalizedMessage = String(message || '').toLowerCase();
+
+    if (
+      normalizedMessage.includes('unrecognised ip') ||
+      normalizedMessage.includes('unrecognized ip') ||
+      normalizedMessage.includes('unauthorised ip') ||
+      normalizedMessage.includes('unauthorized ip') ||
+      normalizedMessage.includes('authorised_ips') ||
+      normalizedMessage.includes('authorized_ips')
+    ) {
+      return 'Resend blocked this email. Please check the verified sender/domain and API key in backend/.env, then click Submit again.';
+    }
+
+    return message;
   };
 
   const handleUploadCompletedFile = async (files: FileList | File[]) => {
@@ -521,6 +572,7 @@ export function OrderDetailPage() {
             type: file.type || 'application/octet-stream',
             size: file.size,
             data: base64Data,
+            localFile: file,
             hasFile: true,
             uploaded_at: new Date().toISOString(),
           } as UploadedFile;
@@ -540,6 +592,9 @@ export function OrderDetailPage() {
     }
   };
 
+  const getPersistableCompletedFiles = (files: UploadedFile[]) =>
+    files.map(({ localFile, ...file }) => file);
+
   const handleSubmitCompletedFile = async () => {
     if (!order || pendingCompletedFiles.length === 0) {
       toast.error('Please upload at least one file before submitting');
@@ -547,15 +602,15 @@ export function OrderDetailPage() {
     }
 
     try {
-      setUploadingCompletedFile(true);
+      setSubmittingCompletedFile(true);
 
       if (pendingCompletedFiles.length > 1) {
         const submittedAt = new Date().toISOString();
-        const localFiles = pendingCompletedFiles.map((file) => ({
+        const localFiles = getPersistableCompletedFiles(pendingCompletedFiles).map((file) => ({
           ...file,
           uploaded_at: submittedAt,
         }));
-        await sendCompletedFilesByEmail(localFiles);
+        await sendCompletedFilesByEmail(pendingCompletedFiles);
         const fallbackOrder: Order = {
           ...order,
           completed_files: localFiles,
@@ -574,6 +629,9 @@ export function OrderDetailPage() {
       const [pendingCompletedFile] = pendingCompletedFiles;
       await sendCompletedFilesByEmail(pendingCompletedFiles);
 
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), COMPLETED_FILE_SUBMIT_TIMEOUT_MS);
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/completed-file`,
         {
@@ -590,15 +648,17 @@ export function OrderDetailPage() {
               size: pendingCompletedFile.size,
               data: `data:${pendingCompletedFile.type || 'application/octet-stream'};base64,${pendingCompletedFile.data}`
             }
-          })
+          }),
+          signal: controller.signal
         }
-      );
+      ).finally(() => clearTimeout(timeout));
 
       if (response.ok) {
         const data = await response.json();
+        const submittedFiles = getPersistableCompletedFiles(pendingCompletedFiles);
         const submittedOrder: Order = {
           ...data.order,
-          completed_files: pendingCompletedFiles,
+          completed_files: submittedFiles,
         };
 
         setOrder(submittedOrder);
@@ -614,8 +674,8 @@ export function OrderDetailPage() {
 
       const fallbackOrder: Order = {
         ...order,
-        completed_files: pendingCompletedFiles,
-        completed_file: pendingCompletedFile,
+        completed_files: getPersistableCompletedFiles(pendingCompletedFiles),
+        completed_file: getPersistableCompletedFiles([pendingCompletedFile])[0],
         completed_file_name: pendingCompletedFile.name,
         completed_at: pendingCompletedFile.uploaded_at,
         updated_at: new Date().toISOString(),
@@ -626,9 +686,27 @@ export function OrderDetailPage() {
       toast.success('File submitted locally and emailed to the delivery address.');
     } catch (error) {
       console.error('Error submitting completed file:', error);
+      if (error instanceof Error && error.name === 'AbortError' && order) {
+        const submittedAt = new Date().toISOString();
+        const fallbackOrder: Order = {
+          ...order,
+          completed_files: getPersistableCompletedFiles(pendingCompletedFiles),
+          completed_file: getPersistableCompletedFiles(pendingCompletedFiles)[0],
+          completed_file_name: pendingCompletedFiles[0]?.name,
+          completed_at: submittedAt,
+          updated_at: submittedAt,
+        };
+
+        setOrder(fallbackOrder);
+        syncOrderInLocalStorage(fallbackOrder);
+        setPendingCompletedFiles([]);
+        toast.success('Document emailed successfully. Saved locally because order update timed out.');
+        return;
+      }
+
       toast.error(error instanceof Error ? error.message : 'Failed to email completed document');
     } finally {
-      setUploadingCompletedFile(false);
+      setSubmittingCompletedFile(false);
     }
   };
 
@@ -1169,7 +1247,7 @@ export function OrderDetailPage() {
                         type="file"
                         className="hidden"
                         multiple
-                        disabled={uploadingCompletedFile}
+                        disabled={uploadingCompletedFile || submittingCompletedFile}
                         onChange={(e) => {
                           if (e.target.files?.length) {
                             handleUploadCompletedFile(e.target.files);
@@ -1184,6 +1262,7 @@ export function OrderDetailPage() {
                         <button
                           onClick={() => completedFileInputRef.current?.click()}
                           type="button"
+                          disabled={uploadingCompletedFile || submittingCompletedFile}
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
                         >
                           <Plus className="w-4 h-4" />
@@ -1192,10 +1271,10 @@ export function OrderDetailPage() {
                         <button
                           onClick={handleSubmitCompletedFile}
                           type="button"
-                          disabled={uploadingCompletedFile}
+                          disabled={uploadingCompletedFile || submittingCompletedFile}
                           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          {uploadingCompletedFile ? 'Submitting...' : 'Submit'}
+                          {submittingCompletedFile ? 'Submitting...' : 'Submit'}
                         </button>
                       </>
                     )}
@@ -1344,7 +1423,7 @@ export function OrderDetailPage() {
                       <div>
                         <p className="text-xs text-gray-500">Delivery Address</p>
                         <p className="text-sm text-gray-900">
-                          {order.shipping_details?.email || order.customer_email || 'N/A'}
+                          {order.shipping_details?.email || 'N/A'}
                         </p>
                       </div>
                     </div>
