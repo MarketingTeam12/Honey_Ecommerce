@@ -191,11 +191,13 @@ export function PickYourLanguage() {
               initial={{ opacity: 0, x: 30, scale: 0.98 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{ opacity: 0, x: -30, scale: 0.98 }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 1.01 }}
               transition={{ duration: 0.4, ease: 'easeInOut', delay: index * 0.05 }}
             >
               {/* Image Box - Only contains image */}
               <Link to={product.route} className="group block h-full">
-                <div className="h-full bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-md transition-all hover:border-blue-500 hover:shadow-xl flex flex-col">
+                <div className="h-full bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-out hover:border-blue-500 hover:shadow-xl flex flex-col">
                   <div className="relative w-full aspect-square overflow-hidden bg-white">
                     {product.image ? (
                       <img
