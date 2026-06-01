@@ -818,7 +818,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)] gap-8 lg:gap-12 lg:items-start">
           
           {/* LEFT COLUMN - Product Images */}
-          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
+          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start lg:pr-1">
             {/* Main Product Image with Zoom */}
             <div
               ref={imageRef}
@@ -1116,7 +1116,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                         placeholder="Type to search country..."
                         className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-2"
                       />
-                      <div className="max-h-56 overflow-y-auto space-y-1">
+                      <div className="space-y-1">
                         {filteredDestinationOptions.length > 0 ? (
                           filteredDestinationOptions.map((country) => (
                             <button
@@ -1172,7 +1172,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                           ? 'Education Documents'
                           : 'Commercial Documents'} <span className="text-red-600">*</span>
                     </Label>
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                    <div className="space-y-2">
                       {apostilleDocumentOptionsToShow.map((docType) => (
                         <div key={docType.id} className="flex items-center space-x-2">
                           <Checkbox
@@ -1266,7 +1266,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               <h3 className="font-bold text-xl md:text-2xl text-gray-900">Configure Your Order</h3>
 
               {/* Source & Target Language (ALWAYS shown for Translation, but NOT for Sworn Translation) */}
-              {data.type === 'translation' && !data.title.toLowerCase().includes('sworn') && (
+              {data.type === 'translation' && (
                 <>
                   <div>
                     <Label htmlFor="source-lang" className="text-base md:text-lg font-semibold">
@@ -1295,7 +1295,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                           placeholder="Type to search language..."
                           className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-2"
                         />
-                        <div className="max-h-56 overflow-y-auto space-y-1">
+                        <div className="space-y-1">
                           {filteredSourceLanguageOptions.length > 0 ? (
                             filteredSourceLanguageOptions.map((lang) => (
                               <label key={lang.value} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
@@ -1341,7 +1341,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                           placeholder="Type to search language..."
                           className="w-full h-9 rounded-md border border-gray-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 mb-2"
                         />
-                        <div className="max-h-56 overflow-y-auto space-y-1">
+                        <div className="space-y-1">
                           {filteredTargetLanguageOptions.length > 0 ? (
                             filteredTargetLanguageOptions.map((lang) => (
                               <label key={lang.value} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer">
@@ -1388,7 +1388,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   <Label className="mb-3 block text-base md:text-lg font-semibold">
                     Document Type <span className="text-red-600">*</span>
                   </Label>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="space-y-2">
                     {documentTypesToShow.map(docType => (
                       <div key={docType.id} className="flex items-center space-x-2">
                         <Checkbox
@@ -1495,7 +1495,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   const errors: string[] = [];
 
                   // Check for translation services (but NOT for sworn translations)
-                  if (data.type === 'translation' && !data.title.toLowerCase().includes('sworn')) {
+                  if (data.type === 'translation') {
                     if (sourceLanguages.length === 0) {
                       errors.push('Please select a source language');
                     }

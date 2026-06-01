@@ -101,7 +101,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <aside
         className={`${
@@ -134,7 +134,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4">
+        <nav className="flex-1 overflow-y-hidden py-4">
           {navigation.map((item) => {
             const isExpanded = item.expandedKey === 'items' ? itemsExpanded : item.expandedKey === 'sales' ? salesExpanded : false;
             const toggleExpanded = () => {
@@ -208,7 +208,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {/* Top Header */}
         <header className="min-h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 py-2 gap-2">
           <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -295,7 +295,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
+        <main className="flex-1 bg-gray-50">
           {children}
         </main>
       </div>

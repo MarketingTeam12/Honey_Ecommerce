@@ -17,6 +17,22 @@ body,
   overflow-x: hidden;
 }
 
+/* Remove visible scrollbars globally (legacy + nested containers) */
+html,
+body,
+#root,
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
 img,
 video,
 canvas,
