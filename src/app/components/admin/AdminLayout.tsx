@@ -47,6 +47,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, [loading, canAccessAdmin, fullAdmin, location.pathname, navigate]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -61,12 +67,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   if (!canAccessAdmin) {
     return null;
   }
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setSidebarOpen(false);
-    }
-  }, []);
 
   const fullNavigation = [
     { name: 'Home', href: '/admin', icon: Home },

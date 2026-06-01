@@ -75,6 +75,21 @@ interface Order {
 }
 
 const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
+const toSearchableText = (value: unknown): string => {
+  if (value == null) return '';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value).toLowerCase();
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => toSearchableText(item)).join(' ');
+  }
+  if (typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>)
+      .map((item) => toSearchableText(item))
+      .join(' ');
+  }
+  return '';
+};
 
 const canSalesManagerSeeOrder = (
   order: Order,
@@ -511,9 +526,48 @@ export function SalesPage() {
     }
   };
 
-  const filteredOrders = selectedFilter === 'all' 
-    ? orders 
+  const statusFilteredOrders = selectedFilter === 'all'
+    ? orders
     : orders.filter(order => order.status === selectedFilter);
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredOrders = normalizedSearch
+    ? statusFilteredOrders.filter((order) => {
+        const searchableOrderText = toSearchableText({
+          id: order.id,
+          order_number: order.order_number,
+          user_id: order.user_id,
+          customer_name: order.customer_name,
+          customer_email: order.customer_email,
+          payment_method: order.payment_method,
+          payment_status: order.payment_status,
+          status: order.status,
+          total_amount: order.total_amount,
+          subtotal: order.subtotal,
+          discount: order.discount,
+          tax: order.tax,
+          currency: order.currency,
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+          shipping_method: order.shipping_method,
+          tracking_number: order.tracking_number,
+          shipping_carrier: order.shipping_carrier,
+          estimated_delivery: order.estimated_delivery,
+          assigned_to: order.assigned_to,
+          notes: order.notes,
+          shipping_address: order.shipping_address,
+          shipping_details: order.shipping_details,
+          items: order.items?.map((item) => ({
+            id: item.id,
+            name: item.name,
+            basePrice: item.basePrice,
+            totalPrice: item.totalPrice,
+            pageCount: item.pageCount,
+          })),
+        });
+        return searchableOrderText.includes(normalizedSearch);
+      })
+    : statusFilteredOrders;
 
   const totalOrders = orders.length;
   const pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'confirmed').length;
@@ -712,6 +766,16 @@ export function SalesPage() {
                 Last refresh: {lastRefresh.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
             </div>
+          </div>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by order id, email, name, phone, item, status, amount..."
+              className="w-full rounded-lg border border-blue-300 bg-white pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
           <div className="flex flex-wrap gap-2">
             <button
