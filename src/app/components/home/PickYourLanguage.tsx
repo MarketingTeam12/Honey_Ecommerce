@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
 import { useCurrency } from '@/app/context/CurrencyContext';
@@ -142,7 +142,7 @@ export function PickYourLanguage() {
 
     const intervalId = window.setInterval(() => {
       setStartIndex((prev) => (prev + 1) % products.length);
-    }, 3200);
+    }, 1800);
 
     return () => window.clearInterval(intervalId);
   }, [products.length, isPaused]);
@@ -183,13 +183,15 @@ export function PickYourLanguage() {
           </button>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+          <AnimatePresence mode="popLayout" initial={false}>
           {visibleProducts.map((product, index) => (
             <motion.div
               key={product.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              layout
+              initial={{ opacity: 0, x: 30, scale: 0.98 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -30, scale: 0.98 }}
+              transition={{ duration: 0.4, ease: 'easeInOut', delay: index * 0.05 }}
             >
               {/* Image Box - Only contains image */}
               <Link to={product.route} className="group block h-full">
@@ -252,6 +254,7 @@ export function PickYourLanguage() {
               </Link>
             </motion.div>
           ))}
+          </AnimatePresence>
           </div>
         </div>
       </div>

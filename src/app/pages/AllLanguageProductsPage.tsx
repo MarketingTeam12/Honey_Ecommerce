@@ -79,7 +79,7 @@ export function AllLanguageProductsPage() {
 
   return (
     <div className="min-h-screen bg-white py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[92rem] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl mb-2">Language Translation Services</h1>
@@ -107,11 +107,11 @@ export function AllLanguageProductsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
             {adminLanguageProducts.map((product) => (
               <div
                 key={product.id}
-                className="group border border-gray-200 rounded-lg overflow-hidden hover:shadow-xl transition-all duration-300 bg-white flex flex-col"
+                className="group border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 bg-white flex flex-col max-w-[28rem] w-full mx-auto"
               >
                 {/* Image Container */}
                 <Link to={product.url} className="block relative overflow-hidden bg-gray-100">
@@ -119,10 +119,10 @@ export function AllLanguageProductsPage() {
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-64 sm:h-72 object-cover bg-white group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-80 sm:h-96 object-cover bg-white group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
-                    <div className="w-full h-64 sm:h-72 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+                    <div className="w-full h-80 sm:h-96 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-6">
                       <div className="text-center">
                         <svg className="w-20 h-20 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -159,7 +159,7 @@ export function AllLanguageProductsPage() {
                 </Link>
 
                 {/* Product Info */}
-                <div className="p-4 flex flex-col justify-between">
+                <div className="p-5 sm:p-6 flex flex-col justify-between">
                   <Link to={product.url}>
                     <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
                       {product.name}
