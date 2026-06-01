@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle } from 'lucide-react';
+import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
@@ -67,6 +67,21 @@ interface Order {
 }
 
 const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
+const toSearchableText = (value: unknown): string => {
+  if (value == null) return '';
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value).toLowerCase();
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => toSearchableText(item)).join(' ');
+  }
+  if (typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>)
+      .map((item) => toSearchableText(item))
+      .join(' ');
+  }
+  return '';
+};
 
 const canSalesManagerSeeOrder = (
   order: Order,
@@ -86,6 +101,7 @@ export function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showSetupBanner, setShowSetupBanner] = useState(false);
@@ -401,9 +417,42 @@ export function OrdersPage() {
     );
   };
 
-  const filteredOrders = filterStatus === 'All' 
-    ? orders 
+  const statusFilteredOrders = filterStatus === 'All'
+    ? orders
     : orders.filter(order => order.status.toLowerCase() === filterStatus.toLowerCase());
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredOrders = normalizedSearch
+    ? statusFilteredOrders.filter((order) => {
+        const searchableText = toSearchableText({
+          id: order.id,
+          order_number: order.order_number,
+          user_id: order.user_id,
+          customer_name: order.customer_name,
+          customer_email: order.customer_email,
+          payment_method: order.payment_method,
+          payment_status: order.payment_status,
+          status: order.status,
+          total_amount: order.total_amount,
+          subtotal: order.subtotal,
+          discount: order.discount,
+          tax: order.tax,
+          currency: order.currency,
+          tracking_number: order.tracking_number,
+          shipping_carrier: order.shipping_carrier,
+          shipping_method: order.shipping_method,
+          estimated_delivery: order.estimated_delivery,
+          notes: order.notes,
+          assigned_to: order.assigned_to,
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+          shipping_address: order.shipping_address,
+          shipping_details: order.shipping_details,
+          items: order.items,
+        });
+        return searchableText.includes(normalizedSearch);
+      })
+    : statusFilteredOrders;
 
   if (loading) {
     return (
@@ -431,6 +480,16 @@ export function OrdersPage() {
               </button>
             </div>
             <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search orders..."
+                  className="w-64 px-3 py-1.5 pl-9 border border-blue-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
               <button
                 onClick={() => {
                   setRefreshing(true);

@@ -732,9 +732,20 @@ export function SalesPage() {
 
         {/* Filters and Live Updates Control */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
             <h3 className="text-sm font-semibold text-gray-700">Filter by Status</h3>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
+              <div className="relative w-full sm:w-[28rem]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by order id, email, name, phone, item, status, amount..."
+                  className="w-full rounded-lg border border-blue-300 bg-white pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex items-center gap-3">
               <button
                 onClick={() => setLiveUpdatesEnabled(!liveUpdatesEnabled)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
@@ -765,17 +776,8 @@ export function SalesPage() {
               <span className="text-xs text-gray-500">
                 Last refresh: {lastRefresh.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>
+              </div>
             </div>
-          </div>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by order id, email, name, phone, item, status, amount..."
-              className="w-full rounded-lg border border-blue-300 bg-white pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
           </div>
           <div className="flex flex-wrap gap-2">
             <button

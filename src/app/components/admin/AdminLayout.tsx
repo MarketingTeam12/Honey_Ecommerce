@@ -2,7 +2,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, ShoppingCart, Users, TrendingUp,
-  Store, BarChart3, Settings, Search,
+  Store, BarChart3, Settings,
   Menu, X, LogOut, ChevronDown, LayoutGrid, Tag, Mail, MessageSquare, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
@@ -219,14 +219,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="relative flex-1 max-w-md min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search in Customers ( / )"
-                className="w-full min-w-0 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-              />
-            </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
