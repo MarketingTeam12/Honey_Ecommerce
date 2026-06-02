@@ -67,9 +67,37 @@ const defaultContextValue: ProductContextType = {
 export const ProductContext = createContext<ProductContextType>(defaultContextValue);
 
 const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+const PRODUCTS_STORAGE_KEY = 'admin_products';
+const CATEGORIES_STORAGE_KEY = 'admin_categories';
+
+function readStoredJson<T>(key: string, fallback: T): T {
+  try {
+    const storedValue = localStorage.getItem(key);
+    if (!storedValue) {
+      return fallback;
+    }
+
+    return JSON.parse(storedValue) as T;
+  } catch (error) {
+    console.error(`Failed to read ${key} from localStorage:`, error);
+    return fallback;
+  }
+}
+
+function writeStoredJson(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Failed to write ${key} to localStorage:`, error);
+  }
+}
 
 export function ProductProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(() =>
+    typeof window === 'undefined'
+      ? []
+      : readStoredJson<Product[]>(PRODUCTS_STORAGE_KEY, []),
+  );
   const [categories, setCategories] = useState<Category[]>([
     {
       id: '1',
@@ -159,8 +187,11 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       if (!data.products || data.products.length === 0) {
         console.log('📭 No products found on server. App will use default categories.');
         setProducts([]);
+        writeStoredJson(PRODUCTS_STORAGE_KEY, []);
       } else {
-        setProducts(data.products || []);
+        const normalizedProducts = data.products || [];
+        setProducts(normalizedProducts);
+        writeStoredJson(PRODUCTS_STORAGE_KEY, normalizedProducts);
       }
       
       setIsLoading(false);
@@ -171,7 +202,8 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         console.log('⚠️ Server not reachable:', error.message, '- Edge Function not deployed. App will work with limited functionality.');
       }
       // Don't set error state - just use defaults silently
-      setProducts([]);
+      const storedProducts = readStoredJson<Product[]>(PRODUCTS_STORAGE_KEY, []);
+      setProducts(storedProducts);
       setIsLoading(false);
       setHasError(false); // Don't show error to user, just use defaults
     }
@@ -249,6 +281,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
           createdAt: cat.createdAt || new Date().toISOString()
         }));
         setCategories(categoriesWithDates);
+        writeStoredJson(CATEGORIES_STORAGE_KEY, categoriesWithDates);
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
@@ -290,7 +323,11 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       console.log('✅ Product created on server:', data.product);
       
       // Add to local state
-      setProducts(prev => [...prev, data.product]);
+      setProducts(prev => {
+        const nextProducts = [...prev, data.product];
+        writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
+        return nextProducts;
+      });
       
       return data.product;
     } catch (error) {
@@ -325,9 +362,11 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       console.log('✅ Product updated on server:', data.product);
       
       // Update local state
-      setProducts(prev => 
-        prev.map(product => product.id === id ? data.product : product)
-      );
+      setProducts(prev => {
+        const nextProducts = prev.map(product => product.id === id ? data.product : product);
+        writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
+        return nextProducts;
+      });
     } catch (error) {
       console.error('❌ Error updating product:', error);
       throw error;
@@ -360,7 +399,11 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       console.log('✅ Product deleted from server');
       
       // Remove from local state
-      setProducts(prev => prev.filter(product => product.id !== id));
+      setProducts(prev => {
+        const nextProducts = prev.filter(product => product.id !== id);
+        writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
+        return nextProducts;
+      });
     } catch (error) {
       console.error('❌ Error deleting product:', error);
       throw error;
@@ -368,7 +411,47 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   };
 
   const getProduct = (id: string) => {
-    const product = products.find(product => product.id === id);
+    const normalizedId = id.trim().toLowerCase();
+    const requestTier = normalizedId.includes('premium')
+      ? 'premium'
+      : normalizedId.includes('standard')
+        ? 'standard'
+        : normalizedId.includes('basic')
+          ? 'basic'
+          : '';
+    const requestAliases = new Set([
+      normalizedId,
+      normalizedId.replace(/-package$/, ''),
+      normalizedId.replace(/-packages$/, ''),
+    ]);
+
+    const product = products.find((product) => {
+      const productId = (product.id || '').trim().toLowerCase();
+      const productNameSlug = (product.name || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      const productCategory = (product.category || '').trim().toLowerCase();
+      const categoryLooksStartup = productCategory.includes('startup');
+
+      if (productId === normalizedId || productNameSlug === normalizedId) {
+        return true;
+      }
+
+      if (categoryLooksStartup && requestAliases.has(productNameSlug)) {
+        return true;
+      }
+
+      if (categoryLooksStartup && requestTier) {
+        return (
+          productNameSlug.includes(requestTier) ||
+          (product.name || '').trim().toLowerCase().includes(requestTier)
+        );
+      }
+
+      return false;
+    });
     console.log('🔎 getProduct called:', {
       requestedId: id,
       found: !!product,
@@ -385,19 +468,29 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       id: Date.now().toString(),
       createdAt: new Date().toISOString()
     };
-    setCategories(prev => [...prev, newCategory]);
+    setCategories(prev => {
+      const nextCategories = [...prev, newCategory];
+      writeStoredJson(CATEGORIES_STORAGE_KEY, nextCategories);
+      return nextCategories;
+    });
   };
 
   const updateCategory = (id: string, categoryData: Partial<Category>) => {
-    setCategories(prev =>
-      prev.map(category =>
+    setCategories(prev => {
+      const nextCategories = prev.map(category =>
         category.id === id ? { ...category, ...categoryData } : category
-      )
-    );
+      );
+      writeStoredJson(CATEGORIES_STORAGE_KEY, nextCategories);
+      return nextCategories;
+    });
   };
 
   const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(category => category.id !== id));
+    setCategories(prev => {
+      const nextCategories = prev.filter(category => category.id !== id);
+      writeStoredJson(CATEGORIES_STORAGE_KEY, nextCategories);
+      return nextCategories;
+    });
   };
 
   const uploadImages = async (files: (File | string)[]) => {

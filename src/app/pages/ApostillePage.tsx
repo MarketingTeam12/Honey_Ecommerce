@@ -63,16 +63,15 @@ export function ApostillePage() {
 
   if (adminMatch) {
     const adminImages = normalizeProductImages(adminMatch.images, adminMatch.name);
+    const adminDescription = adminMatch.description?.trim() || '';
 
     productData = {
       ...productData,
       title: adminMatch.name || productData.title,
+      description: adminDescription || productData.description || '',
       price: adminMatch.price || productData.price,
       originalPrice: adminMatch.compareAtPrice || productData.originalPrice,
       images: adminImages.length > 0 ? adminImages : productData.images,
-      productDetails: adminMatch.description
-        ? [adminMatch.description, ...productData.productDetails]
-        : productData.productDetails,
     };
   }
 

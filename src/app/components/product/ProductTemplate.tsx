@@ -28,6 +28,8 @@ import { getFirstValidImage, normalizeProductImages } from '@/app/utils/imageUti
 
 const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
 const POPULAR_CHOICE_APOSTILLE_KEYS = ['poland-apostille', 'dutch-apostille', 'serbia-apostille', 'netherlands-apostille'];
+const MAX_UPLOAD_SIZE_MB = 50;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 const APOSTILLE_DOCUMENT_TYPES = [
   { value: 'personal', label: 'Personal' },
   { value: 'education', label: 'Education' },
@@ -158,6 +160,86 @@ const getPromoTag = (seed: string) => {
   const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return PROMO_TAGS[hash % PROMO_TAGS.length];
 };
+
+function renderFormattedInlineText(text: string) {
+  const parts: any[] = [];
+  const pattern = /(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null = null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    const token = match[0];
+    const isBold = token.startsWith('**') || token.startsWith('__');
+    const innerText = token.slice(isBold ? 2 : 1, isBold ? -2 : -1);
+
+    parts.push(
+      isBold ? <strong key={`${match.index}-${token}`}>{innerText}</strong> : <em key={`${match.index}-${token}`}>{innerText}</em>,
+    );
+
+    lastIndex = match.index + token.length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+}
+
+function renderFormattedDescription(description: string) {
+  const lines = description.split(/\r?\n/);
+
+  return (
+    <div className="space-y-2 text-left whitespace-pre-wrap break-words">
+      {lines.map((line, index) => {
+        const trimmed = line.trim();
+
+        if (!trimmed) {
+          return <div key={`blank-${index}`} className="h-2" />;
+        }
+
+        const bulletMatch = trimmed.match(/^[-•*]\s+(.*)$/);
+        const numberedMatch = trimmed.match(/^(\d+)[.)]\s+(.*)$/);
+        const isHeading =
+          /^[A-Z0-9\s&/().,-]+$/.test(trimmed) &&
+          trimmed.length > 3 &&
+          trimmed.length <= 60 &&
+          !trimmed.includes('₹');
+
+        if (bulletMatch) {
+          return (
+            <div key={`bullet-${index}`} className="flex items-start gap-2">
+              <span className="mt-1.5 text-gray-500">•</span>
+              <span className="flex-1">{renderFormattedInlineText(bulletMatch[1])}</span>
+            </div>
+          );
+        }
+
+        if (numberedMatch) {
+          return (
+            <div key={`numbered-${index}`} className="flex items-start gap-2">
+              <span className="min-w-[1.5rem] font-medium text-gray-600">{`${numberedMatch[1]}.`}</span>
+              <span className="flex-1">{renderFormattedInlineText(numberedMatch[2])}</span>
+            </div>
+          );
+        }
+
+        return (
+          <div
+            key={`line-${index}`}
+            className={`leading-relaxed ${isHeading ? 'font-bold text-[#0a1247]' : 'text-gray-700'}`}
+          >
+            {renderFormattedInlineText(trimmed)}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ==================== PRICING DATA STRUCTURES ====================
 
@@ -319,6 +401,7 @@ export interface RelatedProduct {
 export interface ProductData {
   type: 'translation' | 'apostille' | 'attestation' | 'startup';
   title: string;
+  description?: string;
   images: ProductImage[];
   price: number;
   originalPrice: number;
@@ -392,7 +475,6 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const [driveLink, setDriveLink] = useState('');
   const [pageCount, setPageCount] = useState(1);
   const [packageDuration, setPackageDuration] = useState<'full-package' | '1-year' | '2-year'>('full-package');
-  const [showAllProductDetails, setShowAllProductDetails] = useState(false);
   const startupVideosByPath: Record<string, { title: string; videoId: string }> = {
     '/basic-startup-package': { title: 'Basic Startup Package', videoId: 'nVrSsvjJ1lg' },
     '/standard-startup-package': { title: 'Standard Startup Package', videoId: '48XaA1Rglu0' },
@@ -513,7 +595,6 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     setPageCount(1);
     setPackageDuration('full-package');
     setIsZoomed(false);
-    setShowAllProductDetails(false);
   }, [productId]);
 
   // Auto-fix target language to English when product allows only English target.
@@ -668,7 +749,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const validFiles = files.filter(file => file.size <= 7 * 1024 * 1024); // 7MB max
+    const validFiles = files.filter(file => file.size <= MAX_UPLOAD_SIZE_BYTES);
     setUploadedFiles(prev => {
       const newFiles = [...prev, ...validFiles];
       updatePageCountFromFiles(newFiles);
@@ -686,7 +767,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     e.preventDefault();
     e.stopPropagation();
     const files = Array.from(e.dataTransfer.files);
-    const validFiles = files.filter(file => file.size <= 7 * 1024 * 1024); // 7MB max
+    const validFiles = files.filter(file => file.size <= MAX_UPLOAD_SIZE_BYTES);
     setUploadedFiles(prev => {
       const newFiles = [...prev, ...validFiles];
       updatePageCountFromFiles(newFiles);
@@ -804,9 +885,6 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     usingFallback: !data.documentTypes || data.documentTypes.length === 0
   });
 
-  const productDetailsList = DEFAULT_PRODUCT_DETAILS;
-  const visibleProductDetails = showAllProductDetails ? productDetailsList : productDetailsList.slice(0, 4);
-  const hasHiddenProductDetails = productDetailsList.length > 4;
   const isNetherlandsApostille =
     isApostilleService &&
     (productId.includes('netherlands-apostille') || data.title.toLowerCase().includes('netherlands apostille'));
@@ -815,10 +893,11 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
         {/* Main 2-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)] gap-8 lg:gap-12 lg:items-start">
+        <div className="lg:pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(360px,520px)_minmax(0,1fr)] gap-8 lg:gap-12 lg:items-start">
           
           {/* LEFT COLUMN - Product Images */}
-          <div className="space-y-4 lg:sticky lg:top-24 lg:self-start lg:pr-1">
+          <div className="space-y-4 lg:self-start lg:pr-1">
             {/* Main Product Image with Zoom */}
             <div
               ref={imageRef}
@@ -952,7 +1031,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
           </div>
 
           {/* RIGHT COLUMN - Product Details Panel */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2 lg:pb-6 lg:overscroll-contain">
             {/* Product Title with Wishlist Button */}
             <div>
               <div className="flex items-start justify-between gap-4 mb-3">
@@ -1008,34 +1087,42 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               </Badge>
             </div>
 
+            {data.description && (
+              <div className="text-base md:text-lg text-gray-700">
+                {renderFormattedDescription(data.description)}
+              </div>
+            )}
+
             {/* Product Highlights */}
-            <div className="space-y-2 border-t pt-4">
-              {(data.highlights || []).map((highlight, index) => {
-                // Skip rendering green check for startup packages
-                const showCheck = data.type !== 'startup';
-                
-                // Determine text size class
-                let sizeClass = '';
-                if (highlight.large) {
-                  sizeClass = 'text-xl';
-                } else if (highlight.medium) {
-                  sizeClass = 'text-lg';
-                }
-                
-                // Determine font weight
-                const fontWeight = highlight.bold ? 'font-bold' : '';
-                
-                return (
-                  <div key={index} className="flex items-start gap-2">
-                    {showCheck && <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />}
-                    {!showCheck && highlight.text && <div className="w-5" />}
-                    <span className={`text-gray-700 ${fontWeight} ${sizeClass}`}>
-                      {highlight.text}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+            {(data.highlights || []).length > 0 && (
+              <div className="space-y-2 border-t pt-4">
+                {(data.highlights || []).map((highlight, index) => {
+                  // Skip rendering green check for startup packages
+                  const showCheck = data.type !== 'startup';
+                  
+                  // Determine text size class
+                  let sizeClass = '';
+                  if (highlight.large) {
+                    sizeClass = 'text-xl';
+                  } else if (highlight.medium) {
+                    sizeClass = 'text-lg';
+                  }
+                  
+                  // Determine font weight
+                  const fontWeight = highlight.bold ? 'font-bold' : '';
+                  
+                  return (
+                    <div key={index} className="flex items-start gap-2">
+                      {showCheck && <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />}
+                      {!showCheck && highlight.text && <div className="w-5" />}
+                      <span className={`text-gray-700 ${fontWeight} ${sizeClass}`}>
+                        {highlight.text}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Quick Support */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -1411,8 +1498,8 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               {/* Upload Document - Hide for startup packages */}
               {data.type !== 'startup' && (
                 <div>
-                  <Label htmlFor="file-upload" className="mb-2 block text-base md:text-lg font-semibold">
-                    Upload Document (Max 7 MB, Multiple Files Allowed) <span className="text-red-600">*</span>
+                <Label htmlFor="file-upload" className="mb-2 block text-base md:text-lg font-semibold">
+                    Upload Document (Max {MAX_UPLOAD_SIZE_MB} MB, Multiple Files Allowed) <span className="text-red-600">*</span>
                   </Label>
                   <div 
                     className="relative"
@@ -1434,7 +1521,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-10 h-10 mb-3 text-gray-400" />
                         <p className="mb-2 text-base md:text-lg text-gray-500"> or drag and drop <span className="font-semibold">Click to upload</span></p>
-                        <p className="text-sm md:text-base text-gray-500">PDF, DOC, DOCX, JPG, PNG (MAX. 7MB)</p>
+                        <p className="text-sm md:text-base text-gray-500">PDF, DOC, DOCX, JPG, PNG (MAX. {MAX_UPLOAD_SIZE_MB}MB)</p>
                       </div>
                     </label>
                   </div>
@@ -1464,7 +1551,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   )}
                   <div className="mt-3">
                     <Label htmlFor="drive-link" className="mb-2 block text-sm md:text-base font-medium text-gray-700">
-                      Drive Link (for files larger than 7 MB)
+                      Drive Link (for files larger than {MAX_UPLOAD_SIZE_MB} MB)
                     </Label>
                     <input
                       id="drive-link"
@@ -1480,7 +1567,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   </div>
                 </div>
               )}
-              {/* Add to Cart Button */}
+            {/* Add to Cart Button */}
               <Button
                 className="w-full bg-black hover:bg-gray-800 text-white h-12 text-lg lg:sticky lg:bottom-4 z-10 shadow-lg"
                 size="lg"
@@ -1591,67 +1678,19 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {/* BELOW SECTION - Tabs/Accordion Style */}
         <div className="mt-12">
-          {data.type === 'startup' ? (
-            // For startup packages, show only Product Details without tabs
-            <div className="prose max-w-none">
-              <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">Product Details</h3>
-              <div className="space-y-3 border border-gray-200 rounded-lg p-5 bg-white relative">
-                {visibleProductDetails.map((detail, idx) => (
-                  <p key={idx} className="text-gray-700">{detail}</p>
-                ))}
-                {hasHiddenProductDetails && (
-                  <div className="sticky bottom-0 pt-3 bg-white">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full sm:w-auto"
-                      onClick={() => setShowAllProductDetails((prev) => !prev)}
-                    >
-                      {showAllProductDetails ? 'Show Less' : 'Learn More'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            // For other products, show full tabs
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-                <TabsTrigger value="details">Product Details</TabsTrigger>
+          {data.type !== 'startup' && (
+            <Tabs defaultValue="receive" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="receive">What You'll Receive</TabsTrigger>
                 <TabsTrigger value="process">Process</TabsTrigger>
                 <TabsTrigger value="timeline">Delivery Timeline</TabsTrigger>
                 <TabsTrigger value="why">Why Choose Us</TabsTrigger>
               </TabsList>
-
-              <TabsContent value="details" className="mt-6">
-                <div className="prose max-w-none">
-                  <h3 className="text-2xl font-bold mb-4 text-[#0a1247]">Product Details</h3>
-                  <div className="border border-gray-200 rounded-lg p-5 bg-white relative">
-                    <ul className="space-y-2">
-                      {visibleProductDetails.map((detail, idx) => (
-                        <li key={idx} className="text-gray-700">{detail}</li>
-                      ))}
-                    </ul>
-                    {hasHiddenProductDetails && (
-                      <div className="sticky bottom-0 pt-4 bg-white">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full sm:w-auto"
-                          onClick={() => setShowAllProductDetails((prev) => !prev)}
-                        >
-                          {showAllProductDetails ? 'Show Less' : 'Learn More'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
 
               <TabsContent value="receive" className="mt-6">
                 <div className="prose max-w-none">

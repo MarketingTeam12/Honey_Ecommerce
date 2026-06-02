@@ -11,15 +11,7 @@ function createApostilleData(country: string, price: number, originalPrice: numb
     images: [],
     price,
     originalPrice,
-    highlights: [
-      { text: 'Pricing calculated per document' },
-      { text: 'MEA (Ministry of External Affairs) attestation included' },
-      { text: `${country} Embassy attestation in India` },
-      { text: 'Scanned copies emailed before dispatch' },
-      { text: 'Hard copies delivered India & International' },
-      { text: `Accepted by ${country} authorities` },
-      { text: 'Track your application online' }
-    ],
+    highlights: [],
     documentTypes: [
       { id: 'birth-certificate', label: 'Birth Certificate' },
       { id: 'marriage-certificate', label: 'Marriage Certificate' },

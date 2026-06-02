@@ -2,12 +2,57 @@
 import { useParams } from 'react-router-dom';
 import { ProductTemplate } from '@/app/components/product/ProductTemplate';
 import { productDataMap } from '@/app/data/productData';
-import { startupPackagesData } from '@/app/data/startupPackageData';
 import { useProducts } from '@/app/context/ProductContext';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { useAuth } from '@/app/context/AuthContext';
 import { normalizeProductImages } from '@/app/utils/imageUtils';
+
+function buildProductHighlights(description?: string) {
+  if (!description) {
+    return [];
+  }
+
+  return description
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => ({
+      text: line,
+      bold: /^[A-Z0-9\s&/().,-]+$/.test(line) || line.endsWith(':'),
+    }));
+}
+
+function buildProductDetails(description?: string) {
+  if (!description) {
+    return [];
+  }
+
+  return description
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function normalizeProductType(
+  category: string,
+): 'translation' | 'apostille' | 'attestation' | 'startup' {
+  const normalizedCategory = category.trim().toLowerCase();
+
+  if (normalizedCategory.includes('startup')) {
+    return 'startup';
+  }
+
+  if (normalizedCategory.includes('apostille')) {
+    return 'apostille';
+  }
+
+  if (normalizedCategory.includes('attestation')) {
+    return 'attestation';
+  }
+
+  return 'translation';
+}
 
 interface ProductConfig {
   showSourceLanguage: boolean;
@@ -106,7 +151,12 @@ export function ProductPage() {
 
     if (!adminProduct) {
       // Fallback to static product data
-      return staticFallbackProduct;
+      return {
+        ...staticFallbackProduct,
+        description: '',
+        highlights: [],
+        productDetails: [],
+      };
     }
     
     // Helper functions
@@ -142,25 +192,9 @@ export function ProductPage() {
       showDocumentType
     });
     
-    // For startup packages, try to get highlights from static data
-    let highlights = [
-      { text: 'Professional and certified service' },
-      { text: 'Fast turnaround time' },
-      { text: 'Experienced team' },
-      { text: 'Quality guaranteed' }
-    ];
-    
-    if (isStartupPackage) {
-      // Try to match startup package by name
-      const startupKey = Object.keys(startupPackagesData).find(key => 
-        startupPackagesData[key].title.toLowerCase() === adminProduct.name.toLowerCase()
-      );
-      
-      if (startupKey && startupPackagesData[startupKey].highlights) {
-        highlights = startupPackagesData[startupKey].highlights;
-        console.log('âœ… Using static highlights for startup package:', startupKey);
-      }
-    }
+    const adminDescription = adminProduct.description?.trim();
+    const resolvedDescription = adminDescription || '';
+    const resolvedHighlights: { text: string; bold?: boolean }[] = [];
     
     // Build source languages array
     let sourceLanguages = undefined;
@@ -206,21 +240,17 @@ export function ProductPage() {
           : [{ url: '', alt: adminProduct.name }];
 
     return {
-      type: adminProduct.category.toLowerCase() as 'translation' | 'apostille' | 'attestation' | 'startup',
+      type: normalizeProductType(adminProduct.category),
       title: adminProduct.name,
+      description: resolvedDescription,
       images: resolvedImages,
       price: adminProduct.price,
       originalPrice: adminProduct.compareAtPrice || adminProduct.price * 1.25,
-      highlights,
+      highlights: resolvedHighlights,
       sourceLanguages,
       targetLanguages,
       documentTypes,
-      productDetails: [
-        adminProduct.description || 'Professional service provided by Honey Translation Services',
-        'High-quality results guaranteed',
-        'Experienced and certified professionals',
-        'Timely delivery'
-      ],
+      productDetails: [],
       whatYouReceive: [
         'Professionally completed service',
         'Digital copy via email',

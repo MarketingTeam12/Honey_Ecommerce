@@ -40,6 +40,8 @@ const DOCUMENT_TYPES = [
 ];
 
 const PROMO_TAGS = ['Top Rated', 'Best Offer', 'Popular Choice', 'Exclusive Deal', 'Best Seller', 'Limited Time Offer'];
+const MAX_UPLOAD_SIZE_MB = 50;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 const getPromoTag = (seed: string) => {
   const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -111,7 +113,9 @@ export function SwornTranslationPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
+      const newFiles = Array.from(e.target.files).filter(
+        (file) => file.size <= MAX_UPLOAD_SIZE_BYTES,
+      );
       setUploadedFiles([...uploadedFiles, ...newFiles]);
       e.target.value = '';
     }
@@ -352,7 +356,7 @@ export function SwornTranslationPage() {
               >
                 <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-600 mb-1">Click to upload or drag and drop</p>
-                <p className="text-sm text-gray-500">Recommended file size: maximum 7 MB</p>
+                <p className="text-sm text-gray-500">Recommended file size: maximum {MAX_UPLOAD_SIZE_MB} MB</p>
                 <input
                   ref={fileInputRef}
                   type="file"
