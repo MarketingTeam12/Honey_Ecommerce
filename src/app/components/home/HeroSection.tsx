@@ -1,4 +1,4 @@
-﻿import { motion } from 'motion/react';
+import { motion } from 'motion/react';
 import centerCertificate from '@/assets/center-certificate-v2.png';
 import honeyFavicon from '@/assets/honey-favicon-transparent.png';
 import bannerBefore from '@/assets/banner-before.png';

@@ -49,7 +49,6 @@ export function AddEditItemPage() {
     stock: '',
     weight: '',
     status: 'active' as 'active' | 'draft' | 'archived',
-    tags: '',
     metaTitle: '',
     metaDescription: ''
   });
@@ -99,7 +98,6 @@ export function AddEditItemPage() {
           stock: product.stock.toString(),
           weight: product.weight || '',
           status: product.status,
-          tags: product.tags.join(', '),
           metaTitle: product.metaTitle || '',
           metaDescription: product.metaDescription || ''
         });
@@ -450,7 +448,6 @@ export function AddEditItemPage() {
         stock: parseInt(formData.stock),
         weight: formData.weight,
         status: formData.status,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
         metaTitle: formData.metaTitle,
         metaDescription: formData.metaDescription,
         images: uploadedImageUrls // Use Supabase Storage URLs instead of base64
@@ -1034,18 +1031,6 @@ export function AddEditItemPage() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tags
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.tags}
-                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Comma separated tags"
-                  />
-                </div>
               </div>
             </div>
 
