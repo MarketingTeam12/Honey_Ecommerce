@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle, Search } from 'lucide-react';
+import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
@@ -102,6 +102,8 @@ export function OrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showSetupBanner, setShowSetupBanner] = useState(false);
@@ -421,9 +423,40 @@ export function OrdersPage() {
     ? orders
     : orders.filter(order => order.status.toLowerCase() === filterStatus.toLowerCase());
 
+  const isOrderWithinDateRange = (orderDateValue: string) => {
+    if (!fromDate && !toDate) {
+      return true;
+    }
+
+    const orderDate = new Date(orderDateValue);
+    if (Number.isNaN(orderDate.getTime())) {
+      return false;
+    }
+
+    if (fromDate) {
+      const startDate = new Date(`${fromDate}T00:00:00`);
+      if (orderDate.getTime() < startDate.getTime()) {
+        return false;
+      }
+    }
+
+    if (toDate) {
+      const endDate = new Date(`${toDate}T23:59:59.999`);
+      if (orderDate.getTime() > endDate.getTime()) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const dateFilteredOrders = statusFilteredOrders.filter((order) =>
+    isOrderWithinDateRange(order.created_at)
+  );
+
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const filteredOrders = normalizedSearch
-    ? statusFilteredOrders.filter((order) => {
+    ? dateFilteredOrders.filter((order) => {
         const searchableText = toSearchableText({
           id: order.id,
           order_number: order.order_number,
@@ -452,7 +485,7 @@ export function OrdersPage() {
         });
         return searchableText.includes(normalizedSearch);
       })
-    : statusFilteredOrders;
+    : dateFilteredOrders;
 
   if (loading) {
     return (
@@ -479,7 +512,7 @@ export function OrdersPage() {
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -488,6 +521,26 @@ export function OrdersPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search orders..."
                   className="w-64 px-3 py-1.5 pl-9 border border-blue-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="w-40 px-3 py-1.5 pl-9 border border-blue-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  aria-label="From Date"
+                />
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-40 px-3 py-1.5 pl-9 border border-blue-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  aria-label="To Date"
                 />
               </div>
               <button
