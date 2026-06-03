@@ -6,7 +6,7 @@ import {
   Menu, X, LogOut, ChevronDown, LayoutGrid, Tag, Mail, MessageSquare, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import { hasAdminAccess, isFullAdmin } from '@/app/utils/roleAccess';
+import { canAccessRoleFeature, hasAdminAccess, isFullAdmin } from '@/app/utils/roleAccess';
 import honeyLogo from 'figma:asset/d99fd9d20cac16122a3e457a66e96224eb5ad345.png';
 
 interface AdminLayoutProps {
@@ -19,10 +19,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [itemsExpanded, setItemsExpanded] = useState(false);
+  const [userManagementExpanded, setUserManagementExpanded] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const canAccessAdmin = hasAdminAccess(user?.email, user?.role);
   const fullAdmin = isFullAdmin(user?.email, user?.role);
+  const salesManagerRole = user?.role === 'sales_manager';
 
   useEffect(() => {
     if (!loading && !canAccessAdmin) {
@@ -31,21 +33,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }, [loading, canAccessAdmin, navigate]);
 
   useEffect(() => {
-    if (loading || !canAccessAdmin || fullAdmin) return;
-    const allowedForSalesManager = [
-      '/admin',
-      '/admin/sales/orders',
-      '/admin/sales/orders/',
-      '/admin/reports',
-      '/admin/notifications',
-    ];
-    const isAllowed = allowedForSalesManager.some((path) =>
-      path.endsWith('/') ? location.pathname.startsWith(path) : location.pathname === path
-    );
-    if (!isAllowed) {
-      navigate('/admin/sales/orders', { replace: true });
+    const isUserManagementRoute =
+      location.pathname.startsWith('/admin/accounts') ||
+      location.pathname.startsWith('/admin/customers') ||
+      location.pathname.startsWith('/admin/roles');
+
+    if (isUserManagementRoute) {
+      setUserManagementExpanded(true);
     }
-  }, [loading, canAccessAdmin, fullAdmin, location.pathname, navigate]);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -69,31 +65,80 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   const fullNavigation = [
-    { name: 'Home', href: '/admin', icon: Home },
+    { name: 'Home', href: '/admin', icon: Home, permissionKey: 'home' },
     { 
       name: 'Items', 
       href: '/admin/items', 
       icon: Package,
       expandedKey: 'items',
+      permissionKey: 'items',
       children: [
-        { name: 'All Items', href: '/admin/items' },
-        { name: 'Add New Item', href: '/admin/items/new' },
-        { name: 'Categories', href: '/admin/categories' },
-        { name: 'Coupons', href: '/admin/coupons' },
-        { name: 'Item Reviews', href: '/admin/item-reviews' }
+        { name: 'All Items', href: '/admin/items', permissionKey: 'items' },
+        { name: 'Add New Item', href: '/admin/items/new', permissionKey: 'add_new_item' },
+        { name: 'Categories', href: '/admin/categories', permissionKey: 'categories' },
+        { name: 'Coupons', href: '/admin/coupons', permissionKey: 'coupons' },
+        { name: 'Item Reviews', href: '/admin/item-reviews', permissionKey: 'item_reviews' }
       ]
     },
-    { name: 'User Management', href: '/admin/customers', icon: Users },
-    { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-    { name: 'Customer Emails', href: '/admin/customer-emails', icon: Mail },
-    { name: 'Customer Queries', href: '/admin/customer-queries', icon: MessageSquare }
+    {
+      name: 'User Management',
+      href: '/admin/accounts',
+      icon: Users,
+      expandedKey: 'userManagement',
+      permissionKey: 'accounts',
+      children: [
+        { name: 'Accounts', href: '/admin/accounts', permissionKey: 'accounts' },
+        { name: 'Role', href: '/admin/roles', permissionKey: 'roles' },
+      ],
+    },
+    { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart, permissionKey: 'orders' },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3, permissionKey: 'reports' },
+    { name: 'Customer Emails', href: '/admin/customer-emails', icon: Mail, permissionKey: 'customer_emails' },
+    { name: 'Customer Queries', href: '/admin/customer-queries', icon: MessageSquare, permissionKey: 'customer_queries' }
   ];
   const salesManagerNavigation = [
-    { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
+    { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart, permissionKey: 'orders' },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3, permissionKey: 'reports' },
   ];
-  const navigation = fullAdmin ? fullNavigation : salesManagerNavigation;
+  const filterNavigation = (items: any[]) =>
+    items
+      .map((item) => {
+        if (!item.children) {
+          return canAccessRoleFeature(user?.role, item.permissionKey) ? item : null;
+        }
+
+        const children = item.children.filter(
+          (child: any) => !child.permissionKey || canAccessRoleFeature(user?.role, child.permissionKey)
+        );
+        const hasOwnAccess = !item.permissionKey || canAccessRoleFeature(user?.role, item.permissionKey);
+
+        if (!hasOwnAccess && children.length === 0) {
+          return null;
+        }
+
+        return {
+          ...item,
+          children,
+        };
+      })
+      .filter(Boolean);
+  const navigation = fullAdmin ? fullNavigation : salesManagerRole ? salesManagerNavigation : filterNavigation(fullNavigation);
+  const allowedPaths = navigation.flatMap((item) =>
+    item.children && item.children.length > 0 ? item.children.map((child: any) => child.href) : [item.href]
+  );
+
+  useEffect(() => {
+    if (loading || !canAccessAdmin) return;
+    if (allowedPaths.length === 0) return;
+
+    const isAllowed = allowedPaths.some((path) => {
+      return path.endsWith('/') ? location.pathname.startsWith(path) : location.pathname === path || location.pathname.startsWith(`${path}/`);
+    });
+
+    if (!isAllowed) {
+      navigate(allowedPaths[0], { replace: true });
+    }
+  }, [loading, canAccessAdmin, location.pathname, navigate, allowedPaths]);
 
   const handleLogout = async () => {
     await logout();
@@ -101,12 +146,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        } fixed lg:static inset-y-0 left-0 z-40 w-64 bg-[#1a1f2e] text-white transition-transform duration-300 flex flex-col`}
+        } fixed lg:static inset-y-0 left-0 z-40 w-64 bg-[#1a1f2e] text-white transition-transform duration-300 flex flex-col h-screen`}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-700">
@@ -134,11 +179,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-hidden py-4">
+        <nav className="flex-1 overflow-y-auto py-4">
           {navigation.map((item) => {
-            const isExpanded = item.expandedKey === 'items' ? itemsExpanded : item.expandedKey === 'sales' ? salesExpanded : false;
+            const isItemActive = item.children
+              ? item.children.some((child) =>
+                  location.pathname === child.href || location.pathname.startsWith(`${child.href}/`)
+                )
+              : location.pathname === item.href;
+            const isExpanded =
+              item.expandedKey === 'items'
+                ? itemsExpanded
+                : item.expandedKey === 'userManagement'
+                  ? userManagementExpanded
+                  : item.expandedKey === 'sales'
+                    ? salesExpanded
+                    : false;
             const toggleExpanded = () => {
               if (item.expandedKey === 'items') setItemsExpanded(!itemsExpanded);
+              if (item.expandedKey === 'userManagement') setUserManagementExpanded(!userManagementExpanded);
               if (item.expandedKey === 'sales') setSalesExpanded(!salesExpanded);
             };
 
@@ -148,7 +206,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   <button
                     onClick={toggleExpanded}
                     className={`w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-gray-700 transition-colors ${
-                      location.pathname.startsWith(item.href) ? 'bg-red-600' : ''
+                      isItemActive ? 'bg-gray-700' : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -170,9 +228,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                           key={child.name}
                           to={child.href}
                           className={`block px-12 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors ${
-                            location.pathname === child.href ? 'bg-gray-700 text-white' : ''
+                            location.pathname === child.href || location.pathname.startsWith(`${child.href}/`)
+                              ? 'bg-gray-700 text-white'
+                              : ''
                           }`}
                         >
+                          {child.icon && <child.icon className="inline-block w-4 h-4 mr-2 align-[-2px]" />}
                           {child.name}
                         </Link>
                       ))}
@@ -208,7 +269,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Top Header */}
         <header className="min-h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 py-2 gap-2">
           <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -287,7 +348,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 bg-gray-50">
+        <main className="flex-1 bg-gray-50 overflow-y-auto min-h-0">
           {children}
         </main>
       </div>

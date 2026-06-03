@@ -7,7 +7,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'sales_manager' | 'customer';
+  role: string;
 }
 
 type UserRole = User['role'];
@@ -16,15 +16,15 @@ const USER_ROLES_STORAGE_KEY = 'honey_translation_user_roles';
 const REGISTERED_USERS_STORAGE_KEY = 'registered_users';
 const ADMIN_EMAILS = new Set(['admin@honeytranslations.com', 'swetha@gmail.com']);
 const normalizeEmail = (email?: string | null) => String(email || '').trim().toLowerCase();
+const normalizeRoleKey = (role: unknown): string => {
+  const value = String(role || '').trim().toLowerCase();
+  if (!value) return 'customer';
+  if (value === 'sales manager' || value === 'manager') return 'sales_manager';
+  return value.replace(/\s+/g, '_');
+};
 
 const normalizeRole = (role: unknown): UserRole => {
-  const value = String(role || '').trim().toLowerCase();
-
-  if (value === 'admin') return 'admin';
-  if (value === 'sales_manager' || value === 'sales manager' || value === 'manager') return 'sales_manager';
-  if (value === 'customer' || value === 'user') return 'customer';
-
-  return 'customer';
+  return normalizeRoleKey(role);
 };
 
 const getStoredRole = (email?: string | null): UserRole | null => {

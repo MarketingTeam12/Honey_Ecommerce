@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle, Search, Calendar } from 'lucide-react';
+import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle, Search, Calendar, Plus, X, Check, Edit3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
@@ -10,6 +10,8 @@ import { isSalesManager } from '@/app/utils/roleAccess';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 const DELETED_ORDERS_KEY = 'honey_translation_deleted_orders';
+const SALES_MANAGER_NAMES_KEY = 'honey_sales_manager_names';
+const ORDER_ASSIGNMENTS_KEY = 'honey_translation_order_assignments';
 
 interface UploadedFile {
   name: string;
@@ -67,6 +69,7 @@ interface Order {
 }
 
 const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
+const normalizeManagerName = (value?: string | null) => String(value || '').trim();
 const toSearchableText = (value: unknown): string => {
   if (value == null) return '';
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -107,9 +110,16 @@ export function OrdersPage() {
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [showSetupBanner, setShowSetupBanner] = useState(false);
+  const [salesManagerNames, setSalesManagerNames] = useState<string[]>([]);
+  const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
+  const [assignDraft, setAssignDraft] = useState('');
 
   useEffect(() => {
-    const cachedOrdersRaw = getSortedActiveOrders(loadOrdersFromLocalStorage());
+    setSalesManagerNames(loadSalesManagerNames());
+  }, []);
+
+  useEffect(() => {
+    const cachedOrdersRaw = getSortedActiveOrders(applyStoredAssignments(loadOrdersFromLocalStorage()));
     const cachedOrders = isSalesManager(user?.email, user?.role)
       ? cachedOrdersRaw.filter((order) => canSalesManagerSeeOrder(order, user))
       : cachedOrdersRaw;
@@ -182,19 +192,23 @@ export function OrdersPage() {
       // ===== MERGE: Combine both sources, deduplicate by order ID =====
       const orderMap = new Map<string, Order>();
       
-      // Backend orders take priority (they have server-side data)
+      // Backend orders are the base record for each order
       backendOrders.forEach((order: Order) => {
         if (order && order.id) {
           orderMap.set(order.id, order);
         }
       });
       
-      // Add localStorage orders that aren't in backend
+      // Overlay localStorage orders so locally saved fields like assigned_to persist
       const unsyncedOrders: Order[] = [];
       localOrders.forEach((order: Order) => {
-        if (order && order.id && !orderMap.has(order.id)) {
-          orderMap.set(order.id, order);
-          unsyncedOrders.push(order);
+        if (order && order.id) {
+          if (orderMap.has(order.id)) {
+            orderMap.set(order.id, mergeOrderRecords(orderMap.get(order.id)!, order));
+          } else {
+            orderMap.set(order.id, order);
+            unsyncedOrders.push(order);
+          }
         }
       });
       
@@ -205,12 +219,13 @@ export function OrdersPage() {
       }
       
       // ===== FINAL: Sort and set =====
-      const sortedOrders = getSortedActiveOrders(Array.from(orderMap.values()));
+      const sortedOrders = getSortedActiveOrders(applyStoredAssignments(Array.from(orderMap.values())));
       const visibleOrders = isSalesManager(user?.email, user?.role)
         ? sortedOrders.filter((order) => canSalesManagerSeeOrder(order, user))
         : sortedOrders;
       
       setOrders(visibleOrders);
+      syncSalesManagerNamesFromOrders(visibleOrders);
       console.log('âœ… [OrdersPage] Total orders displayed:', visibleOrders.length, 
         `(${backendOrders.length} backend + ${unsyncedOrders.length} local-only)`);
       
@@ -223,7 +238,7 @@ export function OrdersPage() {
         ? localOrdersRaw.filter((order) => canSalesManagerSeeOrder(order, user))
         : localOrdersRaw;
       if (localOrders.length > 0) {
-        setOrders(localOrders);
+        setOrders(applyStoredAssignments(localOrders));
         if (!background) {
           toast.info('Showing orders from browser cache', { duration: 3000 });
         }
@@ -323,6 +338,87 @@ export function OrdersPage() {
       toast.error('Failed to delete orders: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const openAssignEditor = (order: Order) => {
+    setAssigningOrderId(order.id);
+    setAssignDraft(order.assigned_to || '');
+  };
+
+  const closeAssignEditor = () => {
+    setAssigningOrderId(null);
+    setAssignDraft('');
+  };
+
+  const saveAssignedManager = (orderId: string, managerName?: string) => {
+    const nextName = normalizeManagerName(managerName ?? assignDraft);
+    if (!nextName) {
+      toast.error('Please enter a sales manager name');
+      return;
+    }
+
+    const nextSalesManagerNames = mergeSalesManagerNames(salesManagerNames, nextName);
+    setSalesManagerNames(nextSalesManagerNames);
+    localStorage.setItem(SALES_MANAGER_NAMES_KEY, JSON.stringify(nextSalesManagerNames));
+
+    setOrders((prevOrders) => {
+      const updatedOrders = prevOrders.map((order) =>
+        order.id === orderId
+          ? { ...order, assigned_to: nextName, updated_at: new Date().toISOString() }
+          : order,
+      );
+
+      saveOrdersToLocalStorage(updatedOrders);
+      return updatedOrders;
+    });
+
+    toast.success(`Assigned ${nextName} to this order`);
+    setAssigningOrderId(null);
+    setAssignDraft('');
+  };
+
+  const clearAssignedManager = (orderId: string) => {
+    const updatedOrders = orders.map((order) =>
+      order.id === orderId
+        ? { ...order, assigned_to: undefined, updated_at: new Date().toISOString() }
+        : order,
+    );
+
+    setOrders(updatedOrders);
+    saveOrdersToLocalStorage(updatedOrders);
+    toast.success('Assignment removed');
+    closeAssignEditor();
+  };
+
+  const removeSalesManagerName = (name: string) => {
+    const nextNames = salesManagerNames.filter((item) => normalize(item) !== normalize(name));
+    setSalesManagerNames(nextNames);
+    localStorage.setItem(SALES_MANAGER_NAMES_KEY, JSON.stringify(nextNames));
+    toast.success(`Removed ${name} from the sales manager list`);
+  };
+
+  const syncSalesManagerNamesFromOrders = (currentOrders: Order[]) => {
+    const derivedNames = currentOrders
+      .map((order) => normalizeManagerName(order.assigned_to))
+      .filter(Boolean);
+
+    if (derivedNames.length === 0) {
+      return;
+    }
+
+    const nextNames = mergeSalesManagerNames(salesManagerNames, ...derivedNames);
+    if (nextNames.join('|') !== salesManagerNames.join('|')) {
+      setSalesManagerNames(nextNames);
+      localStorage.setItem(SALES_MANAGER_NAMES_KEY, JSON.stringify(nextNames));
+    }
+  };
+
+  const saveOrdersToLocalStorage = (updatedOrders: Order[]) => {
+    try {
+      saveOrderAssignmentsToLocalStorage(updatedOrders);
+    } catch (error) {
+      console.error('âŒ [OrdersPage] Failed to persist order assignments:', error);
     }
   };
 
@@ -487,6 +583,161 @@ export function OrdersPage() {
       })
     : dateFilteredOrders;
 
+  const filteredSalesManagerNames = salesManagerNames.filter((name) =>
+    name.toLowerCase().includes(assignDraft.trim().toLowerCase()),
+  );
+
+  const renderAssignmentField = (order: Order) => {
+    if (assigningOrderId === order.id) {
+      return (
+        <form
+          className="w-64 space-y-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveAssignedManager(order.id);
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={assignDraft}
+              onChange={(e) => setAssignDraft(e.target.value)}
+              placeholder="Type sales manager name"
+              className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  saveAssignedManager(order.id);
+                }
+                if (e.key === 'Escape') {
+                  closeAssignEditor();
+                }
+              }}
+            />
+            <button
+              type="submit"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              className="rounded-lg bg-blue-600 p-2 text-white transition-colors hover:bg-blue-700"
+              title="Save assignment"
+            >
+              <Check className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="max-h-32 overflow-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+            {filteredSalesManagerNames.length > 0 ? (
+              filteredSalesManagerNames.map((name) => (
+                <div
+                  key={name}
+                  className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+                >
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setAssignDraft(name)}
+                    className="flex-1 text-left text-gray-700 hover:text-gray-900"
+                  >
+                    {name}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeSalesManagerName(name)}
+                    className="text-gray-400 hover:text-red-600"
+                    title="Remove from dropdown"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-xs text-gray-500">
+                No saved managers yet. Type a name and press the blue tick to save it.
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => clearAssignedManager(order.id)}
+              className="text-xs text-red-600 hover:text-red-700"
+            >
+              Remove assignment
+            </button>
+            <button
+              type="button"
+              onClick={closeAssignEditor}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      );
+    }
+
+    if (order.assigned_to) {
+      return (
+        <div className="w-full max-w-[14rem] rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 px-3 py-2 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-green-700">
+                Sales manager
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold text-green-900">
+                {order.assigned_to}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAssignEditor(order);
+                }}
+                className="rounded-md p-1.5 text-green-700 transition-colors hover:bg-green-100"
+                title="Edit assignment"
+              >
+                <Edit3 className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearAssignedManager(order.id);
+                }}
+                className="rounded-md p-1.5 text-red-600 transition-colors hover:bg-red-50"
+                title="Remove assignment"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-1 text-xs font-medium text-green-700">
+            <Check className="h-3.5 w-3.5" />
+            <span>Saved</span>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => openAssignEditor(order)}
+        className="inline-flex w-full max-w-[14rem] items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-600"
+        title="Assign sales manager"
+      >
+        <Plus className="h-4 w-4" />
+        <span>Assign sales manager</span>
+      </button>
+    );
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -647,6 +898,9 @@ export function OrdersPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                   Date
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                  Assign
+                </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
@@ -726,6 +980,9 @@ export function OrdersPage() {
                         year: 'numeric'
                       })}
                     </span>
+                  </td>
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    {renderAssignmentField(order)}
                   </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-2">
@@ -848,7 +1105,6 @@ const syncUnsyncedOrders = async (ordersToSync: Order[]) => {
 
 // Function to load orders from both localStorage sources
 function loadOrdersFromLocalStorage(): Order[] {
-  const allOrders: Order[] = [];
   const orderMap = new Map<string, Order>();
   
   // Load from admin storage
@@ -883,6 +1139,116 @@ function loadOrdersFromLocalStorage(): Order[] {
   return Array.from(orderMap.values());
 }
 
+function loadSalesManagerNames(): string[] {
+  try {
+    const stored = localStorage.getItem(SALES_MANAGER_NAMES_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return [];
+    return Array.from(
+      new Set(
+        parsed
+          .map((name) => normalizeManagerName(name))
+          .filter(Boolean),
+      ),
+    );
+  } catch (error) {
+    console.error('âŒ [OrdersPage] Failed to load sales manager names:', error);
+    return [];
+  }
+}
+
+function loadOrderAssignmentsFromLocalStorage(): Record<string, { assigned_to?: string; updated_at?: string }> {
+  try {
+    const stored = localStorage.getItem(ORDER_ASSIGNMENTS_KEY);
+    if (!stored) return {};
+
+    const parsed = JSON.parse(stored);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+
+    return Object.fromEntries(
+      Object.entries(parsed as Record<string, { assigned_to?: string; updated_at?: string }>).map(([orderId, assignment]) => [
+        orderId,
+        {
+          assigned_to: normalizeManagerName(assignment?.assigned_to),
+          updated_at: typeof assignment?.updated_at === 'string' ? assignment.updated_at : undefined,
+        },
+      ]),
+    );
+  } catch (error) {
+    console.error('âŒ [OrdersPage] Failed to load order assignments:', error);
+    return {};
+  }
+}
+
+function saveOrderAssignmentsToLocalStorage(updatedOrders: Order[]) {
+  const existingAssignments = loadOrderAssignmentsFromLocalStorage();
+  const nextAssignments: Record<string, { assigned_to?: string; updated_at?: string }> = { ...existingAssignments };
+
+  updatedOrders.forEach((order) => {
+    if (order.assigned_to) {
+      nextAssignments[order.id] = {
+        assigned_to: normalizeManagerName(order.assigned_to),
+        updated_at: order.updated_at,
+      };
+    } else {
+      delete nextAssignments[order.id];
+    }
+  });
+
+  localStorage.setItem(ORDER_ASSIGNMENTS_KEY, JSON.stringify(nextAssignments));
+}
+
+function applyStoredAssignments(orders: Order[]): Order[] {
+  const assignments = loadOrderAssignmentsFromLocalStorage();
+
+  return orders.map((order) => {
+    const storedAssignment = assignments[order.id];
+    if (!storedAssignment?.assigned_to) {
+      return order;
+    }
+
+    if (normalizeManagerName(order.assigned_to) === normalizeManagerName(storedAssignment.assigned_to)) {
+      return order;
+    }
+
+    return {
+      ...order,
+      assigned_to: storedAssignment.assigned_to,
+      updated_at: storedAssignment.updated_at || order.updated_at,
+    };
+  });
+}
+
+function mergeSalesManagerNames(baseNames: string[], ...extraNames: string[]): string[] {
+  const merged = new Map<string, string>();
+
+  [...baseNames, ...extraNames].forEach((name) => {
+    const trimmed = normalizeManagerName(name);
+    if (!trimmed) return;
+    const key = normalize(trimmed);
+    if (!merged.has(key)) {
+      merged.set(key, trimmed);
+    }
+  });
+
+  return Array.from(merged.values()).sort((a, b) => a.localeCompare(b));
+}
+
+function mergeOrderRecords(base: Order, overlay: Order): Order {
+  return {
+    ...base,
+    ...overlay,
+    shipping_address: overlay.shipping_address ?? base.shipping_address,
+    shipping_details: {
+      ...(base.shipping_details || {}),
+      ...(overlay.shipping_details || {}),
+    },
+    items: overlay.items?.length ? overlay.items : base.items,
+    assigned_to: overlay.assigned_to ?? base.assigned_to,
+  };
+}
+
 // Function to remove an order from localStorage
 function removeOrderFromLocalStorage(orderId: string) {
   // Remove from admin storage
@@ -895,6 +1261,17 @@ function removeOrderFromLocalStorage(orderId: string) {
     } catch (e) {
       console.error('âŒ [OrdersPage] Failed to remove order from admin localStorage:', e);
     }
+  }
+
+  // Remove from lightweight assignment storage
+  try {
+    const assignments = loadOrderAssignmentsFromLocalStorage();
+    if (assignments[orderId]) {
+      delete assignments[orderId];
+      localStorage.setItem(ORDER_ASSIGNMENTS_KEY, JSON.stringify(assignments));
+    }
+  } catch (e) {
+    console.error('âŒ [OrdersPage] Failed to remove order assignment from localStorage:', e);
   }
   
   // Remove from user storage

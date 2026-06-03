@@ -9,7 +9,6 @@ import {
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
-import { OrderTrackingManager } from '@/app/components/admin/OrderTrackingManager';
 import { OrderManagementVisual } from '@/app/components/admin/OrderManagementVisual';
 import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
 
@@ -1366,14 +1365,6 @@ export function OrderDetailPage() {
                 </div>
               </div>
 
-              {/* Live Order Tracking Manager */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <OrderTrackingManager
-                  orderId={order.id}
-                  orderNumber={order.order_number}
-                  onUpdate={fetchOrder}
-                />
-              </div>
             </div>
 
             {/* Sidebar */}

@@ -6,9 +6,10 @@ import { User, Mail, Eye, Search } from 'lucide-react';
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 const USER_ROLES_STORAGE_KEY = 'honey_translation_user_roles';
 const REGISTERED_USERS_STORAGE_KEY = 'registered_users';
+const ROLES_STORAGE_KEY = 'honey_roles';
 const normalizeEmail = (email?: string | null) => String(email || '').trim().toLowerCase();
 
-type UserRole = 'admin' | 'sales_manager' | 'customer';
+type UserRole = string;
 type CustomerStatus = 'active' | 'inactive';
 
 interface Customer {
@@ -27,16 +28,40 @@ interface Customer {
 
 const normalizeRole = (role: unknown): UserRole => {
   const value = String(role || '').trim().toLowerCase();
-  if (value === 'admin') return 'admin';
-  if (value === 'sales_manager' || value === 'sales manager' || value === 'manager') return 'sales_manager';
-  return 'customer';
+  if (!value) return 'customer';
+  if (value === 'sales manager' || value === 'manager') return 'sales_manager';
+  return value.replace(/\s+/g, '_');
 };
 
-const roleOptions: { value: UserRole; label: string }[] = [
+const builtinRoleOptions: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
   { value: 'sales_manager', label: 'Sales Manager' },
   { value: 'customer', label: 'Customer' },
 ];
+
+const getAvailableRoleOptions = (): { value: UserRole; label: string }[] => {
+  const options = [...builtinRoleOptions];
+
+  try {
+    const raw = localStorage.getItem(ROLES_STORAGE_KEY);
+    if (!raw) return options;
+
+    const parsed = JSON.parse(raw) as Array<{ key?: string; name?: string }>;
+    if (!Array.isArray(parsed)) return options;
+
+    parsed.forEach((role) => {
+      const value = normalizeRole(role.key || role.name);
+      const label = role.name || value;
+      if (!options.some((option) => option.value === value)) {
+        options.push({ value, label });
+      }
+    });
+  } catch (error) {
+    console.error('Failed to load custom roles:', error);
+  }
+
+  return options;
+};
 
 const statusOptions: { value: CustomerStatus; label: string }[] = [
   { value: 'active', label: 'Active' },
@@ -56,6 +81,7 @@ function CustomersPage() {
   const [filterStatus, setFilterStatus] = useState<string>('All');
   const [customerRoles, setCustomerRoles] = useState<Record<string, UserRole>>({});
   const [customerStatuses, setCustomerStatuses] = useState<Record<string, CustomerStatus>>({});
+  const roleOptions = getAvailableRoleOptions();
 
   useEffect(() => {
     const savedRoles = localStorage.getItem(USER_ROLES_STORAGE_KEY);
@@ -262,7 +288,7 @@ function CustomersPage() {
         <div className="p-8 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading customers...</p>
+            <p className="text-gray-600">Loading accounts...</p>
           </div>
         </div>
       </AdminLayout>
@@ -276,9 +302,9 @@ function CustomersPage() {
         <div className="border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Customers</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">Accounts</h1>
               <p className="text-sm text-gray-500 mt-1">
-                Manage and view all your customers
+                Manage and view all your accounts
               </p>
             </div>
           </div>
@@ -291,7 +317,7 @@ function CustomersPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search customers by name, email, or ID..."
+                placeholder="Search accounts by name, email, or ID..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -300,7 +326,7 @@ function CustomersPage() {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="All">All Customers</option>
+              <option value="All">All Accounts</option>
               <option value="active">Active</option>
               <option value="inactive">Disabled</option>
             </select>
@@ -312,7 +338,7 @@ function CustomersPage() {
           <div className="bg-blue-50 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-600 font-medium">Total Customers</p>
+                <p className="text-sm text-blue-600 font-medium">Total Accounts</p>
                 <p className="text-2xl font-bold text-blue-900 mt-1">{customers.length}</p>
               </div>
               <User className="w-10 h-10 text-blue-600 opacity-50" />
@@ -322,7 +348,7 @@ function CustomersPage() {
           <div className="bg-green-50 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-600 font-medium">Active Customers</p>
+                <p className="text-sm text-green-600 font-medium">Active Accounts</p>
                 <p className="text-2xl font-bold text-green-900 mt-1">
                   {customers.filter(c => c.status === 'active').length}
                 </p>
@@ -440,8 +466,8 @@ function CustomersPage() {
               <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">
                 {searchQuery || filterStatus !== 'All' 
-                  ? 'No customers found matching your criteria' 
-                  : 'No customers yet'}
+                  ? 'No accounts found matching your criteria' 
+                  : 'No accounts yet'}
               </p>
               {(searchQuery || filterStatus !== 'All') && (
                 <button
@@ -462,7 +488,7 @@ function CustomersPage() {
         {filteredCustomers.length > 0 && (
           <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {filteredCustomers.length} of {customers.length} customers
+                  Showing {filteredCustomers.length} of {customers.length} accounts
             </div>
             <div className="flex items-center gap-2">
               <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">

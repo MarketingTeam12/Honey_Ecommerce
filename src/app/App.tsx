@@ -40,6 +40,7 @@ import CouponsPage from "@/app/pages/admin/CouponsPage";
 import OrdersPageAdmin from "@/app/pages/admin/OrdersPage";
 import OrderDetailPageAdmin from "@/app/pages/admin/OrderDetailPage";
 import CustomersPage from "@/app/pages/admin/CustomersPage";
+import RoleManagementPage from "@/app/pages/admin/RoleManagementPage";
 import CustomerEmailsPage from "@/app/pages/admin/CustomerEmailsPage";
 import { CustomerQueriesPage } from "@/app/pages/admin/CustomerQueriesPage";
 import SalesPage from "@/app/pages/admin/SalesPage";
@@ -344,6 +345,14 @@ function App() {
                     <Route
                       path="/admin/customers"
                       element={<CustomersPage />}
+                    />
+                    <Route
+                      path="/admin/accounts"
+                      element={<CustomersPage />}
+                    />
+                    <Route
+                      path="/admin/roles"
+                      element={<RoleManagementPage />}
                     />
                     <Route
                       path="/admin/customer-emails"
