@@ -8,6 +8,7 @@ import {
 import { useAuth } from '@/app/context/AuthContext';
 import { canAccessRoleFeature, hasAdminAccess, isFullAdmin } from '@/app/utils/roleAccess';
 import honeyLogo from 'figma:asset/d99fd9d20cac16122a3e457a66e96224eb5ad345.png';
+import { AdminPageSkeleton } from '@/app/components/layout/PageSkeleton';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -50,14 +51,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
-          <p className="text-sm text-gray-600">Checking admin access...</p>
-        </div>
-      </div>
-    );
+    return <AdminPageSkeleton />;
   }
 
   if (!canAccessAdmin) {

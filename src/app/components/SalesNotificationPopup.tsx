@@ -1,7 +1,9 @@
-﻿import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { X, ShoppingBag } from 'lucide-react';
-import { allProductsMap } from '@/app/data/allProductData';
+import { useEffect, useMemo, useState, MouseEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
+import { useProducts } from '@/app/context/ProductContext';
+import { getFirstValidImage } from '@/app/utils/imageUtils';
+import checkMarkIcon from '@/assets/check-mark.png';
 
 interface SaleNotification {
   id: string;
@@ -12,66 +14,63 @@ interface SaleNotification {
   productUrl: string;
 }
 
+const DEMO_LOCATIONS = [
+  'Hyderabad, India',
+  'Mumbai, India',
+  'Bangalore, India',
+  'Chennai, India',
+  'Delhi, India',
+  'Pune, India',
+];
+
 export function SalesNotificationPopup() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { products } = useProducts();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Fetch actual product data from existing product pages
-  const notifications: SaleNotification[] = [
-    {
-      id: '1',
-      productName: allProductsMap['saudi-arabia'].title,
-      description: 'Educational certificate apostille',
-      location: 'Mumbai, India',
-      thumbnail: allProductsMap['saudi-arabia'].images[0].url,
-      productUrl: '/apostille/saudi-arabia',
-    },
-    {
-      id: '2',
-      productName: allProductsMap['uae'].title,
-      description: 'Marriage certificate apostille',
-      location: 'Dubai, UAE',
-      thumbnail: allProductsMap['uae'].images[0].url,
-      productUrl: '/apostille/uae',
-    },
-    {
-      id: '3',
-      productName: allProductsMap['china'].title,
-      description: 'Birth certificate attestation',
-      location: 'Delhi, India',
-      thumbnail: allProductsMap['china'].images[0].url,
-      productUrl: '/attestation/china',
-    },
-    {
-      id: '4',
-      productName: allProductsMap['qatar'].title,
-      description: 'Degree certificate attestation',
-      location: 'Bangalore, India',
-      thumbnail: allProductsMap['qatar'].images[0].url,
-      productUrl: '/attestation/qatar',
-    },
-    {
-      id: '5',
-      productName: allProductsMap['basic'].title,
-      description: 'Company registration package',
-      location: 'Hyderabad, India',
-      thumbnail: allProductsMap['basic'].images[0].url,
-      productUrl: '/startup/basic',
-    },
-    {
-      id: '6',
-      productName: allProductsMap['usa'].title,
-      description: 'Academic certificate apostille',
-      location: 'Chennai, India',
-      thumbnail: allProductsMap['usa'].images[0].url,
-      productUrl: '/apostille/usa',
-    },
-  ];
+  const shouldShowOnRoute =
+    !location.pathname.startsWith('/admin') &&
+    !location.pathname.startsWith('/signin') &&
+    !location.pathname.startsWith('/login') &&
+    !location.pathname.startsWith('/signup') &&
+    !location.pathname.startsWith('/auth') &&
+    !location.pathname.startsWith('/debug') &&
+    !location.pathname.startsWith('/init-demo') &&
+    !location.pathname.startsWith('/storage-setup') &&
+    !location.pathname.startsWith('/test-review');
+  const notifications = useMemo<SaleNotification[]>(
+    () =>
+      products
+        .filter((product) => product.status === 'active')
+        .map((product, index) => {
+          const thumbnail = getFirstValidImage(product.images);
+
+          if (!thumbnail) {
+            return null;
+          }
+
+          return {
+            id: product.id,
+            productName: product.name,
+            description: product.description || product.category || 'Professional service package',
+            location: DEMO_LOCATIONS[index % DEMO_LOCATIONS.length],
+            thumbnail,
+            productUrl: `/product/${product.id}`,
+          };
+        })
+        .filter((notification): notification is SaleNotification => Boolean(notification)),
+    [products],
+  );
 
   useEffect(() => {
-    if (isDismissed) return;
+    setCurrentIndex(0);
+  }, [notifications.length]);
+
+  useEffect(() => {
+    if (isDismissed || !shouldShowOnRoute || notifications.length === 0) return;
 
     let showInterval: NodeJS.Timeout | null = null;
     let hideTimeout: NodeJS.Timeout | null = null;
@@ -99,14 +98,11 @@ export function SalesNotificationPopup() {
           hideTimeout = null;
         }
         setIsVisible(false);
-      } else {
-        if (!showInterval) {
-          startCycle();
-        }
+      } else if (!showInterval) {
+        startCycle();
       }
     };
 
-    // Show first notification immediately
     setIsVisible(true);
     const firstHideTimeout = setTimeout(() => {
       setIsVisible(false);
@@ -125,10 +121,10 @@ export function SalesNotificationPopup() {
       clearTimeout(firstHideTimeout);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isDismissed]);
+  }, [isDismissed, shouldShowOnRoute, notifications.length]);
 
   useEffect(() => {
-    if (isDismissed) return;
+    if (isDismissed || !shouldShowOnRoute || notifications.length === 0) return;
 
     let rotateInterval: NodeJS.Timeout | null = null;
 
@@ -146,10 +142,8 @@ export function SalesNotificationPopup() {
           clearInterval(rotateInterval);
           rotateInterval = null;
         }
-      } else {
-        if (!rotateInterval) {
-          startRotation();
-        }
+      } else if (!rotateInterval) {
+        startRotation();
       }
     };
 
@@ -162,85 +156,87 @@ export function SalesNotificationPopup() {
       }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isDismissed, notifications.length]);
+  }, [isDismissed, shouldShowOnRoute, notifications.length]);
 
   const handleClick = () => {
     const notification = notifications[currentIndex];
+    if (!notification) return;
+    setIsVisible(false);
     navigate(notification.productUrl);
   };
 
-  const handleClose = (e: React.MouseEvent) => {
+  const handleClose = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setIsVisible(false);
     setIsDismissed(true);
   };
 
-  if (isDismissed || !isVisible) return null;
+  if (isDismissed || !isVisible || !shouldShowOnRoute || notifications.length === 0) return null;
 
   const currentNotification = notifications[currentIndex];
 
   return (
     <div
-      className={`fixed bottom-20 sm:bottom-6 left-3 right-3 sm:left-6 sm:right-auto z-50 transition-all duration-500 ease-out ${
-        isVisible
-          ? 'translate-x-0 opacity-100'
-          : '-translate-x-full opacity-0'
+      className={`fixed bottom-20 left-3 right-3 z-50 transition-all duration-500 ease-out sm:bottom-6 sm:left-6 sm:right-auto ${
+        isVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
       }`}
     >
       <div
         onClick={handleClick}
-        className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 cursor-pointer hover:shadow-xl hover:scale-105 transition-all duration-300 max-w-sm w-full sm:w-auto"
+        className="relative w-full max-w-[17rem] cursor-pointer overflow-hidden rounded-2xl border border-white/70 bg-white/95 p-3 shadow-[0_18px_50px_rgba(10,18,71,0.18)] backdrop-blur transition-transform duration-300 hover:scale-[1.015] hover:shadow-[0_22px_60px_rgba(10,18,71,0.24)] sm:w-auto"
         role="button"
         tabIndex={0}
-        onKeyPress={(e) => {
-          if (e.key === 'Enter') handleClick();
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick();
+          }
         }}
       >
-        {/* Close Button */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#2d96d8] via-[#0a1247] to-[#22c55e]" />
+
         <button
           onClick={handleClose}
-          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute right-2 top-2 z-10 rounded-full bg-white/90 p-1 text-gray-400 shadow-sm transition-colors hover:text-gray-700"
           aria-label="Close notification"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-start gap-4">
-          {/* Thumbnail */}
+        <div className="flex items-center gap-3">
           <div className="flex-shrink-0">
-            <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+            <div className="h-16 w-16 overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
               <img
                 src={currentNotification.thumbnail}
                 alt={currentNotification.productName}
-                className="w-full h-full object-cover"
+                className="h-full w-full object-contain object-center"
               />
             </div>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0 pr-4">
-            {/* Badge */}
-            <div className="flex items-center gap-1 mb-2">
-              <ShoppingBag className="w-3.5 h-3.5 text-green-600" />
-              <span className="text-xs font-medium text-green-600 uppercase tracking-wide">
-                Recent Purchase
+          <div className="min-w-0 flex-1 pr-4">
+            <span className="mb-1 inline-flex items-center text-[0.58rem] font-semibold uppercase tracking-[0.2em] text-[#0f9b63]">
+              <span className="mr-2 inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden">
+                <img
+                  src={checkMarkIcon}
+                  alt="Recent purchase"
+                  className="block h-full w-full rotate-0 object-contain object-center align-middle"
+                />
               </span>
-            </div>
+              Recent Purchase
+            </span>
 
-            {/* Product Name */}
-            <h4 className="text-sm font-bold text-gray-900 mb-1 line-clamp-1">
+            <h4 className="mb-0.5 line-clamp-1 text-[0.9rem] font-bold text-[#0a1247]">
               {currentNotification.productName}
             </h4>
 
-            {/* Description */}
-            <p className="text-xs text-gray-600 mb-2 line-clamp-1">
+            <p className="mb-1 line-clamp-1 text-[0.74rem] text-gray-600">
               {currentNotification.description}
             </p>
 
-            {/* Location */}
-            <p className="text-xs text-gray-500 flex items-center gap-1">
+            <p className="flex items-center gap-1 text-[0.69rem] text-gray-500">
               <svg
-                className="w-3 h-3"
+                className="h-3 w-3 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -261,17 +257,13 @@ export function SalesNotificationPopup() {
               Purchased from {currentNotification.location}
             </p>
 
-            {/* Time indicator */}
-            <p className="text-xs text-gray-400 mt-2">
-              Just now
-            </p>
+            <p className="mt-1 text-[0.65rem] text-gray-400">Just now</p>
           </div>
         </div>
 
-        {/* Progress indicator */}
-        <div className="mt-3 h-1 bg-gray-100 rounded-full overflow-hidden">
+        <div className="mt-3 h-1 overflow-hidden rounded-full bg-gray-100">
           <div
-            className="h-full bg-blue-500 rounded-full animate-progress"
+            className="h-full rounded-full bg-gradient-to-r from-[#2d96d8] to-[#0a1247] animate-progress"
             style={{
               animation: 'progress 4s linear forwards',
             }}
@@ -296,4 +288,3 @@ export function SalesNotificationPopup() {
     </div>
   );
 }
-

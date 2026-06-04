@@ -103,7 +103,8 @@ import DatabaseDiagnosticsPage from "@/app/pages/DatabaseDiagnosticsPage";
 import EdgeFunctionHelpPage from "@/app/pages/EdgeFunctionHelpPage";
 
 // Import components
-import ProductPopup from "@/app/components/ProductPopup";
+import { SalesNotificationPopup } from "@/app/components/SalesNotificationPopup";
+import SalesIQWidget from "@/app/components/SalesIQWidget";
 import DemoUserInitializer from "@/app/components/DemoUserInitializer";
 import ErrorBoundary from "@/app/components/ErrorBoundary";
 import ScrollToTop from "@/app/components/ScrollToTop";
@@ -247,7 +248,8 @@ function App() {
             <CartProvider>
               <WishlistProvider>
                 <ProductProvider>
-                  <ProductPopup />
+                  <SalesIQWidget />
+                  <SalesNotificationPopup />
                   <Toaster position="top-right" richColors />
                   <Routes>
                     <Route

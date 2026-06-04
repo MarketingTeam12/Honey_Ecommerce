@@ -901,7 +901,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
             {/* Main Product Image with Zoom */}
             <div
               ref={imageRef}
-              className="relative w-full max-w-[520px] mx-auto aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 cursor-pointer"
+              className="relative w-full max-w-[520px] mx-auto aspect-square bg-white rounded-lg overflow-hidden border-2 border-gray-200 cursor-pointer"
               onMouseEnter={() => setIsZoomed(true)}
               onMouseLeave={() => setIsZoomed(false)}
               onMouseMove={handleMouseMove}
@@ -911,7 +911,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   <img
                     src={validImages[selectedImage].url}
                     alt={validImages[selectedImage].alt}
-                    className="w-full h-full object-contain bg-white p-4 cursor-pointer"
+                    className="w-full h-full object-contain object-center bg-white p-3 cursor-pointer"
                     width="600"
                     height="600"
                     loading="eager"
@@ -960,7 +960,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                   <img
                     src={image.url}
                     alt={image.alt}
-                    className="w-full h-full object-contain bg-white p-2 cursor-pointer"
+                    className="w-full h-full object-contain object-center bg-white p-1.5 cursor-pointer"
                     width="120"
                     height="120"
                     loading="lazy"

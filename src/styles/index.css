@@ -45,6 +45,27 @@ iframe {
   max-width: 100%;
 }
 
+#zsiq_float,
+#zsiq_floatmain,
+.zsiq_floatmain,
+.zsiq_custommain,
+.zsiq_theme1,
+.zsiq_theme2 {
+  bottom: 1rem !important;
+  right: 1rem !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 9998 !important;
+}
+
+#zsiq_float iframe,
+#zsiq_floatmain iframe,
+.zsiq_floatmain iframe,
+.zsiq_custommain iframe {
+  max-width: none !important;
+}
+
 .scroll-ambient {
   position: absolute;
   border-radius: 9999px;

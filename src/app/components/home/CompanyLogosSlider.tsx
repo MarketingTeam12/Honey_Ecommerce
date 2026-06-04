@@ -50,7 +50,7 @@ export function CompanyLogosSlider() {
       id: 1,
       name: 'Fratelli',
       image: fratelliLogo,
-      imageStyle: { maxWidth: '220px', maxHeight: '82px', mixBlendMode: 'darken' as const },
+      imageStyle: { width: '250px', maxWidth: '250px', maxHeight: '112px', mixBlendMode: 'darken' as const },
     },
     {
       id: 2,
@@ -71,6 +71,7 @@ export function CompanyLogosSlider() {
       id: 5,
       name: 'ARC International',
       image: arcLogo,
+      imageStyle: { maxWidth: '245px', maxHeight: '106px', mixBlendMode: 'darken' as const },
     },
     {
       id: 6,
@@ -102,18 +103,19 @@ export function CompanyLogosSlider() {
       id: 11,
       name: 'New India Assurance',
       image: newIndiaLogo,
+      imageStyle: { width: '150px', maxWidth: '150px', maxHeight: '112px', mixBlendMode: 'darken' as const },
     },
     {
       id: 12,
       name: 'Royal Enfield',
       image: royalEnfieldLogo,
-      imageStyle: { maxWidth: '220px', maxHeight: '82px', mixBlendMode: 'multiply' as const },
+      imageStyle: { width: '1000px', maxWidth: '500px', maxHeight: '400px', mixBlendMode: 'multiply' as const },
     },
     {
       id: 13,
       name: 'Saint-Gobain',
       image: saintGobainLogo,
-      imageStyle: { maxWidth: '220px', maxHeight: '82px', mixBlendMode: 'darken' as const },
+      imageStyle: { width: '295px', maxWidth: '295px', maxHeight: '130px', mixBlendMode: 'darken' as const },
     },
   ];
 
@@ -137,11 +139,11 @@ export function CompanyLogosSlider() {
                 style={{ width: '270px' }}
               >
                 <div className="bg-white rounded-lg border border-gray-300 p-5 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-36">
-                  <img 
-                    src={logo.image} 
-                    alt={logo.name} 
-                    className="w-auto max-w-[200px] max-h-[74px] object-contain"
-                      style={logo.imageStyle ? { mixBlendMode: 'darken' } : undefined}
+                  <img
+                    src={logo.image}
+                    alt={logo.name}
+                    className="w-auto max-w-[230px] max-h-[96px] object-contain"
+                    style={logo.imageStyle}
                   />
                 </div>
               </div>

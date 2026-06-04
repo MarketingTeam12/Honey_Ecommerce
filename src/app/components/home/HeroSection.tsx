@@ -3,7 +3,7 @@ import centerCertificate from '@/assets/center-certificate-v2.png';
 import honeyFavicon from '@/assets/honey-favicon-transparent.png';
 import bannerBefore from '@/assets/banner-before.png';
 import bannerAfter from '@/assets/banner-after.png';
-import approvedStampGreen from '@/assets/approved-stamp-green.png';
+import checkMarkIcon from '@/assets/check-mark.png';
 
 export function HeroSection() {
   const flags = [
@@ -136,11 +136,13 @@ export function HeroSection() {
                     className="absolute top-[1.4%] left-[1.5%] w-[7.2%] h-auto object-contain z-20"
                   />
                 </div>
-                <img
-                  src={approvedStampGreen}
-                  alt="Approved stamp left"
-                  className="absolute -left-[9%] bottom-[11%] w-[20%] h-auto object-contain z-30 pointer-events-none"
-                />
+                <div className="absolute -left-[8%] bottom-[10%] z-30 pointer-events-none">
+                  <img
+                    src={checkMarkIcon}
+                    alt="Verified check mark"
+                    className="h-20 w-20 object-contain rotate-0"
+                  />
+                </div>
               </div>
               <div className="relative bg-white rounded-2xl border-[2.5px] border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4]">
                 <img
@@ -169,11 +171,13 @@ export function HeroSection() {
                     className="absolute top-[1.6%] left-[1.6%] w-[7.8%] h-auto object-contain z-20"
                   />
                 </div>
-                <img
-                  src={approvedStampGreen}
-                  alt="Approved stamp right"
-                  className="absolute -right-[10%] top-[11%] w-[20%] h-auto object-contain z-30 rotate-[45deg] pointer-events-none"
-                />
+                <div className="absolute -right-[9%] top-[10%] z-30 pointer-events-none">
+                  <img
+                    src={checkMarkIcon}
+                    alt="Verified check mark"
+                    className="h-20 w-20 object-contain rotate-0"
+                  />
+                </div>
               </div>
             </div>
 
