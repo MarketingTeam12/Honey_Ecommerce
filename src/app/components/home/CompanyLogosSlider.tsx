@@ -9,7 +9,6 @@ import identityLogo from '@/assets/identity-logo.png';
 import lrkLogo from '@/assets/lrk-logo.jpg';
 import muthootFinanceLogo from '@/assets/muthoot-finance-logo.webp';
 import newIndiaLogo from '@/assets/new-india-logo.jpg';
-import royalEnfieldLogo from '@/assets/royal-enfield-logo.webp';
 import saintGobainLogo from '@/assets/saint-gobain-source.jpg';
 import tvsLogo from '@/assets/tvs-logo-clean.png';
 
@@ -17,8 +16,9 @@ export function CompanyLogosSlider() {
   type LogoItem = {
     id: number;
     name: string;
-    image: string;
+    image?: string;
     imageStyle?: CSSProperties;
+    textLogo?: boolean;
   };
 
   // Professional company logos with different colors and styles
@@ -108,8 +108,7 @@ export function CompanyLogosSlider() {
     {
       id: 12,
       name: 'Royal Enfield',
-      image: royalEnfieldLogo,
-      imageStyle: { width: '1000px', maxWidth: '500px', maxHeight: '400px', mixBlendMode: 'multiply' as const },
+      textLogo: true,
     },
     {
       id: 13,
@@ -138,13 +137,19 @@ export function CompanyLogosSlider() {
                 className="flex-shrink-0 mx-4"
                 style={{ width: '270px' }}
               >
-                <div className="bg-white rounded-lg border border-gray-300 p-5 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-36">
-                  <img
-                    src={logo.image}
-                    alt={logo.name}
-                    className="w-auto max-w-[230px] max-h-[96px] object-contain"
-                    style={logo.imageStyle}
-                  />
+                <div className={`bg-white rounded-lg border border-gray-300 shadow-md hover:shadow-lg transition-shadow flex items-center justify-center h-36 overflow-hidden ${logo.textLogo ? 'px-2 py-5' : 'p-5'}`}>
+                  {logo.textLogo ? (
+                    <div className="royal-enfield-text-logo" aria-label={logo.name}>
+                      Royal Enfield
+                    </div>
+                  ) : (
+                    <img
+                      src={logo.image ?? ''}
+                      alt={logo.name}
+                      className="w-auto max-w-[230px] max-h-[96px] object-contain"
+                      style={logo.imageStyle}
+                    />
+                  )}
                 </div>
               </div>
             ))}
@@ -168,6 +173,22 @@ export function CompanyLogosSlider() {
 
         .animate-scroll-logos:hover {
           animation-play-state: paused;
+        }
+
+        .royal-enfield-text-logo {
+          display: inline-block;
+          color: #e6331a;
+          font-family: Georgia, 'Times New Roman', serif;
+          font-size: 30px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: 0;
+          text-align: center;
+          text-transform: uppercase;
+          white-space: nowrap;
+          transform: scaleX(0.78);
+          transform-origin: center;
+          text-shadow: 0 1px 0 rgba(160, 22, 10, 0.2);
         }
       `}</style>
     </section>

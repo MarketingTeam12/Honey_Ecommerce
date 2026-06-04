@@ -136,13 +136,6 @@ export function HeroSection() {
                     className="absolute top-[1.4%] left-[1.5%] w-[7.2%] h-auto object-contain z-20"
                   />
                 </div>
-                <div className="absolute -left-[8%] bottom-[10%] z-30 pointer-events-none">
-                  <img
-                    src={checkMarkIcon}
-                    alt="Verified check mark"
-                    className="h-20 w-20 object-contain rotate-0"
-                  />
-                </div>
               </div>
               <div className="relative bg-white rounded-2xl border-[2.5px] border-[#6f88a3] shadow-xl overflow-hidden aspect-[3/4]">
                 <img
