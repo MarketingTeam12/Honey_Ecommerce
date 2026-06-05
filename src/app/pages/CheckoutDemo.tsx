@@ -111,9 +111,6 @@ export function CheckoutDemo() {
           >
             <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 p-6">
               <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-white" />
-                </div>
                 <div>
                   <p className="text-indigo-100 text-sm">SCREEN 2</p>
                   <h2 className="text-2xl text-white">Address Page</h2>

@@ -4,6 +4,8 @@ import { ArrowLeft, Save, Upload, Image as ImageIcon, X, Plus, Trash2, GripVerti
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useProducts } from '@/app/context/ProductContext';
+import { useAuth } from '@/app/context/AuthContext';
+import { canAccessRoleAction } from '@/app/utils/roleAccess';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 
 interface Language {
@@ -31,12 +33,22 @@ export function AddEditItemPage() {
   const { id } = useParams();
   const isEdit = !!id;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
   const { addProduct, updateProduct, getProduct, categories, uploadImages } = useProducts();
+  const canEditItems = canAccessRoleAction(user?.role, 'items', 'edit');
+  const canUpdateItems = canAccessRoleAction(user?.role, 'items', 'update');
 
   // Debug: Log categories to console
   useEffect(() => {
     console.log('ðŸ“‹ Categories loaded in AddEditItemPage:', categories);
   }, [categories]);
+
+  useEffect(() => {
+    if (isEdit && !canEditItems) {
+      toast.error('Edit access denied');
+      navigate('/admin/items', { replace: true });
+    }
+  }, [isEdit, canEditItems, navigate]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -406,6 +418,12 @@ export function AddEditItemPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isEdit && !canUpdateItems) {
+      toast.error('Update access denied');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -1038,7 +1056,7 @@ export function AddEditItemPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (isEdit && !canUpdateItems)}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
               >
                 {loading ? (

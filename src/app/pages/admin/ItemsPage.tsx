@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import { Plus, Search, Filter, Edit, Trash2, Eye, RefreshCw, X, DollarSign, Package, Tag, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
+import { useAuth } from '@/app/context/AuthContext';
 import { useProducts } from '@/app/context/ProductContext';
+import { canAccessRoleAction } from '@/app/utils/roleAccess';
 
 export function ItemsPage() {
+  const { user } = useAuth();
   const { products, deleteProduct, isLoading, refreshProducts } = useProducts();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -21,6 +24,8 @@ export function ItemsPage() {
   const [filterPriceMax, setFilterPriceMax] = useState('');
   const [filterStockMin, setFilterStockMin] = useState('');
   const [sortBy, setSortBy] = useState('name-asc');
+  const canEditItems = canAccessRoleAction(user?.role, 'items', 'edit');
+  const canDeleteItems = canAccessRoleAction(user?.role, 'items', 'delete');
 
   // Show server notice if no products after loading
   useEffect(() => {
@@ -286,24 +291,46 @@ export function ItemsPage() {
                           >
                             <Eye className="w-4 h-4 text-gray-600" />
                           </button>
-                          <Link
-                            to={`/admin/items/edit/${product.id}`}
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Edit Product"
-                          >
-                            <Edit className="w-4 h-4 text-blue-600" />
-                          </Link>
-                          <button 
-                            onClick={() => handleDelete(product.id, product.name)}
-                            className={`p-2 hover:bg-red-50 rounded-lg transition-colors ${
-                              deleteConfirm === product.id ? 'bg-red-100' : ''
-                            }`}
-                            title={deleteConfirm === product.id ? 'Click again to confirm' : 'Delete Product'}
-                          >
-                            <Trash2 className={`w-4 h-4 ${
-                              deleteConfirm === product.id ? 'text-red-700' : 'text-red-600'
-                            }`} />
-                          </button>
+                          {canEditItems ? (
+                            <Link
+                              to={`/admin/items/edit/${product.id}`}
+                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                              title="Edit Product"
+                            >
+                              <Edit className="w-4 h-4 text-blue-600" />
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              className="p-2 rounded-lg text-gray-300 cursor-not-allowed"
+                              title="Edit access denied"
+                              disabled
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                          {canDeleteItems ? (
+                            <button 
+                              onClick={() => handleDelete(product.id, product.name)}
+                              className={`p-2 hover:bg-red-50 rounded-lg transition-colors ${
+                                deleteConfirm === product.id ? 'bg-red-100' : ''
+                              }`}
+                              title={deleteConfirm === product.id ? 'Click again to confirm' : 'Delete Product'}
+                            >
+                              <Trash2 className={`w-4 h-4 ${
+                                deleteConfirm === product.id ? 'text-red-700' : 'text-red-600'
+                              }`} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="p-2 rounded-lg text-gray-300 cursor-not-allowed"
+                              title="Delete access denied"
+                              disabled
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

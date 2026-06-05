@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Copy, CheckCircle, Tag, Calendar, Percent, Package, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/app/context/AuthContext';
 import { useCoupons } from '@/app/context/CouponContext';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
+import { canAccessRoleAction } from '@/app/utils/roleAccess';
 import { Badge } from '@/app/components/ui/badge';
 
 interface Coupon {
@@ -24,11 +26,14 @@ interface Coupon {
 }
 
 export default function CouponsPage() {
+  const { user } = useAuth();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddingCoupon, setIsAddingCoupon] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const canEditCoupons = canAccessRoleAction(user?.role, 'coupons', 'edit');
+  const canDeleteCoupons = canAccessRoleAction(user?.role, 'coupons', 'delete');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -561,20 +566,42 @@ export default function CouponsPage() {
                           >
                             {coupon.isActive ? <X className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
                           </button>
-                          <button
-                            onClick={() => handleEditCoupon(coupon)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                            title="Edit"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCoupon(coupon.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canEditCoupons ? (
+                            <button
+                              onClick={() => handleEditCoupon(coupon)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="p-2 text-gray-300 rounded cursor-not-allowed"
+                              title="Edit access denied"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {canDeleteCoupons ? (
+                            <button
+                              onClick={() => handleDeleteCoupon(coupon.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="p-2 text-gray-300 rounded cursor-not-allowed"
+                              title="Delete access denied"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

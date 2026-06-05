@@ -7,6 +7,7 @@ import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { useAuth } from '@/app/context/AuthContext';
 import { BackendStatusBanner } from '@/app/components/BackendStatusBanner';
+import { canAccessRoleAction } from '@/app/utils/roleAccess';
 
 interface WorkSample {
   id: string;
@@ -31,13 +32,15 @@ const CATEGORIES = [
 ] as const;
 
 export function WorkSamplesPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [samples, setSamples] = useState<WorkSample[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingSample, setEditingSample] = useState<WorkSample | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [backendAvailable, setBackendAvailable] = useState(true);
+  const canEditSamples = canAccessRoleAction(user?.role, 'work_samples', 'edit');
+  const canDeleteSamples = canAccessRoleAction(user?.role, 'work_samples', 'delete');
   
   // Form state
   const [formData, setFormData] = useState({
@@ -618,20 +621,42 @@ export function WorkSamplesPage() {
                       >
                         <Download className="w-4 h-4" />
                       </a>
-                      <button
-                        onClick={() => handleEdit(sample)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(sample.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canEditSamples ? (
+                        <button
+                          onClick={() => handleEdit(sample)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="p-2 text-gray-300 rounded-lg cursor-not-allowed"
+                          title="Edit access denied"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDeleteSamples ? (
+                        <button
+                          onClick={() => handleDelete(sample.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="p-2 text-gray-300 rounded-lg cursor-not-allowed"
+                          title="Delete access denied"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

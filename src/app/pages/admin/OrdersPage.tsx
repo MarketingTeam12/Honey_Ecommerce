@@ -12,6 +12,9 @@ const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 const DELETED_ORDERS_KEY = 'honey_translation_deleted_orders';
 const SALES_MANAGER_NAMES_KEY = 'honey_sales_manager_names';
 const ORDER_ASSIGNMENTS_KEY = 'honey_translation_order_assignments';
+const USER_ROLES_STORAGE_KEY = 'honey_translation_user_roles';
+const REGISTERED_USERS_STORAGE_KEY = 'registered_users';
+const ROLES_STORAGE_KEY = 'honey_roles';
 
 interface UploadedFile {
   name: string;
@@ -68,6 +71,14 @@ interface Order {
   updated_at: string;
 }
 
+interface StaffOption {
+  value: string;
+  label: string;
+  email?: string;
+  role?: string;
+  source: 'account' | 'legacy';
+}
+
 const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
 const normalizeManagerName = (value?: string | null) => String(value || '').trim();
 const toSearchableText = (value: unknown): string => {
@@ -93,8 +104,9 @@ const canSalesManagerSeeOrder = (
   if (!user) return false;
   const email = normalize(user.email);
   const userId = normalize(user.id);
+  const userName = normalize((user as { name?: string }).name);
   const assignedTo = normalize(order.assigned_to);
-  return !!assignedTo && (assignedTo === email || assignedTo === userId);
+  return !!assignedTo && (assignedTo === email || assignedTo === userId || assignedTo === userName);
 };
 
 export function OrdersPage() {
@@ -111,11 +123,14 @@ export function OrdersPage() {
   const [deleting, setDeleting] = useState(false);
   const [showSetupBanner, setShowSetupBanner] = useState(false);
   const [salesManagerNames, setSalesManagerNames] = useState<string[]>([]);
+  const [salesManagerOptions, setSalesManagerOptions] = useState<StaffOption[]>([]);
   const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
   const [assignDraft, setAssignDraft] = useState('');
 
   useEffect(() => {
-    setSalesManagerNames(loadSalesManagerNames());
+    const savedNames = loadSalesManagerNames();
+    setSalesManagerNames(savedNames);
+    setSalesManagerOptions(loadSalesManagerOptions(savedNames));
   }, []);
 
   useEffect(() => {
@@ -352,20 +367,26 @@ export function OrdersPage() {
   };
 
   const saveAssignedManager = (orderId: string, managerName?: string) => {
-    const nextName = normalizeManagerName(managerName ?? assignDraft);
-    if (!nextName) {
-      toast.error('Please enter a sales manager name');
+    const nextValue = normalizeManagerName(managerName ?? assignDraft);
+    if (!nextValue) {
+      toast.error('Please select a sales manager');
       return;
     }
 
-    const nextSalesManagerNames = mergeSalesManagerNames(salesManagerNames, nextName);
-    setSalesManagerNames(nextSalesManagerNames);
-    localStorage.setItem(SALES_MANAGER_NAMES_KEY, JSON.stringify(nextSalesManagerNames));
+    const selectedManager = salesManagerOptions.find((option) => normalize(option.value) === normalize(nextValue));
+    const nextLabel = selectedManager?.label || nextValue;
+
+    if (!selectedManager) {
+      const nextSalesManagerNames = mergeSalesManagerNames(salesManagerNames, nextValue);
+      setSalesManagerNames(nextSalesManagerNames);
+      setSalesManagerOptions(loadSalesManagerOptions(nextSalesManagerNames));
+      localStorage.setItem(SALES_MANAGER_NAMES_KEY, JSON.stringify(nextSalesManagerNames));
+    }
 
     setOrders((prevOrders) => {
       const updatedOrders = prevOrders.map((order) =>
         order.id === orderId
-          ? { ...order, assigned_to: nextName, updated_at: new Date().toISOString() }
+          ? { ...order, assigned_to: selectedManager?.email || nextValue, updated_at: new Date().toISOString() }
           : order,
       );
 
@@ -373,7 +394,7 @@ export function OrdersPage() {
       return updatedOrders;
     });
 
-    toast.success(`Assigned ${nextName} to this order`);
+    toast.success(`Assigned ${nextLabel} to this order`);
     setAssigningOrderId(null);
     setAssignDraft('');
   };
@@ -394,6 +415,7 @@ export function OrdersPage() {
   const removeSalesManagerName = (name: string) => {
     const nextNames = salesManagerNames.filter((item) => normalize(item) !== normalize(name));
     setSalesManagerNames(nextNames);
+    setSalesManagerOptions(loadSalesManagerOptions(nextNames));
     localStorage.setItem(SALES_MANAGER_NAMES_KEY, JSON.stringify(nextNames));
     toast.success(`Removed ${name} from the sales manager list`);
   };
@@ -410,6 +432,7 @@ export function OrdersPage() {
     const nextNames = mergeSalesManagerNames(salesManagerNames, ...derivedNames);
     if (nextNames.join('|') !== salesManagerNames.join('|')) {
       setSalesManagerNames(nextNames);
+      setSalesManagerOptions(loadSalesManagerOptions(nextNames));
       localStorage.setItem(SALES_MANAGER_NAMES_KEY, JSON.stringify(nextNames));
     }
   };
@@ -583,9 +606,22 @@ export function OrdersPage() {
       })
     : dateFilteredOrders;
 
-  const filteredSalesManagerNames = salesManagerNames.filter((name) =>
-    name.toLowerCase().includes(assignDraft.trim().toLowerCase()),
+  const filteredSalesManagerOptions = salesManagerOptions.filter((option) =>
+    `${option.label} ${option.email || ''} ${option.role || ''}`.toLowerCase().includes(assignDraft.trim().toLowerCase()),
   );
+
+  const getAssigneeLabel = (assignedTo?: string) => {
+    const value = normalize(assignedTo);
+    if (!value) return '';
+
+    const option = salesManagerOptions.find((item) =>
+      normalize(item.value) === value ||
+      normalize(item.email) === value ||
+      normalize(item.label) === value
+    );
+
+    return option?.label || assignedTo || '';
+  };
 
   const renderAssignmentField = (order: Order) => {
     if (assigningOrderId === order.id) {
@@ -602,7 +638,7 @@ export function OrdersPage() {
               type="text"
               value={assignDraft}
               onChange={(e) => setAssignDraft(e.target.value)}
-              placeholder="Type sales manager name"
+              placeholder="Search sales manager"
               className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
               onKeyDown={(e) => {
@@ -629,33 +665,43 @@ export function OrdersPage() {
           </div>
 
           <div className="max-h-32 overflow-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-            {filteredSalesManagerNames.length > 0 ? (
-              filteredSalesManagerNames.map((name) => (
+            {filteredSalesManagerOptions.length > 0 ? (
+              filteredSalesManagerOptions.map((manager) => (
                 <div
-                  key={name}
+                  key={`${manager.source}-${manager.value}`}
                   className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-gray-50"
                 >
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => setAssignDraft(name)}
+                    onClick={() => {
+                      setAssignDraft(manager.value);
+                      saveAssignedManager(order.id, manager.value);
+                    }}
                     className="flex-1 text-left text-gray-700 hover:text-gray-900"
                   >
-                    {name}
+                    <span className="block font-medium">{manager.label}</span>
+                    {(manager.email || manager.role) && (
+                      <span className="block text-xs text-gray-500">
+                        {[manager.email, manager.role].filter(Boolean).join(' • ')}
+                      </span>
+                    )}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => removeSalesManagerName(name)}
-                    className="text-gray-400 hover:text-red-600"
-                    title="Remove from dropdown"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+                  {manager.source === 'legacy' && (
+                    <button
+                      type="button"
+                      onClick={() => removeSalesManagerName(manager.value)}
+                      className="text-gray-400 hover:text-red-600"
+                      title="Remove from dropdown"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               ))
             ) : (
               <div className="px-3 py-2 text-xs text-gray-500">
-                No saved managers yet. Type a name and press the blue tick to save it.
+                No role users with Orders access found. Add a role user in Accounts and give that role Orders access.
               </div>
             )}
           </div>
@@ -689,7 +735,7 @@ export function OrdersPage() {
                 Sales manager
               </p>
               <p className="mt-1 truncate text-sm font-semibold text-green-900">
-                {order.assigned_to}
+                {getAssigneeLabel(order.assigned_to)}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -1156,6 +1202,116 @@ function loadSalesManagerNames(): string[] {
     console.error('âŒ [OrdersPage] Failed to load sales manager names:', error);
     return [];
   }
+}
+
+function normalizeRoleKey(role: unknown): string {
+  const value = String(role || '').trim().toLowerCase();
+  if (!value) return 'customer';
+  return value.replace(/\s+/g, '_');
+}
+
+function formatRoleLabel(role: string): string {
+  return role
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function roleHasOrdersAccess(roleKey: string): boolean {
+  if (roleKey === 'admin') return true;
+  if (!roleKey || roleKey === 'customer') return false;
+
+  try {
+    const raw = localStorage.getItem(ROLES_STORAGE_KEY);
+    if (!raw) return false;
+
+    const roles = JSON.parse(raw) as Array<{
+      key?: string;
+      name?: string;
+      status?: string;
+      permissions?: {
+        moduleAccess?: unknown[];
+        dataAccess?: unknown[];
+      };
+    }>;
+    if (!Array.isArray(roles)) return false;
+
+    const role = roles.find((item) => normalizeRoleKey(item.key || item.name) === roleKey);
+    if (!role || role.status === 'Inactive') return false;
+
+    const moduleAccess = Array.isArray(role.permissions?.moduleAccess)
+      ? role.permissions!.moduleAccess.map((item) => normalizeRoleKey(item))
+      : [];
+    const dataAccess = Array.isArray(role.permissions?.dataAccess)
+      ? role.permissions!.dataAccess.map((item) => String(item || '').trim().toLowerCase())
+      : [];
+
+    return moduleAccess.includes('orders') || dataAccess.some((token) => token.startsWith('orders:'));
+  } catch (error) {
+    console.error('❌ [OrdersPage] Failed to check role orders access:', error);
+    return false;
+  }
+}
+
+function loadRoleOverrides(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(USER_ROLES_STORAGE_KEY);
+    if (!raw) return {};
+
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries(parsed).map(([email, role]) => [normalize(email), normalizeRoleKey(role)])
+    );
+  } catch (error) {
+    console.error('❌ [OrdersPage] Failed to load role overrides:', error);
+    return {};
+  }
+}
+
+function loadSalesManagerOptions(legacyNames: string[] = []): StaffOption[] {
+  const options = new Map<string, StaffOption>();
+  const roleOverrides = loadRoleOverrides();
+
+  try {
+    const raw = localStorage.getItem(REGISTERED_USERS_STORAGE_KEY);
+    const users = raw ? JSON.parse(raw) : [];
+
+    if (Array.isArray(users)) {
+      users.forEach((account: any) => {
+        const email = normalize(account.email);
+        if (!email) return;
+
+        const role = normalizeRoleKey(roleOverrides[email] ?? account.role);
+        if (!roleHasOrdersAccess(role) || role === 'admin') return;
+
+        const label = normalizeManagerName(account.name) || email;
+        options.set(email, {
+          value: email,
+          label,
+          email,
+          role: formatRoleLabel(role),
+          source: 'account',
+        });
+      });
+    }
+  } catch (error) {
+    console.error('❌ [OrdersPage] Failed to load assignable role users:', error);
+  }
+
+  legacyNames.forEach((name) => {
+    const value = normalizeManagerName(name);
+    const key = normalize(value);
+    if (!value || options.has(key)) return;
+
+    options.set(key, {
+      value,
+      label: value,
+      source: 'legacy',
+    });
+  });
+
+  return Array.from(options.values()).sort((a, b) => a.label.localeCompare(b.label));
 }
 
 function loadOrderAssignmentsFromLocalStorage(): Record<string, { assigned_to?: string; updated_at?: string }> {

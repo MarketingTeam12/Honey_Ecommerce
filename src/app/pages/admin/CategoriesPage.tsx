@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Plus, Trash2, Edit2, Settings, X, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
+import { useAuth } from '@/app/context/AuthContext';
 import { useProducts } from '@/app/context/ProductContext';
+import { canAccessRoleAction } from '@/app/utils/roleAccess';
 
 export function CategoriesPage() {
+  const { user } = useAuth();
   const { categories, addCategory, updateCategory, deleteCategory } = useProducts();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -13,6 +16,8 @@ export function CategoriesPage() {
     slug: '',
     description: ''
   });
+  const canEditCategories = canAccessRoleAction(user?.role, 'categories', 'edit');
+  const canDeleteCategories = canAccessRoleAction(user?.role, 'categories', 'delete');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,20 +97,44 @@ export function CategoriesPage() {
               </div>
               
               <div className="flex items-center gap-2 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => handleEdit(category.id)}
-                  className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(category.id, category.name)}
-                  className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
+                {canEditCategories ? (
+                  <button
+                    onClick={() => handleEdit(category.id)}
+                    className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                    title="Edit access denied"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </button>
+                )}
+                {canDeleteCategories ? (
+                  <button
+                    onClick={() => handleDelete(category.id, category.name)}
+                    className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                    title="Delete access denied"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))}

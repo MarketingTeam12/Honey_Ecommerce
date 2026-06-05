@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/app/utils/supabaseClient';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { buildHeaders } from '@/app/utils/buildHeaders';
+import { hasAdminAccess } from '@/app/utils/roleAccess';
 
 interface User {
   id: string;
@@ -19,7 +20,6 @@ const normalizeEmail = (email?: string | null) => String(email || '').trim().toL
 const normalizeRoleKey = (role: unknown): string => {
   const value = String(role || '').trim().toLowerCase();
   if (!value) return 'customer';
-  if (value === 'sales manager' || value === 'manager') return 'sales_manager';
   return value.replace(/\s+/g, '_');
 };
 
@@ -910,7 +910,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
     user,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin' || user?.role === 'sales_manager',
+    isAdmin: hasAdminAccess(user?.email, user?.role),
     accessToken,
     login,
     signup,

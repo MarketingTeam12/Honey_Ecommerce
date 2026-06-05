@@ -349,7 +349,7 @@ function App() {
                       element={<CustomersPage />}
                     />
                     <Route
-                      path="/admin/accounts"
+                      path="/admin/users"
                       element={<CustomersPage />}
                     />
                     <Route
@@ -1024,4 +1024,3 @@ function App() {
 }
 
 export default App;
-

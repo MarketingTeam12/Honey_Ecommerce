@@ -1,8 +1,8 @@
 export type AppRole = string;
+export type RoleAction = 'edit' | 'delete' | 'update';
 
 export interface RolePermissions {
   moduleAccess: string[];
-  permissionMatrix: string[];
   dataAccess: string[];
 }
 
@@ -22,10 +22,16 @@ const REGISTERED_USERS_STORAGE_KEY = 'registered_users';
 const ROLES_STORAGE_KEY = 'honey_roles';
 const ADMIN_EMAILS = new Set(['admin@honeytranslations.com', 'swetha@gmail.com']);
 const normalizeEmail = (email?: string | null) => String(email || '').trim().toLowerCase();
+const normalizeAction = (action?: string | null): RoleAction | '' => {
+  const value = String(action || '').trim().toLowerCase();
+  if (value === 'edit' || value === 'delete' || value === 'update') {
+    return value;
+  }
+  return '';
+};
 const normalizeRoleKey = (role: unknown): string => {
   const value = String(role || '').trim().toLowerCase();
   if (!value) return 'customer';
-  if (value === 'sales manager' || value === 'manager') return 'sales_manager';
   return value.replace(/\s+/g, '_');
 };
 
@@ -78,7 +84,11 @@ const getRoleDefinitions = (): RoleDefinition[] => {
     if (!Array.isArray(parsed)) return [];
 
     return parsed.map((role) => {
+      const rawKey = String(role.key ?? role.name ?? '').trim().toLowerCase();
       const key = normalizeRoleKey(role.key ?? role.name);
+      if (key === 'customer' && rawKey && rawKey !== 'customer') {
+        return null;
+      }
       return {
         id: role.id || `role-${key}`,
         key,
@@ -89,11 +99,10 @@ const getRoleDefinitions = (): RoleDefinition[] => {
         createdAt: role.createdAt || new Date().toISOString(),
         permissions: {
           moduleAccess: Array.isArray(role.permissions?.moduleAccess) ? role.permissions!.moduleAccess.map(String) : [],
-          permissionMatrix: Array.isArray(role.permissions?.permissionMatrix) ? role.permissions!.permissionMatrix.map(String) : [],
           dataAccess: Array.isArray(role.permissions?.dataAccess) ? role.permissions!.dataAccess.map(String) : [],
         },
       };
-    });
+    }).filter(Boolean) as RoleDefinition[];
   } catch {
     return [];
   }
@@ -110,18 +119,62 @@ export const canAccessRoleFeature = (role?: string | null, featureKey?: string |
   const normalizedFeature = normalizeRoleKey(featureKey);
 
   if (!normalizedFeature) return false;
-  if (key === 'admin' || key === 'sales_manager') return true;
+  if (key === 'admin') return true;
 
   const definition = getRoleDefinition(key);
   if (!definition) return false;
 
   const allPermissions = [
     ...definition.permissions.moduleAccess,
-    ...definition.permissions.permissionMatrix,
     ...definition.permissions.dataAccess,
   ].map(normalizeRoleKey);
 
-  return allPermissions.includes(normalizedFeature);
+  return allPermissions.includes(normalizedFeature) ||
+    definition.permissions.dataAccess.some((permission) => {
+      const parsed = parseDataAccessToken(permission);
+      return parsed?.moduleKey === normalizedFeature || parsed?.moduleKey === '*';
+    });
+};
+
+const parseDataAccessToken = (value: unknown): { moduleKey: string; action: RoleAction } | null => {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return null;
+
+  if (raw === '*') {
+    return { moduleKey: '*', action: 'update' };
+  }
+
+  const [modulePart, actionPart] = raw.split(':').map((part) => part.trim());
+  const action = normalizeAction(actionPart);
+  if (!modulePart || !action) return null;
+
+  return {
+    moduleKey: normalizeRoleKey(modulePart),
+    action,
+  };
+};
+
+export const canAccessRoleAction = (
+  role?: string | null,
+  moduleKey?: string | null,
+  action?: RoleAction | string | null,
+): boolean => {
+  const key = normalizeRoleKey(role);
+  const normalizedModule = normalizeRoleKey(moduleKey);
+  const normalizedAction = normalizeAction(action);
+
+  if (!normalizedModule || !normalizedAction) return false;
+  if (key === 'admin') return true;
+
+  const definition = getRoleDefinition(key);
+  if (!definition) return false;
+
+  return definition.permissions.dataAccess.some((permission) => {
+    const parsed = parseDataAccessToken(permission);
+    if (!parsed) return false;
+    if (parsed.moduleKey === '*') return true;
+    return parsed.moduleKey === normalizedModule && parsed.action === normalizedAction;
+  });
 };
 
 export const resolveAppRole = (
@@ -154,7 +207,7 @@ export const hasAdminAccess = (
   runtimeRole?: unknown,
 ): boolean => {
   const role = resolveAppRole(email, runtimeRole);
-  return role === 'admin' || role === 'sales_manager' || !!getRoleDefinition(role);
+  return role === 'admin' || !!getRoleDefinition(role);
 };
 
 export const isFullAdmin = (
@@ -168,5 +221,6 @@ export const isSalesManager = (
   email?: string | null,
   runtimeRole?: unknown,
 ): boolean => {
-  return resolveAppRole(email, runtimeRole) === 'sales_manager';
+  const role = resolveAppRole(email, runtimeRole);
+  return role !== 'admin' && canAccessRoleFeature(role, 'orders');
 };

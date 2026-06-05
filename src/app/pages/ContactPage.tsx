@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { motion } from 'motion/react';
-import { MapPin, Phone, Mail, Send } from 'lucide-react';
+import { Phone, Mail, Send } from 'lucide-react';
 import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/phoneValidation';
 
 // Country configurations with flags and validation
@@ -145,7 +145,7 @@ export function ContactPage() {
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Contact Us</h1>
           <div className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl shadow-lg mb-6">
             <h2 className="text-2xl font-bold">Get Free Quote</h2>
-            <p className="text-blue-100 mt-2">We Are the Leading Translation Service for Indian and Foreign Languages.</p>
+            <p className="text-blue-100 mt-2">We are the Leading Translation Service for Indian and Foreign Languages</p>
           </div>
         </motion.div>
 
@@ -293,13 +293,6 @@ export function ContactPage() {
             <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-2xl">
               <h3 className="text-2xl font-bold mb-6">Get in Touch</h3>
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6" />
-                  </div>
-                  
-                </div>
-
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Phone className="w-6 h-6" />

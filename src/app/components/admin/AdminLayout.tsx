@@ -2,11 +2,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, ShoppingCart, Users, TrendingUp,
-  Store, BarChart3, Settings,
+  Store, BarChart3, Settings, Bell,
   Menu, X, LogOut, ChevronDown, LayoutGrid, Tag, Mail, MessageSquare, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 import { canAccessRoleFeature, hasAdminAccess, isFullAdmin } from '@/app/utils/roleAccess';
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import honeyLogo from 'figma:asset/d99fd9d20cac16122a3e457a66e96224eb5ad345.png';
 import { AdminPageSkeleton } from '@/app/components/layout/PageSkeleton';
 
@@ -14,18 +15,27 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
+interface AdminNotification {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  read: boolean;
+}
+
 export function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, loading } = useAuth();
+  const { user, logout, loading, accessToken } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [itemsExpanded, setItemsExpanded] = useState(false);
   const [userManagementExpanded, setUserManagementExpanded] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const canAccessAdmin = hasAdminAccess(user?.email, user?.role);
   const fullAdmin = isFullAdmin(user?.email, user?.role);
-  const salesManagerRole = user?.role === 'sales_manager';
 
   useEffect(() => {
     if (!loading && !canAccessAdmin) {
@@ -36,6 +46,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     const isUserManagementRoute =
       location.pathname.startsWith('/admin/accounts') ||
+      location.pathname.startsWith('/admin/users') ||
       location.pathname.startsWith('/admin/customers') ||
       location.pathname.startsWith('/admin/roles');
 
@@ -49,6 +60,57 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       setSidebarOpen(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!canAccessAdmin) return;
+
+    let isMounted = true;
+
+    const loadNotifications = async () => {
+      try {
+        const isMock = accessToken?.startsWith('mock-token-');
+        const bearerToken = !isMock && accessToken ? accessToken : publicAnonKey;
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${bearerToken}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Notification request failed with ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!isMounted) return;
+
+        setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
+      } catch (error) {
+        if (!isMounted) return;
+
+        const storedNotifications = localStorage.getItem('admin_notifications');
+        setNotifications(storedNotifications ? JSON.parse(storedNotifications) : []);
+      }
+    };
+
+    loadNotifications();
+
+    const refreshNotifications = () => {
+      loadNotifications();
+    };
+
+    window.addEventListener('notificationsUpdated', refreshNotifications);
+    window.addEventListener('newOrderNotification', refreshNotifications as EventListener);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('notificationsUpdated', refreshNotifications);
+      window.removeEventListener('newOrderNotification', refreshNotifications as EventListener);
+    };
+  }, [accessToken, canAccessAdmin]);
 
   if (loading) {
     return <AdminPageSkeleton />;
@@ -81,18 +143,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       expandedKey: 'userManagement',
       permissionKey: 'accounts',
       children: [
-        { name: 'Accounts', href: '/admin/accounts', permissionKey: 'accounts' },
-        { name: 'Role', href: '/admin/roles', permissionKey: 'roles' },
+        { name: 'Users', href: '/admin/users', permissionKey: 'accounts' },
+        { name: 'Roles', href: '/admin/roles', permissionKey: 'roles' },
       ],
     },
     { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart, permissionKey: 'orders' },
     { name: 'Reports', href: '/admin/reports', icon: BarChart3, permissionKey: 'reports' },
     { name: 'Customer Emails', href: '/admin/customer-emails', icon: Mail, permissionKey: 'customer_emails' },
     { name: 'Customer Queries', href: '/admin/customer-queries', icon: MessageSquare, permissionKey: 'customer_queries' }
-  ];
-  const salesManagerNavigation = [
-    { name: 'Orders', href: '/admin/sales/orders', icon: ShoppingCart, permissionKey: 'orders' },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3, permissionKey: 'reports' },
   ];
   const filterNavigation = (items: any[]) =>
     items
@@ -116,10 +174,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         };
       })
       .filter(Boolean);
-  const navigation = fullAdmin ? fullNavigation : salesManagerRole ? salesManagerNavigation : filterNavigation(fullNavigation);
+  const navigation = fullAdmin ? fullNavigation : filterNavigation(fullNavigation);
   const allowedPaths = navigation.flatMap((item) =>
     item.children && item.children.length > 0 ? item.children.map((child: any) => child.href) : [item.href]
   );
+  const unreadNotificationsCount = notifications.filter((notification) => !notification.read).length;
+  const recentNotifications = notifications.slice(0, 5);
 
   useEffect(() => {
     if (loading || !canAccessAdmin) return;
@@ -280,6 +340,92 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 hidden xl:block">
               Honey Translation Services
             </Link>
+            <div className="relative">
+              <button
+                type="button"
+                className="relative p-2 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  setProfileDropdownOpen(false);
+                  setNotificationMenuOpen((prev) => !prev);
+                }}
+                title="Notifications"
+                aria-label="Notifications"
+              >
+                <Bell className="w-5 h-5 text-gray-600" />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -right-1 -top-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-semibold flex items-center justify-center">
+                    {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                  </span>
+                )}
+              </button>
+
+              {notificationMenuOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Notifications</p>
+                      <p className="text-xs text-gray-500">{unreadNotificationsCount} unread updates</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotificationMenuOpen(false);
+                        navigate('/admin/notifications');
+                      }}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      View all
+                    </button>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto">
+                    {recentNotifications.length === 0 ? (
+                      <div className="px-4 py-8 text-center text-sm text-gray-500">
+                        No updates yet.
+                      </div>
+                    ) : (
+                      recentNotifications.map((notification) => (
+                        <button
+                          key={notification.id}
+                          type="button"
+                          onClick={() => {
+                            setNotificationMenuOpen(false);
+                            navigate('/admin/notifications');
+                          }}
+                          className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-gray-50 ${
+                            notification.read ? 'bg-white' : 'bg-blue-50/60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span
+                              className={`mt-1 h-2.5 w-2.5 rounded-full shrink-0 ${
+                                notification.read ? 'bg-gray-300' : 'bg-blue-500'
+                              }`}
+                            />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {notification.title || 'New update'}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <p className="text-[11px] text-gray-400 mt-2">
+                                {new Date(notification.created_at).toLocaleString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button 
               className="p-2 hover:bg-gray-100 rounded-lg"
               onClick={() => navigate('/admin/product-fields-config')}
@@ -349,4 +495,3 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     </div>
   );
 }
-

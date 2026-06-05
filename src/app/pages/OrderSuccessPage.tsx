@@ -292,7 +292,7 @@ export function OrderSuccessPage() {
                     <span className="text-sm font-medium text-gray-600">Payment Method</span>
                   </div>
                   <p className="text-lg font-bold text-gray-900">{paymentMethodLabel}</p>
-                  <p className="text-sm text-green-600">âœ“ Verified</p>
+                  <p className="text-sm text-green-600">Verified</p>
                 </div>
 
                 {/* Transaction ID */}

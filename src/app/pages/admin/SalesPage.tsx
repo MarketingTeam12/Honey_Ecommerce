@@ -9,6 +9,7 @@ import { buildHeaders } from '@/app/utils/buildHeaders';
 import { isSalesManager } from '@/app/utils/roleAccess';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
+const ORDER_ASSIGNMENTS_KEY = 'honey_translation_order_assignments';
 
 // 12-step workflow system
 const WORKFLOW_STAGES = [
@@ -321,9 +322,10 @@ export function SalesPage() {
       
       // Sort by created_at descending
       mergedOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const assignedMergedOrders = applyStoredAssignments(mergedOrders);
       const visibleOrders = isSalesManager(user?.email, user?.role)
-        ? mergedOrders.filter((order) => canSalesManagerSeeOrder(order, user))
-        : mergedOrders;
+        ? assignedMergedOrders.filter((order) => canSalesManagerSeeOrder(order, user))
+        : assignedMergedOrders;
       
       console.log(`✅ [SalesPage] Total orders to display: ${visibleOrders.length} (${backendOrders.length} from backend, ${mergedOrders.length - backendOrders.length} from localStorage only)`);
       if (visibleOrders.length > 0) {
@@ -371,9 +373,10 @@ export function SalesPage() {
       if (localOrders) {
         const parsedOrders = JSON.parse(localOrders);
         console.log(`✅ [SalesPage] Loaded ${parsedOrders.length} orders from localStorage (final fallback)`);
+        const assignedOrders = applyStoredAssignments(parsedOrders);
         const visibleOrders = isSalesManager(user?.email, user?.role)
-          ? parsedOrders.filter((order: Order) => canSalesManagerSeeOrder(order, user))
-          : parsedOrders;
+          ? assignedOrders.filter((order: Order) => canSalesManagerSeeOrder(order, user))
+          : assignedOrders;
         setOrders(visibleOrders);
       } else {
         setOrders([]);
@@ -1172,3 +1175,33 @@ export function SalesPage() {
 }
 
 export default SalesPage;
+
+function loadOrderAssignmentsFromLocalStorage(): Record<string, { assigned_to?: string; updated_at?: string }> {
+  try {
+    const stored = localStorage.getItem(ORDER_ASSIGNMENTS_KEY);
+    if (!stored) return {};
+
+    const parsed = JSON.parse(stored);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+
+    return parsed as Record<string, { assigned_to?: string; updated_at?: string }>;
+  } catch (error) {
+    console.error('❌ [SalesPage] Failed to load order assignments:', error);
+    return {};
+  }
+}
+
+function applyStoredAssignments(orders: Order[]): Order[] {
+  const assignments = loadOrderAssignmentsFromLocalStorage();
+
+  return orders.map((order) => {
+    const assignment = assignments[order.id];
+    if (!assignment?.assigned_to) return order;
+
+    return {
+      ...order,
+      assigned_to: assignment.assigned_to,
+      updated_at: assignment.updated_at || order.updated_at,
+    };
+  });
+}

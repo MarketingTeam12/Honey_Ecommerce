@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { ArrowLeft, CheckSquare, MoreHorizontal, Plus, Search, Shield } from 'lucide-react';
-import type { RolePermissions } from '@/app/utils/roleAccess';
+import { ArrowLeft, CheckSquare, Edit, Plus, Search, Shield, Trash2 } from 'lucide-react';
+import type { RoleAction, RolePermissions } from '@/app/utils/roleAccess';
 
 const ROLES_STORAGE_KEY = 'honey_roles';
 const REGISTERED_USERS_STORAGE_KEY = 'registered_users';
 
 type RoleStatus = 'Active' | 'Inactive';
-type PermissionSectionKey = 'moduleAccess' | 'permissionMatrix' | 'dataAccess';
+type PermissionSectionKey = 'moduleAccess' | 'dataAccess';
 
 interface PermissionItem {
   id: string;
@@ -20,6 +20,8 @@ interface PermissionSection {
   description: string;
   items: PermissionItem[];
   newItemValue: string;
+  selectedModuleValue: string;
+  selectedActionValue: RoleAction;
 }
 
 interface RoleItem {
@@ -44,7 +46,7 @@ interface RoleFormState {
 const normalizeRoleKey = (value: unknown) => {
   const normalized = String(value || '').trim().toLowerCase();
   if (!normalized) return 'customer';
-  if (normalized === 'sales manager' || normalized === 'manager') return 'sales_manager';
+  if (normalized === 'sales manager' || normalized === 'manager') return 'customer';
   return normalized.replace(/\s+/g, '_');
 };
 
@@ -53,6 +55,8 @@ const createSection = (title: string, description: string): PermissionSection =>
   description,
   items: [],
   newItemValue: '',
+  selectedModuleValue: '',
+  selectedActionValue: 'edit',
 });
 
 const createEmptyForm = (): RoleFormState => ({
@@ -65,13 +69,9 @@ const createEmptyForm = (): RoleFormState => ({
       'Module Access',
       'Choose which modules this role can open from the admin panel.'
     ),
-    permissionMatrix: createSection(
-      'Permission Matrix',
-      'Add permission checks for actions inside each module.'
-    ),
     dataAccess: createSection(
       'Data Access',
-      'Control which data sets or record groups this role can see.'
+      ''
     ),
   },
 });
@@ -84,7 +84,6 @@ const createEmptyRoleForm = (): RoleFormState => {
 
 const sectionTabs: { key: PermissionSectionKey; label: string }[] = [
   { key: 'moduleAccess', label: 'Module Access' },
-  { key: 'permissionMatrix', label: 'Permission Matrix' },
   { key: 'dataAccess', label: 'Data Access' },
 ];
 
@@ -105,6 +104,50 @@ const moduleAccessOptions = [
   'Customer Queries',
 ];
 
+const dataActionOptions: { value: RoleAction; label: string }[] = [
+  { value: 'edit', label: 'Edit' },
+  { value: 'update', label: 'Update' },
+  { value: 'delete', label: 'Delete' },
+];
+
+const getModuleLabelFromKey = (moduleKey: string) => {
+  const matched = moduleAccessOptions.find((label) => normalizeRoleKey(label) === moduleKey);
+  if (matched) return matched;
+
+  return moduleKey
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
+const formatDataAccessLabel = (token: string) => {
+  const [modulePart, actionPart] = String(token || '').split(':');
+  const moduleLabel = getModuleLabelFromKey(normalizeRoleKey(modulePart));
+  const actionLabel = dataActionOptions.find((option) => option.value === actionPart)?.label || actionPart;
+  return `${moduleLabel} - ${actionLabel}`;
+};
+
+const buildDataAccessToken = (moduleLabel: string, action: RoleAction) => {
+  return `${normalizeRoleKey(moduleLabel)}:${action}`;
+};
+
+const createDataAccessItemsForModules = (
+  moduleLabels: string[],
+  checkedTokens: Set<string> = new Set(),
+): PermissionItem[] => {
+  return moduleLabels.flatMap((moduleLabel) =>
+    dataActionOptions.map((option) => {
+      const token = buildDataAccessToken(moduleLabel, option.value);
+      return {
+        id: token,
+        label: `${moduleLabel} - ${option.label}`,
+        checked: checkedTokens.has(token),
+      };
+    })
+  );
+};
+
 const createModuleAccessItems = (): PermissionItem[] =>
   moduleAccessOptions.map((label) => ({
     id: `module-${normalizeRoleKey(label)}`,
@@ -112,12 +155,37 @@ const createModuleAccessItems = (): PermissionItem[] =>
     checked: false,
   }));
 
+const createRoleFormFromRole = (role: RoleItem): RoleFormState => {
+  const form = createEmptyForm();
+  const moduleAccessSet = new Set(role.permissions.moduleAccess);
+  const dataAccessSet = new Set(role.permissions.dataAccess);
+
+  form.name = role.name;
+  form.description = role.description;
+  form.status = role.status;
+  form.sections.moduleAccess.items = moduleAccessOptions.map((label) => ({
+    id: `module-${normalizeRoleKey(label)}`,
+    label,
+    checked: moduleAccessSet.has(label),
+  }));
+  const selectedModules = form.sections.moduleAccess.items
+    .filter((item) => item.checked)
+    .map((item) => item.label);
+  form.sections.dataAccess.items = createDataAccessItemsForModules(
+    selectedModules,
+    new Set(role.permissions.dataAccess.map(String))
+  );
+
+  return form;
+};
+
 function RoleManagementPage() {
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [screen, setScreen] = useState<'list' | 'create'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [form, setForm] = useState<RoleFormState>(createEmptyRoleForm());
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
 
   useEffect(() => {
     loadRoles();
@@ -130,7 +198,12 @@ function RoleManagementPage() {
       const storedRolesRaw = localStorage.getItem(ROLES_STORAGE_KEY);
       const storedRoles = storedRolesRaw ? JSON.parse(storedRolesRaw) : [];
       const roleList: RoleItem[] = Array.isArray(storedRoles)
-        ? storedRoles.map((role: any) => ({
+        ? storedRoles
+            .filter((role: any) => {
+              const raw = String(role.key || role.name || '').trim().toLowerCase();
+              return raw !== 'sales_manager' && raw !== 'sales manager' && raw !== 'manager';
+            })
+            .map((role: any) => ({
             id: role.id || `role-${normalizeRoleKey(role.key || role.name)}`,
             key: normalizeRoleKey(role.key || role.name),
             name: role.name || '',
@@ -141,9 +214,6 @@ function RoleManagementPage() {
             permissions: {
               moduleAccess: Array.isArray(role.permissions?.moduleAccess)
                 ? role.permissions.moduleAccess.map(String)
-                : [],
-              permissionMatrix: Array.isArray(role.permissions?.permissionMatrix)
-                ? role.permissions.permissionMatrix.map(String)
                 : [],
               dataAccess: Array.isArray(role.permissions?.dataAccess)
                 ? role.permissions.dataAccess.map(String)
@@ -186,14 +256,78 @@ function RoleManagementPage() {
     });
   }, [roles, searchQuery]);
 
+  const dataAccessModuleGroups = useMemo(() => {
+    const midpoint = Math.ceil(moduleAccessOptions.length / 2);
+    return [
+      moduleAccessOptions.slice(0, midpoint),
+      moduleAccessOptions.slice(midpoint),
+    ];
+  }, []);
+
   const handleCreateRole = () => {
     setForm(createEmptyRoleForm());
+    setEditingRoleId(null);
     setScreen('create');
+  };
+
+  const handleEditRole = (role: RoleItem) => {
+    setForm(createRoleFormFromRole(role));
+    setEditingRoleId(role.id);
+    setScreen('create');
+  };
+
+  const handleDeleteRole = (roleId: string) => {
+    const roleToDelete = roles.find((role) => role.id === roleId);
+    if (!roleToDelete) return;
+
+    const confirmed = window.confirm(`Delete ${roleToDelete.name}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    const updatedRoles = roles.filter((role) => role.id !== roleId);
+    setRoles(updatedRoles);
+    localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(updatedRoles));
+
+    if (editingRoleId === roleId) {
+      setEditingRoleId(null);
+      setForm(createEmptyRoleForm());
+      setScreen('list');
+    }
   };
 
   const handleAddPermission = (sectionKey: PermissionSectionKey) => {
     setForm((prev) => {
       const section = prev.sections[sectionKey];
+      if (sectionKey === 'dataAccess') {
+        const moduleLabel = section.selectedModuleValue.trim();
+        const action = section.selectedActionValue;
+        if (!moduleLabel || !action) return prev;
+
+        const token = buildDataAccessToken(moduleLabel, action);
+        if (section.items.some((item) => item.id === token)) return prev;
+
+        const actionLabel = dataActionOptions.find((option) => option.value === action)?.label || action;
+        const updatedSection: PermissionSection = {
+          ...section,
+          items: [
+            ...section.items,
+            {
+              id: token,
+              label: `${moduleLabel} - ${actionLabel}`,
+              checked: false,
+            },
+          ],
+          newItemValue: '',
+        };
+
+        return {
+          ...prev,
+          sections: {
+            ...prev.sections,
+            dataAccess: updatedSection,
+          },
+        };
+      }
+
       const label = section.newItemValue.trim();
       if (!label) return prev;
 
@@ -235,9 +369,47 @@ function RoleManagementPage() {
         sections: {
           ...prev.sections,
           [sectionKey]: updatedSection,
+          ...(sectionKey === 'moduleAccess'
+            ? {
+                dataAccess: {
+                  ...prev.sections.dataAccess,
+                  items: createDataAccessItemsForModules(
+                    updatedSection.items.filter((item) => item.checked).map((item) => item.label),
+                    new Set(prev.sections.dataAccess.items.filter((item) => item.checked).map((item) => item.id))
+                  ),
+                },
+              }
+            : {}),
         },
       };
     });
+  };
+
+  const handleToggleDataAccessAction = (moduleLabel: string, action: RoleAction) => {
+    const moduleIsSelected = form.sections.moduleAccess.items.some(
+      (item) => item.checked && item.label === moduleLabel
+    );
+
+    const token = buildDataAccessToken(moduleLabel, action);
+
+    setForm((prev) => ({
+      ...prev,
+      sections: {
+        ...prev.sections,
+        moduleAccess: {
+          ...prev.sections.moduleAccess,
+          items: prev.sections.moduleAccess.items.map((item) =>
+            item.label === moduleLabel && !moduleIsSelected ? { ...item, checked: true } : item
+          ),
+        },
+        dataAccess: {
+          ...prev.sections.dataAccess,
+          items: prev.sections.dataAccess.items.map((item) =>
+            item.id === token ? { ...item, checked: !item.checked } : item
+          ),
+        },
+      },
+    }));
   };
 
   const handleRemovePermission = (sectionKey: PermissionSectionKey, itemId: string) => {
@@ -264,34 +436,43 @@ function RoleManagementPage() {
       return;
     }
 
+    const existingRole = editingRoleId ? roles.find((role) => role.id === editingRoleId) : null;
+
     const nextRole: RoleItem = {
-      id: `role-${normalizeRoleKey(trimmedName)}-${Date.now()}`,
-      key: normalizeRoleKey(trimmedName),
+      id: existingRole?.id || `role-${normalizeRoleKey(trimmedName)}-${Date.now()}`,
+      key: existingRole?.key || normalizeRoleKey(trimmedName),
       name: trimmedName,
       description: form.description.trim(),
-      users: 0,
+      users: existingRole?.users ?? 0,
       status: form.status,
-      createdAt: new Date().toISOString(),
+      createdAt: existingRole?.createdAt || new Date().toISOString(),
       permissions: {
         moduleAccess: form.sections.moduleAccess.items.filter((item) => item.checked).map((item) => item.label),
-        permissionMatrix: form.sections.permissionMatrix.items.filter((item) => item.checked).map((item) => item.label),
-        dataAccess: form.sections.dataAccess.items.filter((item) => item.checked).map((item) => item.label),
+        dataAccess: form.sections.dataAccess.items.filter((item) => item.checked).map((item) => item.id),
       },
     };
 
-    const updatedRoles = [...roles, nextRole];
+    const updatedRoles = editingRoleId
+      ? roles.map((role) => (role.id === editingRoleId ? nextRole : role))
+      : [...roles, nextRole];
+
     setRoles(updatedRoles);
     localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(updatedRoles));
     setScreen('list');
     setForm(createEmptyRoleForm());
+    setEditingRoleId(null);
   };
 
   const handleCancel = () => {
     setScreen('list');
     setForm(createEmptyRoleForm());
+    setEditingRoleId(null);
   };
 
   const activeSection = form.sections[form.selectedTab];
+  const selectedModuleAccessLabels = new Set(
+    form.sections.moduleAccess.items.filter((item) => item.checked).map((item) => item.label)
+  );
 
   if (loading) {
     return (
@@ -388,13 +569,24 @@ function RoleManagementPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-center">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           type="button"
-                          className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-                          aria-label={`More actions for ${role.name}`}
+                          onClick={() => handleEditRole(role)}
+                          className="rounded-md p-2 text-gray-500 hover:bg-violet-50 hover:text-violet-700"
+                          aria-label={`Edit ${role.name}`}
+                          title="Edit"
                         >
-                          <MoreHorizontal className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRole(role.id)}
+                          className="rounded-md p-2 text-gray-500 hover:bg-red-50 hover:text-red-700"
+                          aria-label={`Delete ${role.name}`}
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -430,9 +622,13 @@ function RoleManagementPage() {
                 <ArrowLeft className="w-4 h-4" />
                 Back to Roles
               </button>
-              <h1 className="text-2xl font-semibold text-gray-900">Create New Role</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {editingRoleId ? 'Edit Role' : 'Create New Role'}
+              </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Add a new role with role details and permission controls.
+                {editingRoleId
+                  ? 'Update the role details and permission controls.'
+                  : 'Add a new role with role details and permission controls.'}
               </p>
             </div>
           </div>
@@ -526,45 +722,73 @@ function RoleManagementPage() {
                     </div>
 
                     <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5">
-                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <div className="flex flex-col gap-2">
                         <div>
                           <h2 className="text-lg font-semibold text-gray-900">{activeSection.title}</h2>
                           <p className="text-sm text-gray-600">{activeSection.description}</p>
                         </div>
-                        {form.selectedTab !== 'moduleAccess' && (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={activeSection.newItemValue}
-                              onChange={(e) =>
-                                setForm((prev) => ({
-                                  ...prev,
-                                  sections: {
-                                    ...prev.sections,
-                                    [prev.selectedTab]: {
-                                      ...prev.sections[prev.selectedTab],
-                                      newItemValue: e.target.value,
-                                    },
-                                  },
-                                }))
-                              }
-                              placeholder={`Add new ${activeSection.title.toLowerCase()}`}
-                              className="w-full md:w-80 rounded-lg border border-gray-300 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleAddPermission(form.selectedTab)}
-                              className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-700"
-                            >
-                              <Plus className="w-4 h-4" />
-                              Add New
-                            </button>
+                        {form.selectedTab === 'dataAccess' ? (
+                          <div className="mt-4 grid w-full gap-4 md:grid-cols-2">
+                            {dataAccessModuleGroups.map((group, groupIndex) => (
+                              <div key={`data-access-group-${groupIndex}`} className="grid gap-3">
+                                {group.map((moduleLabel) => {
+                                  const isModuleSelected = selectedModuleAccessLabels.has(moduleLabel);
+                                  const moduleActionItems = dataActionOptions.map((option) => {
+                                    const token = buildDataAccessToken(moduleLabel, option.value);
+                                    const matchedItem = form.sections.dataAccess.items.find(
+                                      (item) => item.id === token
+                                    );
+                                    return {
+                                      ...option,
+                                      checked: !!matchedItem?.checked,
+                                    };
+                                  });
+
+                                  return (
+                                    <div
+                                      key={moduleLabel}
+                                      className={`grid gap-4 rounded-lg border px-4 py-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start ${
+                                        isModuleSelected
+                                          ? 'border-gray-200 bg-white'
+                                          : 'border-gray-200 bg-gray-50 opacity-70'
+                                      }`}
+                                    >
+                                      <div className="md:pt-1">
+                                        <p className="text-sm font-semibold text-gray-900">{moduleLabel}</p>
+                                      </div>
+                                      <div className="grid gap-2 md:min-w-[180px]">
+                                        {moduleActionItems.map((action) => (
+                                          <label
+                                            key={`${moduleLabel}-${action.value}`}
+                                            className={`flex items-center gap-3 rounded-md px-2 py-1.5 text-sm font-medium transition-colors ${
+                                              action.checked
+                                                ? 'bg-violet-50 text-violet-700'
+                                                : 'text-gray-700 hover:bg-gray-50'
+                                            }`}
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={action.checked}
+                                              onChange={() =>
+                                                handleToggleDataAccessAction(moduleLabel, action.value)
+                                              }
+                                              className="h-4 w-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500"
+                                            />
+                                            <span>{action.label}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ))}
                           </div>
-                        )}
+                        ) : null}
                       </div>
 
                       <div className="mt-6 grid gap-3">
-                        {activeSection.items.length === 0 ? (
+                        {form.selectedTab === 'dataAccess' ? null : activeSection.items.length === 0 ? (
                           <div className="flex items-center gap-3 rounded-lg border border-dashed border-gray-300 bg-white px-4 py-5 text-sm text-gray-500">
                             <CheckSquare className="w-4 h-4 text-gray-400" />
                             No items available in this section.
@@ -599,14 +823,6 @@ function RoleManagementPage() {
                       </div>
                     </div>
 
-                    <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-5 text-sm text-gray-600">
-                      <p className="font-medium text-gray-900 mb-2">How access will work</p>
-                      <p>
-                        The checked items in these three sections will be saved as the role
-                        permissions. Later, we can connect these permissions to the admin sidebar
-                        and each module screen.
-                      </p>
-                    </div>
                   </div>
 
                   <div className="mt-8 flex items-center justify-end gap-3">
@@ -624,7 +840,7 @@ function RoleManagementPage() {
                       className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Plus className="w-4 h-4" />
-                      Save Role
+                      {editingRoleId ? 'Save Changes' : 'Save Role'}
                     </button>
                   </div>
                 </div>

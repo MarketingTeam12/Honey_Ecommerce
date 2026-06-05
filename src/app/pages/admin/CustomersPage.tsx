@@ -2,6 +2,8 @@
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Eye, Search } from 'lucide-react';
+import { useAuth } from '@/app/context/AuthContext';
+import { canAccessRoleAction } from '@/app/utils/roleAccess';
 
 const ORDERS_STORAGE_KEY = 'honey_translation_orders';
 const USER_ROLES_STORAGE_KEY = 'honey_translation_user_roles';
@@ -29,13 +31,11 @@ interface Customer {
 const normalizeRole = (role: unknown): UserRole => {
   const value = String(role || '').trim().toLowerCase();
   if (!value) return 'customer';
-  if (value === 'sales manager' || value === 'manager') return 'sales_manager';
   return value.replace(/\s+/g, '_');
 };
 
 const builtinRoleOptions: { value: UserRole; label: string }[] = [
   { value: 'admin', label: 'Admin' },
-  { value: 'sales_manager', label: 'Sales Manager' },
   { value: 'customer', label: 'Customer' },
 ];
 
@@ -75,6 +75,7 @@ const normalizeStatus = (status: unknown): CustomerStatus => {
 
 function CustomersPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,6 +83,7 @@ function CustomersPage() {
   const [customerRoles, setCustomerRoles] = useState<Record<string, UserRole>>({});
   const [customerStatuses, setCustomerStatuses] = useState<Record<string, CustomerStatus>>({});
   const roleOptions = getAvailableRoleOptions();
+  const canUpdateAccounts = canAccessRoleAction(user?.role, 'accounts', 'update');
 
   useEffect(() => {
     const savedRoles = localStorage.getItem(USER_ROLES_STORAGE_KEY);
@@ -413,7 +415,8 @@ function CustomersPage() {
                     <select
                       value={customerRoles[customer.email] || customer.role}
                       onChange={(e) => handleRoleChange(customer.email, e.target.value as UserRole)}
-                      className="min-w-[140px] rounded-md border border-blue-500 bg-white px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={!canUpdateAccounts}
+                      className="min-w-[140px] rounded-md border border-blue-500 bg-white px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                     >
                       {roleOptions.map((role) => (
                         <option key={role.value} value={role.value}>
@@ -433,11 +436,12 @@ function CustomersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
-                      <select
-                        value={customerStatuses[customer.email] || customer.status}
-                        onChange={(e) => handleStatusChange(customer.email, e.target.value as CustomerStatus)}
-                        className="min-w-[120px] rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
+                    <select
+                      value={customerStatuses[customer.email] || customer.status}
+                      onChange={(e) => handleStatusChange(customer.email, e.target.value as CustomerStatus)}
+                      disabled={!canUpdateAccounts}
+                      className="min-w-[120px] rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    >
                         {statusOptions.map((status) => (
                           <option key={status.value} value={status.value}>
                             {status.label}
