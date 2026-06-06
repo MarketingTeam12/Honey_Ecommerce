@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import AdminUpload from "@/app/components/AdminUpload";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -63,7 +64,7 @@ import { DeploymentGuidePage } from "@/app/pages/admin/DeploymentGuidePage";
 
 // Pages used in routes
 import CheckoutDemo from "@/app/pages/CheckoutDemo";
-import ProductPage from "@/app/pages/ProductPage";
+const ProductPage = lazy(() => import("@/app/pages/ProductPage"));
 import TrackOrderPage from "@/app/pages/TrackOrderPage";
 import LiveOrderTrackingPage from "@/app/pages/LiveOrderTrackingPage";
 import AllApostilleProductsPage from "@/app/pages/AllApostilleProductsPage";
@@ -251,7 +252,17 @@ function App() {
                   <SalesIQWidget />
                   <SalesNotificationPopup />
                   <Toaster position="top-right" richColors />
-                  <Routes>
+                  <Suspense
+                    fallback={
+                      <div className="min-h-[60vh] bg-white flex items-center justify-center px-4">
+                        <div className="text-center">
+                          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4" />
+                          <p className="text-gray-600">Loading page...</p>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <Routes>
                     <Route
                       path="/admin-upload"
                       element={<AdminUpload />}
@@ -1012,7 +1023,8 @@ function App() {
                         </PublicLayout>
                       }
                     />
-                  </Routes>
+                    </Routes>
+                  </Suspense>
                 </ProductProvider>
               </WishlistProvider>
             </CartProvider>
