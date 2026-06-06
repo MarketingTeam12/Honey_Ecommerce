@@ -110,6 +110,7 @@ import DemoUserInitializer from "@/app/components/DemoUserInitializer";
 import ErrorBoundary from "@/app/components/ErrorBoundary";
 import ScrollToTop from "@/app/components/ScrollToTop";
 import PublicLayout from "@/app/components/layout/PublicLayout";
+import { PublicPageSkeleton } from "@/app/components/layout/PageSkeleton";
 import DatabaseSetup from "@/app/components/DatabaseSetup";
 import EdgeFunctionDiagnostics from "@/app/components/EdgeFunctionDiagnostics";
 
@@ -253,14 +254,7 @@ function App() {
                   <SalesNotificationPopup />
                   <Toaster position="top-right" richColors />
                   <Suspense
-                    fallback={
-                      <div className="min-h-[60vh] bg-white flex items-center justify-center px-4">
-                        <div className="text-center">
-                          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4" />
-                          <p className="text-gray-600">Loading page...</p>
-                        </div>
-                      </div>
-                    }
+                    fallback={<PublicPageSkeleton />}
                   >
                     <Routes>
                     <Route
