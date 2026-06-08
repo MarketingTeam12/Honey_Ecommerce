@@ -162,7 +162,7 @@ export function OrderDetailPage() {
         setShippingCarrier(mergedOrder.shipping_carrier || '');
         setNotes(mergedOrder.notes || '');
       } else {
-        console.log('âš  [OrderDetailPage] Backend unavailable, checking localStorage...');
+        console.log('  [OrderDetailPage] Backend unavailable, checking localStorage...');
         
         // FALLBACK: Try to load from localStorage
         const localStorageOrder = orderId ? loadOrderFromLocalStorage(orderId) : null;

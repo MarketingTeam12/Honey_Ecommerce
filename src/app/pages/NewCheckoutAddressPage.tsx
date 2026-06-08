@@ -101,6 +101,9 @@ export function NewCheckoutAddressPage() {
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [selectedCountryCode, setSelectedCountryCode] = useState(countryCodes[0]); // Default to India
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null); // Track which address is being edited
+  const [customerType, setCustomerType] = useState<'individual' | 'company'>('individual');
+  const [gstNumber, setGstNumber] = useState('');
+  const [paymentDetailsError, setPaymentDetailsError] = useState('');
   
   // New address form state
   const [newAddressForm, setNewAddressForm] = useState({
@@ -205,12 +208,23 @@ export function NewCheckoutAddressPage() {
       alert('Please select a billing address');
       return;
     }
+
+    if (customerType === 'company' && !gstNumber.trim()) {
+      setPaymentDetailsError('Please enter your GST Number for company billing.');
+      return;
+    }
     
     // Save selected address to localStorage for use in payment
     const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
     if (selectedAddress) {
       localStorage.setItem('shipping_address', JSON.stringify(selectedAddress));
     }
+
+    const paymentDetails = {
+      customerType,
+      gstNumber: customerType === 'company' ? gstNumber.trim().toUpperCase() : '',
+    };
+    localStorage.setItem('paymentCustomerDetails', JSON.stringify(paymentDetails));
     
     navigate('/checkout/review');
   };
@@ -314,26 +328,22 @@ export function NewCheckoutAddressPage() {
       errors.addressLine1 = 'Address must be at least 5 characters';
     }
     
-    // City validation - must be valid city name from list
+    // City validation - manual text entry, normalize without forcing a dropdown list
     if (!newAddressForm.city.trim()) {
       errors.city = 'City is required';
     } else if (newAddressForm.city.trim().length < 4) {
       errors.city = 'Please enter the complete city name (e.g., Chennai, Pondicherry). Abbreviations like "chn", "cbe" are not allowed';
     } else if (!/^[a-zA-Z\s]+$/.test(newAddressForm.city.trim())) {
       errors.city = 'City name should contain only letters';
-    } else if (!findMatchingCity(newAddressForm.city)) {
-      errors.city = 'City is not recognized. Please enter a valid city name';
     }
     
-    // State validation - must be valid state name from list
+    // State validation - manual text entry, normalize without forcing a dropdown list
     if (!newAddressForm.state.trim()) {
       errors.state = 'State is required';
     } else if (newAddressForm.state.trim().length < 4) {
       errors.state = 'Please enter the full state name (e.g., Tamil Nadu, Kerala). Abbreviations like "TN", "KL" are not allowed';
     } else if (!/^[a-zA-Z\s]+$/.test(newAddressForm.state.trim())) {
       errors.state = 'State name should contain only letters';
-    } else if (!findMatchingState(newAddressForm.state)) {
-      errors.state = 'State is not recognized. Please enter a valid state name';
     }
     
     // Pincode validation - must be exactly 6 digits numeric for India
@@ -355,9 +365,9 @@ export function NewCheckoutAddressPage() {
 
     console.log('âœ… [NewCheckoutAddressPage] Validation passed...');
 
-    // Get properly formatted city and state names (case-insensitive match)
-    const formattedCity = findMatchingCity(newAddressForm.city) || newAddressForm.city.trim();
-    const formattedState = findMatchingState(newAddressForm.state) || newAddressForm.state.trim();
+    // Normalize user-entered city/state names for consistent storage
+    const formattedCity = toProperCase(newAddressForm.city.trim());
+    const formattedState = toProperCase(newAddressForm.state.trim());
 
     if (editingAddressId) {
       // Update existing address
@@ -644,36 +654,26 @@ export function NewCheckoutAddressPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         City *
                       </label>
-                      <select
+                      <input
+                        type="text"
+                        placeholder="Enter city name"
                         value={newAddressForm.city}
                         onChange={(e) => setNewAddressForm({ ...newAddressForm, city: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white"
-                      >
-                        <option value="">Select City</option>
-                        {validCities.map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
+                      />
                       {validationErrors.city && <p className="text-red-500 text-xs mt-1">{validationErrors.city}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         State *
                       </label>
-                      <select
+                      <input
+                        type="text"
+                        placeholder="Enter state name"
                         value={newAddressForm.state}
                         onChange={(e) => setNewAddressForm({ ...newAddressForm, state: e.target.value })}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white"
-                      >
-                        <option value="">Select State</option>
-                        {validStates.map((state) => (
-                          <option key={state} value={state}>
-                            {state}
-                          </option>
-                        ))}
-                      </select>
+                      />
                       {validationErrors.state && <p className="text-red-500 text-xs mt-1">{validationErrors.state}</p>}
                     </div>
                     <div>
@@ -729,6 +729,76 @@ export function NewCheckoutAddressPage() {
           {/* RIGHT COLUMN - Order Summary */}
           <div className="col-span-1">
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 sticky top-8 space-y-6">
+              {/* Payment Details */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    customerType === 'individual'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="customerType"
+                      value="individual"
+                      checked={customerType === 'individual'}
+                      onChange={() => {
+                        setCustomerType('individual');
+                        setPaymentDetailsError('');
+                      }}
+                      className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">Individual</p>
+                      <p className="text-sm text-gray-600">Continue without GST details.</p>
+                    </div>
+                  </label>
+
+                  <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    customerType === 'company'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="customerType"
+                      value="company"
+                      checked={customerType === 'company'}
+                      onChange={() => {
+                        setCustomerType('company');
+                        setPaymentDetailsError('');
+                      }}
+                      className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">Company</p>
+                      <p className="text-sm text-gray-600">Add GST number for company billing.</p>
+                    </div>
+                  </label>
+                </div>
+
+                {customerType === 'company' && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">GST Number</label>
+                    <input
+                      type="text"
+                      value={gstNumber}
+                      onChange={(e) => {
+                        setGstNumber(e.target.value.toUpperCase());
+                        setPaymentDetailsError('');
+                      }}
+                      placeholder="Enter GST Number"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none uppercase"
+                    />
+                  </div>
+                )}
+
+                {paymentDetailsError && (
+                  <p className="mt-3 text-sm text-red-600 font-medium">{paymentDetailsError}</p>
+                )}
+              </div>
+
               {/* Applied Coupon Display (Read-only) */}
               {appliedCoupon && (
                 <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">

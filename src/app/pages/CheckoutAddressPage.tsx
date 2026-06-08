@@ -304,26 +304,22 @@ export function CheckoutAddressPage() {
       errors.addressLine1 = 'Address must be at least 5 characters';
     }
     
-    // City validation - must be full city name, no abbreviations
+    // City validation - manual text entry, without restricting to a dropdown list
     if (!newAddressForm.city.trim()) {
       errors.city = 'City is required';
     } else if (newAddressForm.city.trim().length < 4) {
       errors.city = 'Please enter the complete city name (e.g., Chennai, Pondicherry). Abbreviations like "chn", "cbe" are not allowed';
     } else if (!/^[a-zA-Z\s]+$/.test(newAddressForm.city.trim())) {
       errors.city = 'City name should contain only letters';
-    } else if (!findMatchingCity(newAddressForm.city)) {
-      errors.city = 'City is not recognized. Please enter a valid city name';
     }
     
-    // State validation - must be full state name
+    // State validation - manual text entry, without restricting to a dropdown list
     if (!newAddressForm.state.trim()) {
       errors.state = 'State is required';
     } else if (newAddressForm.state.trim().length < 4) {
       errors.state = 'Please enter the full state name (e.g., Tamil Nadu, Kerala). Abbreviations like "TN", "KL" are not allowed';
     } else if (!/^[a-zA-Z\s]+$/.test(newAddressForm.state.trim())) {
       errors.state = 'State name should contain only letters';
-    } else if (!findMatchingState(newAddressForm.state)) {
-      errors.state = 'State is not recognized. Please enter a valid state name';
     }
     
     // Pincode validation - must be exactly 6 digits numeric for India
@@ -345,9 +341,9 @@ export function CheckoutAddressPage() {
 
     console.log('âœ… [CheckoutAddressPage] Validation passed, creating address...');
 
-    // Get properly formatted city and state names (case-insensitive match)
-    const formattedCity = findMatchingCity(newAddressForm.city) || newAddressForm.city.trim();
-    const formattedState = findMatchingState(newAddressForm.state) || newAddressForm.state.trim();
+    // Normalize user-entered city/state names for consistent storage
+    const formattedCity = toProperCase(newAddressForm.city.trim());
+    const formattedState = toProperCase(newAddressForm.state.trim());
 
     if (editingAddressId) {
       // Update existing address

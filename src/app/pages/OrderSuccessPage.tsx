@@ -216,6 +216,42 @@ export function OrderSuccessPage() {
         ? 'Razorpay'
         : order?.payment_method || 'Online Payment';
 
+  const formatCurrencyAmount = (amount: unknown) => {
+    const numericAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || '0'));
+    return `${currencySymbol}${numericAmount.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
+  const formatOrderLanguages = (...languages: Array<string | undefined | null>) => {
+    return languages
+      .map((language) => String(language || '').trim())
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  const resolveItemRate = (item: any) => {
+    const directRate = parseFloat(String(item.basePrice ?? item.price ?? item.rate ?? 0));
+    if (directRate > 0) return directRate;
+
+    const quantity = parseInt(String(item.pageCount ?? item.quantity ?? 1), 10) || 1;
+    const directAmount = parseFloat(String(item.totalPrice ?? item.amount ?? item.total ?? 0));
+    if (directAmount > 0 && quantity > 0) {
+      return directAmount / quantity;
+    }
+
+    return 0;
+  };
+
+  const resolveItemAmount = (item: any) => {
+    const directAmount = parseFloat(String(item.totalPrice ?? item.amount ?? item.total ?? 0));
+    if (directAmount > 0) return directAmount;
+
+    const quantity = parseInt(String(item.pageCount ?? item.quantity ?? 1), 10) || 1;
+    return resolveItemRate(item) * quantity;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
@@ -343,15 +379,15 @@ export function OrderSuccessPage() {
                       <div key={index} className="flex justify-between items-start bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">{item.name}</p>
-                          {item.sourceLanguage && item.targetLanguage && (
+                          {formatOrderLanguages(item.sourceLanguage, item.targetLanguage) && (
                             <p className="text-sm text-gray-600 mt-1">
-                              {item.sourceLanguage} â†’ {item.targetLanguage}
-                              {item.pageCount && ` â€¢ ${item.pageCount} page(s)`}
+                              {formatOrderLanguages(item.sourceLanguage, item.targetLanguage)}
+                              {item.pageCount && `, ${item.pageCount} page(s)`}
                             </p>
                           )}
                         </div>
                         <span className="font-semibold text-gray-900 ml-4">
-                          {currencySymbol}{parseFloat(item.price || item.total || '0').toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          {formatCurrencyAmount(resolveItemAmount(item))}
                         </span>
                       </div>
                     ))}
@@ -436,4 +472,3 @@ export function OrderSuccessPage() {
 }
 
 export default OrderSuccessPage;
-

@@ -78,9 +78,9 @@ export function AllStartupProductsPage() {
   };
 
   const handleAddToCart = (product: StartupProduct) => {
-    console.log('ðŸ›’ [AllStartupProductsPage] Adding to cart:', product.name);
-    console.log('ðŸ›’ [AllStartupProductsPage] Product image value:', product.image);
-    console.log('ðŸ›’ [AllStartupProductsPage] Image type:', typeof product.image);
+    console.log(' [AllStartupProductsPage] Adding to cart:', product.name);
+    console.log(' [AllStartupProductsPage] Product image value:', product.image);
+    console.log(' [AllStartupProductsPage] Image type:', typeof product.image);
     addToCart({
       id: `${product.id}-${Date.now()}`,
       name: product.name,

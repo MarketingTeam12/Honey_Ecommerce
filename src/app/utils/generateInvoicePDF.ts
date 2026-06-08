@@ -220,13 +220,41 @@ export async function generateInvoicePDF(order: Order): Promise<void> {
 
     // Prepare table data
     const tableData: any[] = [];
-    
+
+    const formatLanguagePair = (...languages: Array<string | undefined | null>) => {
+      return languages
+        .map((language) => String(language || '').trim())
+        .filter(Boolean)
+        .join(', ');
+    };
+
+    const resolveRate = (item: OrderItem) => {
+      const directRate = parseFloat(String(item.basePrice ?? item.rate ?? 0));
+      if (directRate > 0) return directRate;
+
+      const quantity = parseInt(String(item.pageCount ?? item.quantity ?? 1), 10) || 1;
+      const directAmount = parseFloat(String(item.totalPrice ?? item.amount ?? 0));
+      if (directAmount > 0 && quantity > 0) {
+        return directAmount / quantity;
+      }
+
+      return 0;
+    };
+
+    const resolveAmount = (item: OrderItem) => {
+      const directAmount = parseFloat(String(item.totalPrice ?? item.amount ?? 0));
+      if (directAmount > 0) return directAmount;
+
+      const quantity = parseInt(String(item.pageCount ?? item.quantity ?? 1), 10) || 1;
+      return resolveRate(item) * quantity;
+    };
+
     order.items.forEach((item, index) => {
       // Main item row
       const itemName = item.name || `Item ${index + 1}`;
       const quantity = item.pageCount || 1;
-      const rate = item.basePrice || 0;
-      const amount = item.totalPrice || 0;
+      const rate = resolveRate(item);
+      const amount = resolveAmount(item);
       const currency = order.currency === 'INR' ? '₹' : '$';
       
       tableData.push([
@@ -238,8 +266,8 @@ export async function generateInvoicePDF(order: Order): Promise<void> {
       
       // Add service details as sub-rows if available
       const details: string[] = [];
-      if (item.sourceLanguage) details.push(`Source: ${item.sourceLanguage}`);
-      if (item.targetLanguage) details.push(`Target: ${item.targetLanguage}`);
+      const languagePair = formatLanguagePair(item.sourceLanguage, item.targetLanguage);
+      if (languagePair) details.push(`Languages: ${languagePair}`);
       if (item.documentType) details.push(`Type: ${item.documentType}`);
       if (item.certificateType) details.push(`Certificate: ${item.certificateType}`);
       if (item.uploadedFile) details.push(`File: ${item.uploadedFile.name}`);

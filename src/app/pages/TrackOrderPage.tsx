@@ -218,13 +218,13 @@ export function TrackOrderPage() {
             foundOrder = localMatch ? { ...data.order, ...localMatch } : data.order;
           }
         } else {
-          console.log('âš  [TrackOrder] Order not found in backend, trying localStorage...');
+          console.log('[TrackOrder] Order not found in backend, trying localStorage...');
         }
       } catch (backendError: any) {
         if (backendError.name === 'AbortError') {
-          console.log('âš  [TrackOrder] Backend timed out, trying localStorage...');
+          console.log(' [TrackOrder] Backend timed out, trying localStorage...');
         } else {
-          console.log('âš  [TrackOrder] Backend error, trying localStorage:', backendError);
+          console.log(' [TrackOrder] Backend error, trying localStorage:', backendError);
         }
       }
       
@@ -263,7 +263,7 @@ export function TrackOrderPage() {
                 break;
               }
             } catch (e) {
-              console.log(`âš  [TrackOrder] Error parsing ${key}:`, e);
+              console.log(`  [TrackOrder] Error parsing ${key}:`, e);
             }
           }
         }
@@ -334,25 +334,25 @@ export function TrackOrderPage() {
         const data = await response.json();
         
         if (data.success && data.order) {
-          console.log('âœ… [TrackOrder] Order found in backend:', data.order);
+          console.log(' [TrackOrder] Order found in backend:', data.order);
           {
             const localMatch = getLocalOrderByIdentity(data.order);
             foundOrder = localMatch ? { ...data.order, ...localMatch } : data.order;
           }
         } else {
-          console.log('âš  [TrackOrder] Order not found in backend, trying localStorage...');
+          console.log(' [TrackOrder] Order not found in backend, trying localStorage...');
         }
       } catch (backendError: any) {
         if (backendError.name === 'AbortError') {
-          console.log('âš  [TrackOrder] Backend timed out, trying localStorage...');
+          console.log('[TrackOrder] Backend timed out, trying localStorage...');
         } else {
-          console.log('âš  [TrackOrder] Backend error, trying localStorage:', backendError);
+          console.log(' [TrackOrder] Backend error, trying localStorage:', backendError);
         }
       }
       
       // FALLBACK: Search in localStorage if not found in backend
       if (!foundOrder) {
-        console.log('ðŸ” [TrackOrder] Searching localStorage...');
+        console.log('[TrackOrder] Searching localStorage...');
         
         // Search in both user_orders and honey_translation_orders
         const storageKeys = ['user_orders', 'honey_translation_orders'];
@@ -370,12 +370,12 @@ export function TrackOrderPage() {
               );
               
               if (matchedOrder) {
-                console.log(`âœ… [TrackOrder] Order found in ${key}:`, matchedOrder);
+                console.log(`[TrackOrder] Order found in ${key}:`, matchedOrder);
                 foundOrder = matchedOrder;
                 break;
               }
             } catch (e) {
-              console.log(`âš  [TrackOrder] Error parsing ${key}:`, e);
+              console.log(`  [TrackOrder] Error parsing ${key}:`, e);
             }
           }
         }

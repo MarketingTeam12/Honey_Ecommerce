@@ -360,15 +360,15 @@ export function ContentPage() {
               <p className="text-gray-600 mb-6">per page</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
-                  <span className="text-gray-700">English âŸ· Hindi, Tamil, Telugu</span>
+                  <span className="text-green-600"></span>
+                  <span className="text-gray-700">English, Hindi, Tamil, Telugu</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600"></span>
                   <span className="text-gray-700">Certified translation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600"></span>
                   <span className="text-gray-700">1-3 days turnaround</span>
                 </li>
               </ul>
@@ -380,15 +380,15 @@ export function ContentPage() {
               <p className="text-gray-600 mb-6">per page</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600"></span>
                   <span className="text-gray-700">200+ languages supported</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600"></span>
                   <span className="text-gray-700">Certified translation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600"></span>
                   <span className="text-gray-700">2-5 days turnaround</span>
                 </li>
               </ul>

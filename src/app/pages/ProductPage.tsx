@@ -7,6 +7,7 @@ import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { useAuth } from '@/app/context/AuthContext';
 import { normalizeProductImages } from '@/app/utils/imageUtils';
+import legacyFallbackImage from '@/assets/hero-banner-documents.png';
 
 function buildProductHighlights(description?: string) {
   if (!description) {
@@ -237,7 +238,7 @@ export function ProductPage() {
         ? normalizedAdminImages
         : fallbackStaticImages.length > 0
           ? fallbackStaticImages
-          : [{ url: '', alt: adminProduct.name }];
+          : [{ url: legacyFallbackImage, alt: adminProduct.name }];
 
     return {
       type: normalizeProductType(adminProduct.category),

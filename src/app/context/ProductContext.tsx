@@ -92,6 +92,36 @@ function writeStoredJson(key: string, value: unknown) {
   }
 }
 
+function createLocalProduct(productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>, existingId?: string): Product {
+  const now = new Date().toISOString();
+
+  return {
+    ...productData,
+    id: existingId || `local-${Date.now()}`,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function isFetchUnavailable(error: unknown): boolean {
+  return error instanceof TypeError && error.message === 'Failed to fetch';
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Failed to convert file to data URL'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function ProductProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(() =>
     typeof window === 'undefined'
@@ -332,6 +362,16 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       return data.product;
     } catch (error) {
       console.error('❌ Error creating product:', error);
+      if (isFetchUnavailable(error)) {
+        const localProduct = createLocalProduct(productData);
+        setProducts(prev => {
+          const nextProducts = [...prev, localProduct];
+          writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
+          return nextProducts;
+        });
+        console.warn('⚠️ Backend unavailable, saved product locally instead.');
+        return localProduct;
+      }
       throw error;
     }
   };
@@ -369,6 +409,27 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error('❌ Error updating product:', error);
+      if (isFetchUnavailable(error)) {
+        const existingProduct = products.find(product => product.id === id);
+        if (!existingProduct) {
+          throw error;
+        }
+
+        const localProduct: Product = {
+          ...existingProduct,
+          ...productData,
+          id,
+          updatedAt: new Date().toISOString(),
+        };
+
+        setProducts(prev => {
+          const nextProducts = prev.map(product => product.id === id ? localProduct : product);
+          writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
+          return nextProducts;
+        });
+        console.warn('⚠️ Backend unavailable, updated product locally instead.');
+        return;
+      }
       throw error;
     }
   };
@@ -406,6 +467,15 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       console.error('❌ Error deleting product:', error);
+      if (isFetchUnavailable(error)) {
+        setProducts(prev => {
+          const nextProducts = prev.filter(product => product.id !== id);
+          writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
+          return nextProducts;
+        });
+        console.warn('⚠️ Backend unavailable, deleted product locally instead.');
+        return;
+      }
       throw error;
     }
   };
@@ -501,9 +571,14 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         if (file.startsWith('data:')) {
           // It's base64, need to upload it
           console.log('🔄 Converting base64 to Supabase Storage URL...');
-          const url = await uploadImage(file);
-          if (url) {
-            imageUrls.push(url);
+          try {
+            const url = await uploadImage(file);
+            if (url) {
+              imageUrls.push(url);
+            }
+          } catch (error) {
+            console.warn('⚠️ Image upload failed, keeping base64 data URL locally:', error);
+            imageUrls.push(file);
           }
         } else if (file.startsWith('http://') || file.startsWith('https://')) {
           // Already a valid URL, keep it
@@ -515,9 +590,15 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       } else {
         // Upload the file
         console.log('📤 Uploading file to Supabase Storage...');
-        const url = await uploadImage(file);
-        if (url) {
-          imageUrls.push(url);
+        try {
+          const url = await uploadImage(file);
+          if (url) {
+            imageUrls.push(url);
+          }
+        } catch (error) {
+          console.warn('⚠️ Image upload failed, falling back to local data URL:', error);
+          const localUrl = await fileToDataUrl(file);
+          imageUrls.push(localUrl);
         }
       }
     }

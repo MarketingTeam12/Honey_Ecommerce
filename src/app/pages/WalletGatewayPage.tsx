@@ -123,8 +123,8 @@ export function WalletGatewayPage() {
             }
             
             if (!backendSaveSuccess) {
-              console.error('âš  [WalletGateway] Order failed to save to backend after all retries!');
-              console.warn('âš  Order may not sync across devices.');
+              console.error(' [WalletGateway] Order failed to save to backend after all retries!');
+              console.warn(' Order may not sync across devices.');
             } else {
               console.log('ðŸŽ‰ [WalletGateway] Order successfully saved to backend for cross-device sync!');
             }

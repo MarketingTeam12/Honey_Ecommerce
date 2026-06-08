@@ -20,6 +20,16 @@ export function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const getPostLoginRedirect = () => {
+    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+    if (redirectUrl) {
+      sessionStorage.removeItem('redirectAfterLogin');
+      return redirectUrl;
+    }
+
+    return isAdminLogin ? '/admin' : '/';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -28,11 +38,7 @@ export function SignInPage() {
     const result = await login(formData.email, formData.password);
     
     if (result.success) {
-      if (isAdminLogin) {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
+      navigate(getPostLoginRedirect(), { replace: true });
     } else {
       setError(result.message || 'Login failed');
       toast.error(result.message || 'Login failed');
@@ -73,12 +79,15 @@ export function SignInPage() {
     setLoading(true);
     setFormData({ email, password });
 
-    // Explicit quick login target should override any stale redirect intent
-    sessionStorage.removeItem('redirectAfterLogin');
-
     const result = await login(email, password);
     if (result.success) {
-      navigate(targetPath);
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl, { replace: true });
+      } else {
+        navigate(targetPath, { replace: true });
+      }
     } else {
       setError(result.message || 'Login failed');
       toast.error(result.message || 'Login failed');

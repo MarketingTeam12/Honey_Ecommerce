@@ -196,7 +196,7 @@ export function EdgeFunctionDiagnostics() {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center">
-              <span className="text-2xl mr-2">âš </span>
+              <span className="text-2xl mr-2"></span>
               <div>
                 <h3 className="font-semibold text-yellow-900">
                   {hasCriticalError ? 'Edge Function Not Accessible' : 'Configuration Issues Detected'}

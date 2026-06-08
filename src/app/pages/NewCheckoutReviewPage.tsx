@@ -81,6 +81,22 @@ export function NewCheckoutReviewPage() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    try {
+      const savedPaymentDetails = localStorage.getItem('paymentCustomerDetails');
+      if (savedPaymentDetails) {
+        const parsed = JSON.parse(savedPaymentDetails) as {
+          customerType?: 'individual' | 'company';
+          gstNumber?: string;
+        };
+        setCustomerType(parsed.customerType === 'company' ? 'company' : 'individual');
+        setGstNumber(parsed.gstNumber || '');
+      }
+    } catch (error) {
+      console.error('Error loading payment customer details:', error);
+    }
+  }, []);
+
   const loadAvailableCoupons = () => {
     const activeCoupons = couponService.getActiveCoupons();
     console.log('ðŸ“¦ [CheckoutReview] Loaded active coupons:', activeCoupons);
@@ -501,76 +517,6 @@ export function NewCheckoutReviewPage() {
               </div>
             </div>
 
-            {/* Payment Details */}
-            <div className="border border-gray-200 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  customerType === 'individual'
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="customerType"
-                    value="individual"
-                    checked={customerType === 'individual'}
-                    onChange={() => {
-                      setCustomerType('individual');
-                      setPaymentDetailsError('');
-                    }}
-                    className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-semibold text-gray-900">Individual</p>
-                    <p className="text-sm text-gray-600">Continue without GST details.</p>
-                  </div>
-                </label>
-
-                <label className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  customerType === 'company'
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="customerType"
-                    value="company"
-                    checked={customerType === 'company'}
-                    onChange={() => {
-                      setCustomerType('company');
-                      setPaymentDetailsError('');
-                    }}
-                    className="mt-1 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="font-semibold text-gray-900">Company</p>
-                    <p className="text-sm text-gray-600">Add GST number for company billing.</p>
-                  </div>
-                </label>
-              </div>
-
-              {customerType === 'company' && (
-                <div className="mt-4">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">GST Number</label>
-                  <input
-                    type="text"
-                    value={gstNumber}
-                    onChange={(e) => {
-                      setGstNumber(e.target.value.toUpperCase());
-                      setPaymentDetailsError('');
-                    }}
-                    placeholder="Enter GST Number"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none uppercase"
-                  />
-                </div>
-              )}
-
-              {paymentDetailsError && (
-                <p className="mt-3 text-sm text-red-600 font-medium">{paymentDetailsError}</p>
-              )}
-            </div>
-
             {/* Order Items */}
             <div className="border border-gray-200 rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-6">Order Details</h2>
@@ -656,176 +602,173 @@ export function NewCheckoutReviewPage() {
               </div>
             </div>
 
-            {/* Coupon Section */}
-            <div className="border border-gray-200 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Apply Coupon Code</h2>
-              
-              {/* Applied Coupon Display */}
-              {appliedCoupon && (
-                <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                        <Tag className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-green-900">Coupon Applied!</p>
-                        <p className="text-sm text-green-700">
-                          Code: <span className="font-mono font-bold">{appliedCoupon.code}</span>
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleRemoveCoupon}
-                      className="p-2 hover:bg-green-100 rounded-full transition-colors"
-                      title="Remove coupon"
-                    >
-                      <X className="w-5 h-5 text-green-700" />
-                    </button>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-green-200">
-                    <p className="text-sm text-green-700">
-                      You're saving <span className="font-bold text-lg">{convertPrice(discount)}</span> on this order!
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Coupon Input */}
-              {!appliedCoupon && (
-                <>
-                  <div className="flex gap-3 mb-4">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => {
-                        setCouponCode(e.target.value.toUpperCase());
-                        setCouponError('');
-                      }}
-                      placeholder="Enter coupon code"
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none uppercase font-mono"
-                    />
-                    <button
-                      onClick={() => handleApplyCoupon(couponCode)}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      Apply
-                    </button>
-                  </div>
-
-                  {/* Error Message */}
-                  {couponError && (
-                    <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                      <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-red-700">{couponError}</p>
-                    </div>
-                  )}
-
-                  {/* View Available Coupons Button */}
-                  <button
-                    onClick={() => setShowCouponsModal(true)}
-                    className="w-full py-3 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Tag className="w-5 h-5" />
-                    View All Available Coupons ({availableCoupons.length})
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Notes / Instructions */}
-            <div className="border border-gray-200 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">Additional Notes (Optional)</h2>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add any special instructions or requirements for your order..."
-                rows={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
-              />
-              <p className="text-sm text-gray-500 mt-2">
-                Example: Urgent delivery needed, specific formatting requirements, etc.
-              </p>
-              <button
-                onClick={() => {
-                  toast.success('Notes saved successfully!');
-                }}
-                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Save Notes
-              </button>
-            </div>
           </div>
 
           {/* RIGHT COLUMN - Order Summary */}
           <div className="col-span-1">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 sticky top-8">
-              <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+            <div className="space-y-6 sticky top-8">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between text-gray-700">
-                  <span>Subtotal</span>
-                  <span className="font-medium">{convertPrice(subtotal)}</span>
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between text-gray-700">
+                    <span>Subtotal</span>
+                    <span className="font-medium">{convertPrice(subtotal)}</span>
+                  </div>
+                  
+                  {appliedCoupon && (
+                    <div className="flex justify-between items-center text-green-600">
+                      <div className="flex items-center gap-1">
+                        <Tag className="w-4 h-4" />
+                        <span>Discount ({appliedCoupon.code})</span>
+                      </div>
+                      <span className="font-medium">- {convertPrice(discount)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between text-gray-700">
+                    <span>Tax (GST 18%)</span>
+                    <span className="font-medium">{convertPrice(tax)}</span>
+                  </div>
+
+                  <div className="h-px bg-gray-300"></div>
+
+                  <div className="flex justify-between text-lg">
+                    <span className="font-semibold">Total Amount</span>
+                    <span className="font-bold text-blue-600 text-2xl">
+                      {convertPrice(total)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">
+                    (Inclusive of all taxes)
+                  </p>
                 </div>
+
+                <button
+                  onClick={handleMakePayment}
+                  className="w-full bg-blue-600 text-white py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors mb-4 text-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Make Payment
+                </button>
+
+                {/* Security Info */}
+                <div className="space-y-2 pt-4 border-t border-gray-300">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Secure Payment Gateway
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Your Data is Encrypted
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    100% Refund Guarantee
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h2 className="text-xl font-semibold mb-4">Apply Coupon Code</h2>
                 
                 {appliedCoupon && (
-                  <div className="flex justify-between items-center text-green-600">
-                    <div className="flex items-center gap-1">
-                      <Tag className="w-4 h-4" />
-                      <span>Discount ({appliedCoupon.code})</span>
+                  <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                          <Tag className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-green-900">Coupon Applied!</p>
+                          <p className="text-sm text-green-700">
+                            Code: <span className="font-mono font-bold">{appliedCoupon.code}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="p-2 hover:bg-green-100 rounded-full transition-colors"
+                        title="Remove coupon"
+                      >
+                        <X className="w-5 h-5 text-green-700" />
+                      </button>
                     </div>
-                    <span className="font-medium">- {convertPrice(discount)}</span>
+                    <div className="mt-3 pt-3 border-t border-green-200">
+                      <p className="text-sm text-green-700">
+                        You're saving <span className="font-bold text-lg">{convertPrice(discount)}</span> on this order!
+                      </p>
+                    </div>
                   </div>
                 )}
 
-                <div className="flex justify-between text-gray-700">
-                  <span>Tax (GST 18%)</span>
-                  <span className="font-medium">{convertPrice(tax)}</span>
-                </div>
+                {!appliedCoupon && (
+                  <>
+                    <div className="flex gap-3 mb-4">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value.toUpperCase());
+                          setCouponError('');
+                        }}
+                        placeholder="Enter coupon code"
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none uppercase font-mono"
+                      />
+                      <button
+                        onClick={() => handleApplyCoupon(couponCode)}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
 
-                <div className="h-px bg-gray-300"></div>
+                    {couponError && (
+                      <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                        <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700">{couponError}</p>
+                      </div>
+                    )}
 
-                <div className="flex justify-between text-lg">
-                  <span className="font-semibold">Total Amount</span>
-                  <span className="font-bold text-blue-600 text-2xl">
-                    {convertPrice(total)}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 text-center">
-                  (Inclusive of all taxes)
-                </p>
+                    <button
+                      onClick={() => setShowCouponsModal(true)}
+                      className="w-full py-3 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Tag className="w-5 h-5" />
+                      View All Available Coupons ({availableCoupons.length})
+                    </button>
+                  </>
+                )}
               </div>
 
-              <button
-                onClick={handleMakePayment}
-                className="w-full bg-blue-600 text-white py-4 rounded-lg font-medium hover:bg-blue-700 transition-colors mb-4 text-lg flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                Make Payment
-              </button>
-
-              {/* Security Info */}
-              <div className="space-y-2 pt-4 border-t border-gray-300">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Secure Payment Gateway
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Your Data is Encrypted
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  100% Refund Guarantee
-                </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h2 className="text-xl font-semibold mb-4">Additional Notes (Optional)</h2>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add any special instructions or requirements for your order..."
+                  rows={5}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none resize-none"
+                />
+                <p className="text-sm text-gray-500 mt-2">
+                  Example: Urgent delivery needed, specific formatting requirements, etc.
+                </p>
+                <button
+                  onClick={() => {
+                    toast.success('Notes saved successfully!');
+                  }}
+                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Save Notes
+                </button>
               </div>
             </div>
           </div>

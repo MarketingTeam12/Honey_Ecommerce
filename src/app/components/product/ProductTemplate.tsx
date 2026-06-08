@@ -65,6 +65,79 @@ const PERSONAL_DOCUMENT_OPTIONS: DocumentTypeOption[] = [
   { id: 'will-testament', label: 'Will Testament' },
   { id: 'other', label: 'Other' },
 ];
+const PRODUCT_DRAFT_STORAGE_PREFIX = 'honey_product_draft:';
+const MAX_DRAFT_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
+interface SerializedUploadedFile {
+  name: string;
+  type: string;
+  lastModified: number;
+  dataUrl: string;
+}
+
+interface ProductFormDraft {
+  version: 1;
+  productId: string;
+  sourceLanguages: string[];
+  targetLanguages: string[];
+  sourceLanguageSearch: string;
+  targetLanguageSearch: string;
+  destinationSearch: string;
+  destination: string;
+  apostilleDocumentType: string;
+  needTranslation: string;
+  translateFromLanguage: string;
+  translateToLanguage: string;
+  selectedDocTypes: string[];
+  uploadedFiles: SerializedUploadedFile[];
+  driveLink: string;
+  pageCount: number;
+  packageDuration: 'full-package' | '1-year' | '2-year';
+  savedAt: string;
+}
+
+const getProductDraftStorageKey = (productId: string) => `${PRODUCT_DRAFT_STORAGE_PREFIX}${productId}`;
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+
+const serializeUploadedFiles = async (files: File[]): Promise<SerializedUploadedFile[]> => {
+  const serializableFiles = files.filter((file) => file.size <= MAX_DRAFT_FILE_SIZE_BYTES);
+
+  return Promise.all(
+    serializableFiles.map(async (file) => ({
+      name: file.name,
+      type: file.type,
+      lastModified: file.lastModified,
+      dataUrl: await readFileAsDataUrl(file),
+    }))
+  );
+};
+
+const deserializeUploadedFiles = async (files: SerializedUploadedFile[]): Promise<File[]> => {
+  const restoredFiles = await Promise.all(
+    files.map(async (file) => {
+      try {
+        const response = await fetch(file.dataUrl);
+        const blob = await response.blob();
+        return new File([blob], file.name, {
+          type: file.type || blob.type,
+          lastModified: file.lastModified,
+        });
+      } catch (error) {
+        console.warn('Failed to restore uploaded file from draft:', file.name, error);
+        return null;
+      }
+    })
+  );
+
+  return restoredFiles.filter((file): file is File => file !== null);
+};
 const EDUCATION_DOCUMENT_OPTIONS: DocumentTypeOption[] = [
   { id: 'college-leaving-certificate', label: 'College Leaving Certificate' },
   { id: 'diploma-certificate', label: 'Diploma Certificate' },
@@ -281,7 +354,7 @@ const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'indonesian': 900,
 };
 
-// English â†’ Indian Language (Most are ?600, with exceptions)
+// English ’ Indian Language (Most are ?600, with exceptions)
 const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -610,6 +683,56 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     setSourceLanguageSearch('');
   }, [isEnglishOnlySource, productId]);
 
+  useEffect(() => {
+    if (isEditMode) return;
+
+    let cancelled = false;
+
+    const restoreDraft = async () => {
+      try {
+        const storageKey = getProductDraftStorageKey(productId);
+        const rawDraft = sessionStorage.getItem(storageKey);
+        if (!rawDraft) return;
+
+        const draft = JSON.parse(rawDraft) as Partial<ProductFormDraft> | null;
+        if (!draft || draft.productId !== productId) return;
+
+        setSourceLanguages(Array.isArray(draft.sourceLanguages) ? draft.sourceLanguages : []);
+        setTargetLanguages(Array.isArray(draft.targetLanguages) ? draft.targetLanguages : []);
+        setSourceLanguageSearch(draft.sourceLanguageSearch || '');
+        setTargetLanguageSearch(draft.targetLanguageSearch || '');
+        setDestinationSearch(draft.destinationSearch || '');
+        setDestination(draft.destination || '');
+        setApostilleDocumentType(draft.apostilleDocumentType || '');
+        setNeedTranslation(draft.needTranslation || '');
+        setTranslateFromLanguage(draft.translateFromLanguage || '');
+        setTranslateToLanguage(draft.translateToLanguage || '');
+        setSelectedDocTypes(Array.isArray(draft.selectedDocTypes) ? draft.selectedDocTypes : []);
+        setDriveLink(draft.driveLink || '');
+        setPageCount(draft.pageCount || 1);
+        setPackageDuration(draft.packageDuration || 'full-package');
+
+        if (Array.isArray(draft.uploadedFiles) && draft.uploadedFiles.length > 0) {
+          const restoredFiles = await deserializeUploadedFiles(draft.uploadedFiles);
+          if (!cancelled) {
+            setUploadedFiles(restoredFiles);
+            if (restoredFiles.length !== draft.uploadedFiles.length) {
+              toast.info('Some uploaded files could not be restored automatically. Please verify them before checkout.');
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to restore pending product draft:', error);
+      }
+    };
+
+    void restoreDraft();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, productId]);
+
   // Fetch product images from database on component mount
   useEffect(() => {
     const fetchProductImages = async () => {
@@ -642,14 +765,14 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
               console.log('ðŸ”„ Updating product images from database');
               setProductImages(validDbImages);
             } else {
-              console.log('âš  No valid images in database, using default images');
+              console.log('  No valid images in database, using default images');
             }
           }
         } else {
           console.error('âŒ Failed to fetch images, status:', response.status);
         }
       } catch (error) {
-        console.log('âš  Using default product images:', error);
+        console.log(' Using default product images:', error);
         // Keep using the default images from data.images
       } finally {
         setImagesLoaded(true);
@@ -750,6 +873,17 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter(file => file.size <= MAX_UPLOAD_SIZE_BYTES);
+    const oversizedFiles = files.filter(file => file.size > MAX_UPLOAD_SIZE_BYTES);
+
+    if (oversizedFiles.length > 0) {
+      toast.error(`File size should be ${MAX_UPLOAD_SIZE_MB} MB or less. Please use the Drive Link field for larger files.`);
+    }
+
+    if (validFiles.length === 0) {
+      e.target.value = '';
+      return;
+    }
+
     setUploadedFiles(prev => {
       const newFiles = [...prev, ...validFiles];
       updatePageCountFromFiles(newFiles);
@@ -768,6 +902,16 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
     e.stopPropagation();
     const files = Array.from(e.dataTransfer.files);
     const validFiles = files.filter(file => file.size <= MAX_UPLOAD_SIZE_BYTES);
+    const oversizedFiles = files.filter(file => file.size > MAX_UPLOAD_SIZE_BYTES);
+
+    if (oversizedFiles.length > 0) {
+      toast.error(`File size should be ${MAX_UPLOAD_SIZE_MB} MB or less. Please use the Drive Link field for larger files.`);
+    }
+
+    if (validFiles.length === 0) {
+      return;
+    }
+
     setUploadedFiles(prev => {
       const newFiles = [...prev, ...validFiles];
       updatePageCountFromFiles(newFiles);
@@ -810,6 +954,140 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   const incrementPages = () => setPageCount(prev => prev + 1);
   const decrementPages = () => setPageCount(prev => Math.max(1, prev - 1));
+
+  const saveProductDraft = async () => {
+    try {
+      const storageKey = getProductDraftStorageKey(productId);
+      const uploadedFilesDraft = await serializeUploadedFiles(uploadedFiles);
+      const draft: ProductFormDraft = {
+        version: 1,
+        productId,
+        sourceLanguages,
+        targetLanguages,
+        sourceLanguageSearch,
+        targetLanguageSearch,
+        destinationSearch,
+        destination,
+        apostilleDocumentType,
+        needTranslation,
+        translateFromLanguage,
+        translateToLanguage,
+        selectedDocTypes,
+        uploadedFiles: uploadedFilesDraft,
+        driveLink,
+        pageCount,
+        packageDuration,
+        savedAt: new Date().toISOString(),
+      };
+
+      sessionStorage.setItem(storageKey, JSON.stringify(draft));
+    } catch (error) {
+      console.warn('Failed to save product draft:', error);
+
+      try {
+        const fallbackDraft: ProductFormDraft = {
+          version: 1,
+          productId,
+          sourceLanguages,
+          targetLanguages,
+          sourceLanguageSearch,
+          targetLanguageSearch,
+          destinationSearch,
+          destination,
+          apostilleDocumentType,
+          needTranslation,
+          translateFromLanguage,
+          translateToLanguage,
+          selectedDocTypes,
+          uploadedFiles: [],
+          driveLink,
+          pageCount,
+          packageDuration,
+          savedAt: new Date().toISOString(),
+        };
+        sessionStorage.setItem(getProductDraftStorageKey(productId), JSON.stringify(fallbackDraft));
+      } catch (fallbackError) {
+        console.warn('Fallback draft save also failed:', fallbackError);
+      }
+    }
+  };
+
+  const clearProductDraft = () => {
+    try {
+      sessionStorage.removeItem(getProductDraftStorageKey(productId));
+    } catch (error) {
+      console.warn('Failed to clear product draft:', error);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+    if (!user) {
+      await saveProductDraft();
+      sessionStorage.setItem('redirectAfterLogin', currentPath);
+      toast.error('Please log in to add items to your cart.');
+      navigate('/signin');
+      return;
+    }
+
+    const errors: string[] = [];
+
+    if (data.type === 'translation') {
+      if (sourceLanguages.length === 0) {
+        errors.push('Please select a source language');
+      }
+      if (targetLanguages.length === 0) {
+        errors.push('Please select a target language');
+      }
+    }
+    if (isApostilleService && !destination) {
+      errors.push('Please select a destination');
+    }
+    if (isApostilleService && !apostilleDocumentType) {
+      errors.push('Please select a document type');
+    }
+
+    if (!isApostilleService && data.type !== 'startup' && selectedDocTypes.length === 0) {
+      errors.push('Please select at least one document type');
+    }
+    if (isApostilleService && apostilleDocumentType && selectedDocTypes.length === 0) {
+      errors.push('Please select at least one document');
+    }
+
+    if (data.type !== 'startup' && uploadedFiles.length === 0 && !driveLink.trim()) {
+      errors.push('Please upload at least one document or provide a Drive link');
+    }
+
+    if (errors.length > 0) {
+      const errorMessage = 'Please complete the following:\n\n' + errors.join('\n');
+      toast.error(errorMessage);
+      return;
+    }
+
+    const cartItemId = isEditMode && editCartItem ? editCartItem.id : `${data.type}-${Date.now()}`;
+
+    addToCart({
+      id: cartItemId,
+      name: data.title,
+      basePrice: currentPrice,
+      category: data.type,
+      url: window.location.pathname,
+      image: getFirstValidImage(productImages, getFirstValidImage(data.images)),
+      sourceLanguage: sourceLanguageDisplay || undefined,
+      targetLanguage: targetLanguageDisplay || undefined,
+      certificateType: selectedDocTypes.join(', ') || undefined,
+      uploadedDocument: uploadedFiles[0] || null,
+      uploadedDocuments: uploadedFiles.length > 0 ? uploadedFiles : undefined,
+      driveLink: driveLink.trim() || undefined,
+      documentPreview: undefined,
+      pageCount: pageCount,
+      totalPrice: currentPrice * pageCount,
+    });
+    clearProductDraft();
+    toast.success('Item added to cart!');
+    navigate('/cart');
+  };
 
   const calculatePageCountFromFiles = async (files: File[]) => {
     let totalPages = 0;
@@ -1368,7 +1646,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                         >
                           <span className={sourceLanguages.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
                             {sourceLanguages.length > 0
-                              ? `Source: ${sourceLanguageDisplay}`
+                              ? sourceLanguageDisplay
                               : 'Select source language(s)'}
                           </span>
                           <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${sourceLanguageOpen ? 'rotate-90' : ''}`} />
@@ -1414,7 +1692,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                         >
                           <span className={targetLanguages.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
                             {targetLanguages.length > 0
-                              ? `Target: ${targetLanguageDisplay}`
+                              ? targetLanguageDisplay
                               : 'Select target language(s)'}
                           </span>
                           <ChevronRight className={`w-4 h-4 text-gray-500 transition-transform ${targetLanguageOpen ? 'rotate-90' : ''}`} />
@@ -1572,73 +1850,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
                 className="w-full bg-black hover:bg-gray-800 text-white h-12 text-lg lg:sticky lg:bottom-4 z-10 shadow-lg"
                 size="lg"
                 onClick={() => {
-                  // Check authentication first
-                  if (!user) {
-                    toast.error('Please log in to add items to your cart.');
-                    return;
-                  }
-
-                  // Validation for mandatory fields
-                  const errors: string[] = [];
-
-                  // Check for translation services (but NOT for sworn translations)
-                  if (data.type === 'translation') {
-                    if (sourceLanguages.length === 0) {
-                      errors.push('Please select a source language');
-                    }
-                    if (targetLanguages.length === 0) {
-                      errors.push('Please select a target language');
-                    }
-                  }
-                  if (isApostilleService && !destination) {
-                    errors.push('Please select a destination');
-                  }
-                  if (isApostilleService && !apostilleDocumentType) {
-                    errors.push('Please select a document type');
-                  }
-
-                  // Check document type selection - skip for startup packages
-                  if (!isApostilleService && data.type !== 'startup' && selectedDocTypes.length === 0) {
-                    errors.push('Please select at least one document type');
-                  }
-                  if (isApostilleService && apostilleDocumentType && selectedDocTypes.length === 0) {
-                    errors.push('Please select at least one document');
-                  }
-
-                  // Check file upload - skip for startup packages
-                  if (data.type !== 'startup' && uploadedFiles.length === 0 && !driveLink.trim()) {
-                    errors.push('Please upload at least one document or provide a Drive link');
-                  }
-
-                  // Show errors if any
-                  if (errors.length > 0) {
-                    const errorMessage = 'Please complete the following:\\n\\n' + errors.join('\\n');
-                    toast.error(errorMessage);
-                    return;
-                  }
-
-                  // Use existing cart item ID if in edit mode, otherwise generate new ID
-                  const cartItemId = isEditMode && editCartItem ? editCartItem.id : `${data.type}-${Date.now()}`;
-                  
-                  addToCart({
-                    id: cartItemId,
-                    name: data.title,
-                    basePrice: currentPrice,
-                    category: data.type,
-                    url: window.location.pathname,
-                    image: getFirstValidImage(productImages, getFirstValidImage(data.images)),
-                    sourceLanguage: sourceLanguageDisplay || undefined,
-                    targetLanguage: targetLanguageDisplay || undefined,
-                    certificateType: selectedDocTypes.join(', ') || undefined,
-                    uploadedDocument: uploadedFiles[0] || null,
-                    uploadedDocuments: uploadedFiles.length > 0 ? uploadedFiles : undefined,
-                    driveLink: driveLink.trim() || undefined,
-                    documentPreview: undefined,
-                    pageCount: pageCount,
-                    totalPrice: currentPrice * pageCount,
-                  });
-                  toast.success('Item added to cart!');
-                  navigate('/cart');
+                  void handleAddToCart();
                 }}
               >
                 <svg

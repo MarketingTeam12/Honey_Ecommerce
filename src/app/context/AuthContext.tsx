@@ -89,6 +89,20 @@ const resolveUserRole = (email: string | undefined | null, fallback: UserRole, b
   );
 };
 
+const fetchWithTimeout = async (input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 3000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
 const upsertRegisteredUserRecord = (
   user: { id: string; email: string; name: string; role: UserRole },
   extras?: { phone?: string; password?: string; source?: string; lastLoginAt?: string },
@@ -527,8 +541,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       console.log('Login attempt started for:', email);
-      
-      // Try Supabase authentication first
+
+      // Fast path: try local/demo authentication first so saved app users
+      // do not wait on a Supabase network round-trip every time they sign in.
+      const localLoginResult = await mockLogin(email, password);
+      if (localLoginResult.success) {
+        return localLoginResult;
+      }
+
+      // Fall back to Supabase authentication if the local/demo path does not match.
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -548,7 +569,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('mock_user');
         localStorage.removeItem('is_mock_auth');
         setIsMockAuth(false);
-        await fetchUserProfile(data.user.id, data.session.access_token);
+
+        const fallbackUser = {
+          id: data.user.id,
+          email: data.user.email || email,
+          name:
+            data.user.user_metadata?.full_name ||
+            data.user.user_metadata?.name ||
+            data.user.email?.split('@')[0] ||
+            'User',
+          role: resolveUserRole(data.user.email || email, 'customer', data.user.user_metadata?.role),
+        };
+
+        setUser(fallbackUser);
+        setAccessToken(data.session.access_token);
+        void fetchUserProfile(data.user.id, data.session.access_token);
         return { success: true };
       }
 
@@ -676,7 +711,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Try backend signup first, fallback to local if it fails
     try {
       console.log('📡 [AuthContext] Sending signup request to backend...');
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/auth/signup`,
         {
           method: 'POST',

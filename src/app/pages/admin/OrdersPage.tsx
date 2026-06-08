@@ -152,9 +152,15 @@ export function OrdersPage() {
     };
     
     window.addEventListener('newOrderNotification', handleNewOrder);
+
+    const interval = setInterval(() => {
+      console.log('🔄 [OrdersPage] Auto-refreshing orders...');
+      void fetchOrders({ background: true });
+    }, 15000);
     
     return () => {
       window.removeEventListener('newOrderNotification', handleNewOrder);
+      clearInterval(interval);
     };
   }, [user?.id, user?.email, user?.role]);
 
@@ -188,21 +194,21 @@ export function OrdersPage() {
           backendOrders = data.orders || [];
           backendAvailable = true;
           setShowSetupBanner(false);
-          console.log('âœ… [OrdersPage] Backend returned', backendOrders.length, 'orders');
+          console.log(' [OrdersPage] Backend returned', backendOrders.length, 'orders');
         } else {
           const errorText = await response.text().catch(() => '');
-          console.warn('âš  [OrdersPage] Backend returned status', response.status);
+          console.warn(' [OrdersPage] Backend returned status', response.status);
           if (errorText.includes('relation') || errorText.includes('does not exist') || errorText.includes('kv_store_a67f0635')) {
             setShowSetupBanner(true);
           }
         }
       } catch (backendError: any) {
-        console.warn('âš  [OrdersPage] Backend fetch failed:', backendError.message);
+        console.warn(' [OrdersPage] Backend fetch failed:', backendError.message);
       }
       
       // ===== SOURCE 2: localStorage =====
       const localOrders = loadOrdersFromLocalStorage();
-      console.log('ðŸ“¦ [OrdersPage] localStorage has', localOrders.length, 'orders');
+      console.log('¦ [OrdersPage] localStorage has', localOrders.length, 'orders');
       
       // ===== MERGE: Combine both sources, deduplicate by order ID =====
       const orderMap = new Map<string, Order>();

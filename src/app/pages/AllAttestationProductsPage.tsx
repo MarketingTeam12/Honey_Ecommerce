@@ -6,6 +6,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useProducts } from '@/app/context/ProductContext';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 import { toast } from 'sonner';
+import legacyFallbackImage from '@/assets/hero-banner-documents.png';
 
 interface Product {
   id: string;
@@ -86,13 +87,13 @@ export function AllAttestationProductsPage() {
 
   // Get Attestation products from admin
   const adminAttestationProducts = adminProducts
-    .filter(product => product.category === 'Attestation' && product.status === 'active')
+    .filter(product => product.category?.toLowerCase().includes('attestation') && product.status === 'active')
     .map(product => ({
       id: product.id,
       name: product.name,
       price: product.price,
       originalPrice: product.compareAtPrice || product.price,
-      image: getFirstValidImage(product.images),
+      image: getFirstValidImage(product.images) || legacyFallbackImage,
       url: `/product/${product.id}`,
       description: product.description || 'Professional attestation service',
       category: 'attestation'

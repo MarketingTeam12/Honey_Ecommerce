@@ -17,6 +17,42 @@ export function PaymentSummaryPage() {
   const [processing, setProcessing] = useState(false);
   const [orderDetails, setOrderDetails] = useState<any>(null);
 
+  const formatCurrencyAmount = (amount: unknown) => {
+    const numericAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || '0'));
+    return numericAmount.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const formatOrderLanguages = (...languages: Array<string | undefined | null>) => {
+    return languages
+      .map((language) => String(language || '').trim())
+      .filter(Boolean)
+      .join(', ');
+  };
+
+  const resolveItemRate = (item: any) => {
+    const directRate = parseFloat(String(item.basePrice ?? item.price ?? item.rate ?? 0));
+    if (directRate > 0) return directRate;
+
+    const quantity = parseInt(String(item.pageCount ?? item.quantity ?? 1), 10) || 1;
+    const directAmount = parseFloat(String(item.totalPrice ?? item.amount ?? item.total ?? 0));
+    if (directAmount > 0 && quantity > 0) {
+      return directAmount / quantity;
+    }
+
+    return 0;
+  };
+
+  const resolveItemAmount = (item: any) => {
+    const directAmount = parseFloat(String(item.totalPrice ?? item.amount ?? item.total ?? 0));
+    if (directAmount > 0) return directAmount;
+
+    const quantity = parseInt(String(item.pageCount ?? item.quantity ?? 1), 10) || 1;
+    return resolveItemRate(item) * quantity;
+  };
+
   // Get order details from location state
   useEffect(() => {
     const state = location.state as any;
@@ -117,7 +153,7 @@ export function PaymentSummaryPage() {
   }
 
   const totalAmount = parseFloat(orderDetails.total_amount);
-  const currencySymbol = orderDetails.currency === 'INR' ? '?' : '$';
+  const currencySymbol = orderDetails.currency === 'INR' ? '₹' : '$';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
@@ -160,15 +196,15 @@ export function PaymentSummaryPage() {
                     <div key={index} className="flex justify-between items-start bg-gray-50 p-3 rounded-lg">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                        {item.sourceLanguage && item.targetLanguage && (
+                        {formatOrderLanguages(item.sourceLanguage, item.targetLanguage) && (
                           <p className="text-xs text-gray-600 mt-1">
-                            {item.sourceLanguage} â†’ {item.targetLanguage}
-                            {item.pageCount && ` â€¢ ${item.pageCount} page(s)`}
+                            {formatOrderLanguages(item.sourceLanguage, item.targetLanguage)}
+                            {item.pageCount ? `, ${item.pageCount} page(s)` : ''}
                           </p>
                         )}
                       </div>
                       <span className="text-sm font-semibold text-gray-900 ml-4">
-                        {currencySymbol}{parseFloat(item.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        {currencySymbol}{formatCurrencyAmount(resolveItemAmount(item))}
                       </span>
                     </div>
                   ))}

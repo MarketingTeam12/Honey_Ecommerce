@@ -7,6 +7,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useProducts } from '@/app/context/ProductContext';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 import { toast } from 'sonner';
+import legacyFallbackImage from '@/assets/hero-banner-documents.png';
 
 interface Product {
   id: string;
@@ -118,13 +119,13 @@ export function AllTranslationProductsPage() {
 
   // Get Translation products from admin
   const adminTranslationProducts = adminProducts
-    .filter(product => product.category === 'Translation' && product.status === 'active')
+    .filter(product => product.category?.toLowerCase().includes('translation') && product.status === 'active')
     .map(product => ({
       id: product.id,
       name: product.name,
       price: product.price,
       originalPrice: product.compareAtPrice || product.price,
-      image: getFirstValidImage(product.images),
+      image: getFirstValidImage(product.images) || legacyFallbackImage,
       url: `/product/${product.id}`,
       description: product.description || 'Professional translation service',
       category: 'translation'

@@ -6,6 +6,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useProducts } from '@/app/context/ProductContext';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 import { toast } from 'sonner';
+import legacyFallbackImage from '@/assets/hero-banner-documents.png';
 
 interface Product {
   id: string;
@@ -293,7 +294,7 @@ export function AllApostilleProductsPage() {
   // Get Apostille products from admin
   const adminApostilleProducts = adminProducts
     .filter(product => {
-      const matches = product.category === 'Apostille' && product.status === 'active';
+      const matches = product.category?.toLowerCase().includes('apostille') && product.status === 'active';
       console.log(`Product "${product.name}": category="${product.category}", status="${product.status}", matches=${matches}`);
       return matches;
     })
@@ -308,7 +309,7 @@ export function AllApostilleProductsPage() {
         name: product.name,
         price: product.price,
         originalPrice: product.compareAtPrice || product.price,
-        image: getFirstValidImage(product.images),
+        image: getFirstValidImage(product.images) || legacyFallbackImage,
         url: `/product/${product.id}`,
         description: product.description || 'Professional apostille service',
         category: 'apostille'

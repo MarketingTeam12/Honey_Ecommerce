@@ -2,9 +2,8 @@
 import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useProducts } from '@/app/context/ProductContext';
-import { projectId } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/utils/supabase/info';
 import { useAuth } from '@/app/context/AuthContext';
-import { buildHeaders } from '@/app/utils/buildHeaders';
 import { Clock, AlertCircle, XCircle, DollarSign, Package, BarChart3, TrendingUp, ShoppingCart, Users, Database, ExternalLink } from 'lucide-react';
 
 interface Order {
@@ -39,9 +38,109 @@ interface DashboardData {
   outOfStockItems: any[];
 }
 
+const ORDERS_STORAGE_KEY = 'honey_translation_orders';
+
+const parseCurrencyAmount = (amount: unknown) => {
+  const numericAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || '0'));
+  return Number.isFinite(numericAmount) ? numericAmount : 0;
+};
+
+const loadOrdersFromLocalStorage = (): Order[] => {
+  const orderMap = new Map<string, Order>();
+
+  ['honey_translation_orders', 'user_orders'].forEach((key) => {
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((order: Order) => {
+          if (order?.id) {
+            orderMap.set(order.id, order);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn(`Failed to parse ${key}:`, error);
+    }
+  });
+
+  return Array.from(orderMap.values());
+};
+
+const mergeOrders = (backendOrders: Order[], localOrders: Order[]) => {
+  const orderMap = new Map<string, Order>();
+
+  backendOrders.forEach((order) => {
+    if (order?.id) {
+      orderMap.set(order.id, order);
+    }
+  });
+
+  localOrders.forEach((order) => {
+    if (order?.id) {
+      const existing = orderMap.get(order.id);
+      orderMap.set(order.id, existing ? { ...existing, ...order } : order);
+    }
+  });
+
+  return Array.from(orderMap.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+};
+
+const normalizeStatus = (value: unknown) => String(value || '').trim().toLowerCase();
+
+const isPendingOrder = (order: Order) => {
+  const status = normalizeStatus(order.status);
+  const paymentStatus = normalizeStatus(order.payment_status);
+
+  if (['shipped', 'delivered', 'cancelled', 'canceled', 'refunded'].includes(status)) {
+    return false;
+  }
+
+  if (
+    status.includes('pending') ||
+    status.includes('received') ||
+    status.includes('await') ||
+    status.includes('new') ||
+    status.includes('confirmed') ||
+    status.includes('review') ||
+    status.includes('processing') ||
+    status.includes('analysis')
+  ) {
+    return true;
+  }
+
+  return paymentStatus === 'pending';
+};
+
+const getOrdersStats = (orders: Order[]) => {
+  const pendingOrders = orders.filter(isPendingOrder);
+  const shippingOrders = orders.filter((order) => {
+    const status = normalizeStatus(order.status);
+    return ['processing', 'shipped', 'courier'].includes(status);
+  });
+  const paidOrders = orders.filter((order) => ['paid', 'delivered'].includes(normalizeStatus(order.payment_status)));
+  const unpaidOrders = orders.filter((order) => normalizeStatus(order.payment_status) !== 'paid');
+  const uniqueCustomers = new Set(
+    orders.map((order) => order.customer_email || order.customer_name || order.user_id).filter(Boolean)
+  );
+
+  return {
+    pendingOrders,
+    shippingOrders,
+    totalOrders: orders.length,
+    totalCustomers: uniqueCustomers.size,
+    totalRevenue: paidOrders.reduce((sum, order) => sum + parseCurrencyAmount(order.total_amount), 0),
+    yetToReceivePayments: unpaidOrders.reduce((sum, order) => sum + parseCurrencyAmount(order.total_amount), 0),
+  };
+};
+
 export function AdminDashboard() {
-  const { products, categories } = useProducts();
-  const { user, accessToken } = useAuth();
+  const { products } = useProducts();
+  const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false); // Changed to false for instant load
   const [storageStatus, setStorageStatus] = useState<{ allReady: boolean } | null>(null);
@@ -52,6 +151,23 @@ export function AdminDashboard() {
     // Load immediately without blocking UI
     loadDashboardData();
     checkStorageStatus();
+
+    const handleNewOrder = () => {
+      console.log('🔔 [Dashboard] New order notification received, refreshing dashboard...');
+      void loadDashboardData();
+    };
+
+    window.addEventListener('newOrderNotification', handleNewOrder);
+
+    const interval = setInterval(() => {
+      console.log('🔄 [Dashboard] Auto-refreshing dashboard metrics...');
+      void loadDashboardData();
+    }, 15000);
+
+    return () => {
+      window.removeEventListener('newOrderNotification', handleNewOrder);
+      clearInterval(interval);
+    };
   }, []);
 
   // Check storage bucket status
@@ -73,84 +189,106 @@ export function AdminDashboard() {
     try {
       // Keep UI interactive while data refreshes in background
       
-      console.log('ðŸ“Š [Dashboard] Fetching dashboard data...');
+      console.log('📊 [Dashboard] Fetching dashboard data...');
       
       // Add timeout to prevent hanging requests
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
       try {
-        // Always use publicAnonKey to pass Supabase infrastructure validation
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/dashboard-stats`,
+          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`,
           {
-            headers: buildHeaders(accessToken),
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${publicAnonKey}`,
+              apikey: publicAnonKey,
+            },
             signal: controller.signal
           }
         );
 
         clearTimeout(timeoutId);
 
-        console.log('ðŸ“Š [Dashboard] Response status:', response.status);
-        
-        // Get response text first to see what we're actually receiving
-        const responseText = await response.text();
-        
+        console.log('📊 [Dashboard] Response status:', response.status);
+
         if (!response.ok) {
-          // Check if it's a backend deployment issue
-          const isBackendIssue = responseText.includes('Missing authorization header') || 
-                                 responseText.includes('Invalid JWT') || 
-                                 responseText.includes('\"code\":401');
-          
-          if (isBackendIssue) {
-            console.log('â„¹ [Dashboard] Backend not deployed - using local fallback mode');
-            // Don't set jwtError, just use fallback data
-          } else {
-            console.log('â„¹ [Dashboard] Backend error - using local fallback mode');
-          }
-          
-          // Use fallback data instead of throwing error
-          throw new Error('Backend unavailable');
+          throw new Error('Orders endpoint unavailable');
         }
 
-        // Try to parse the JSON
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.log('â„¹ [Dashboard] Could not parse response - using local fallback');
-          throw new Error('Backend unavailable');
-        }
+        const data = await response.json();
+        const backendOrders: Order[] = Array.isArray(data.orders) ? data.orders : [];
+        const localOrders = loadOrdersFromLocalStorage();
+        const mergedOrders = mergeOrders(backendOrders, localOrders);
+        const orderStats = getOrdersStats(mergedOrders);
 
-        setDashboardData(data);
-        console.log('âœ… [Dashboard] Loaded dashboard data from backend');
+        setDashboardData({
+          stats: {
+            totalProducts: products.length,
+            totalOrders: orderStats.totalOrders,
+            totalCustomers: orderStats.totalCustomers,
+            totalRevenue: String(orderStats.totalRevenue),
+          },
+          pendingOrdersCount: orderStats.pendingOrders.length,
+          cancellationRequestsCount: 0,
+          pendingPaymentsCount: orderStats.yetToReceivePayments > 0 ? 1 : 0,
+          outOfStockCount: 0,
+          pendingOrders: orderStats.pendingOrders,
+          cancellationRequests: [],
+          pendingPayments: orderStats.yetToReceivePayments > 0
+            ? [{ amount: String(orderStats.yetToReceivePayments) }]
+            : [],
+          outOfStockItems: []
+        });
+        console.log(`✅ [Dashboard] Loaded ${mergedOrders.length} orders from backend/localStorage`);
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         
         if (fetchError.name === 'AbortError') {
-          console.log('âš  [Dashboard] Request timed out - using fallback data');
+          console.log('⚠ [Dashboard] Request timed out - using fallback data');
         } else {
-          console.log('âš  [Dashboard] Fetch error:', fetchError.message);
+          console.log('⚠ [Dashboard] Fetch error:', fetchError.message);
         }
-        
-        // Use fallback data
-        throw new Error('Backend unavailable');
+
+        const localOrders = loadOrdersFromLocalStorage();
+        const orderStats = getOrdersStats(localOrders);
+
+        setDashboardData({
+          stats: {
+            totalProducts: products.length,
+            totalOrders: orderStats.totalOrders,
+            totalCustomers: orderStats.totalCustomers,
+            totalRevenue: String(orderStats.totalRevenue),
+          },
+          pendingOrdersCount: orderStats.pendingOrders.length,
+          cancellationRequestsCount: 0,
+          pendingPaymentsCount: orderStats.yetToReceivePayments > 0 ? 1 : 0,
+          outOfStockCount: 0,
+          pendingOrders: orderStats.pendingOrders,
+          cancellationRequests: [],
+          pendingPayments: orderStats.yetToReceivePayments > 0
+            ? [{ amount: String(orderStats.yetToReceivePayments) }]
+            : [],
+          outOfStockItems: []
+        });
       }
     } catch (error) {
       // Set local fallback data - no error shown to user
-      console.log('â„¹ [Dashboard] Using local fallback mode (backend not available)');
+      console.log('ℹ [Dashboard] Using local fallback mode (backend not available)');
+      const localOrders = loadOrdersFromLocalStorage();
+      const orderStats = getOrdersStats(localOrders);
       setDashboardData({
         stats: {
           totalProducts: products.length,
-          totalOrders: 0,
-          totalCustomers: 0,
-          totalRevenue: '0',
+          totalOrders: orderStats.totalOrders,
+          totalCustomers: orderStats.totalCustomers,
+          totalRevenue: String(orderStats.totalRevenue),
         },
-        pendingOrdersCount: 0,
+        pendingOrdersCount: orderStats.pendingOrders.length,
         cancellationRequestsCount: 0,
         pendingPaymentsCount: 0,
         outOfStockCount: 0,
-        pendingOrders: [],
+        pendingOrders: orderStats.pendingOrders,
         cancellationRequests: [],
         pendingPayments: [],
         outOfStockItems: []
@@ -166,7 +304,7 @@ export function AdminDashboard() {
     returnRequests: 0, // Not tracking return requests currently
     pendingCancelRequests: dashboardData.cancellationRequestsCount,
     yetToReceivePayments: dashboardData.pendingPayments.reduce((sum, payment) => {
-      const amount = payment.amount.replace('?', '').replace(/,/g, '');
+      const amount = String(payment.amount || '0').replace(/[^\d.-]/g, '');
       return sum + parseFloat(amount);
     }, 0),
     outOfStockItems: dashboardData.outOfStockCount,
@@ -378,4 +516,3 @@ export function AdminDashboard() {
 }
 
 export default AdminDashboard;
-

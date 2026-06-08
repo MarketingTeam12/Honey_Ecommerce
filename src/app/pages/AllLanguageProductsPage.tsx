@@ -3,7 +3,9 @@ import { Heart } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useWishlist } from '@/app/context/WishlistContext';
 import { useProducts } from '@/app/context/ProductContext';
+import { allProductsMap } from '@/app/data/allProductData';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
+import legacyFallbackImage from '@/assets/hero-banner-documents.png';
 
 interface Product {
   id: string;
@@ -22,6 +24,26 @@ const getPromoTag = (seed: string) => {
   const hash = seed.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return PROMO_TAGS[hash % PROMO_TAGS.length];
 };
+
+const fallbackLanguageProducts: Product[] = Object.entries(allProductsMap)
+  .filter(([, productData]) => productData.type === 'translation')
+  .map(([id, productData]) => ({
+    id,
+    name: productData.title,
+    price: productData.price,
+    originalPrice: productData.originalPrice,
+    image: getFirstValidImage(productData.images) || legacyFallbackImage,
+    url: `/product/${id}`,
+    description:
+      productData.description ||
+      productData.productDetails
+        .map((detail) => (typeof detail === 'string' ? detail : detail.text))
+        .filter(Boolean)
+        .slice(0, 2)
+        .join(' ') ||
+      'Professional language translation service',
+    category: 'language',
+  }));
 
 export function AllLanguageProductsPage() {
   const { convertPrice } = useCurrency();
@@ -44,11 +66,15 @@ export function AllLanguageProductsPage() {
       name: product.name,
       price: product.price,
       originalPrice: product.compareAtPrice || product.price,
-      image: getFirstValidImage(product.images),
+      image: getFirstValidImage(product.images) || legacyFallbackImage,
       url: `/product/${product.id}`,
       description: product.description || 'Professional language translation service',
       category: 'language'
     }));
+
+  const languageProducts = adminLanguageProducts.length > 0
+    ? adminLanguageProducts
+    : fallbackLanguageProducts;
 
   const handleWishlistToggle = (product: Product) => {
     if (isInWishlist(product.id)) {
@@ -87,12 +113,12 @@ export function AllLanguageProductsPage() {
             Professional translation services for all languages
           </p>
           <p className="text-gray-500 mt-2">
-            {adminLanguageProducts.length} language services available
+            {languageProducts.length} language services available
           </p>
         </div>
 
         {/* Products Grid */}
-        {adminLanguageProducts.length === 0 ? (
+        {languageProducts.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-12 text-center border border-gray-200">
             <div className="max-w-md mx-auto">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -108,7 +134,7 @@ export function AllLanguageProductsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-            {adminLanguageProducts.map((product) => (
+            {languageProducts.map((product) => (
               <div
                 key={product.id}
                 className="group border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 bg-white flex flex-col max-w-[28rem] w-full mx-auto"

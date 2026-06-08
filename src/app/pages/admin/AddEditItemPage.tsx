@@ -1044,7 +1044,7 @@ export function AddEditItemPage() {
                   </select>
                   {categories.length === 0 && (
                     <p className="text-xs text-yellow-600 mt-1">
-                      âš  Using default categories. Categories will load shortly.
+                        Using default categories. Categories will load shortly.
                     </p>
                   )}
                 </div>

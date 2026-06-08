@@ -127,8 +127,8 @@ export function BankGatewayPage() {
             }
             
             if (!backendSaveSuccess) {
-              console.error('âš  [BankGateway] Order failed to save to backend after all retries!');
-              console.warn('âš  Order may not sync across devices.');
+              console.error('  [BankGateway] Order failed to save to backend after all retries!');
+              console.warn('  Order may not sync across devices.');
             } else {
               console.log('ðŸŽ‰ [BankGateway] Order successfully saved to backend for cross-device sync!');
             }
