@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, Copy, Database, AlertTriangle, ExternalLink, RefreshCw, XCircle, Trash2, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { copyToClipboard } from '@/app/utils/clipboard';
 
 export default function QuickOrdersFixPage() {
@@ -20,7 +20,7 @@ export default function QuickOrdersFixPage() {
   const checkDatabaseStatus = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup/status`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup/status`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -66,7 +66,7 @@ export default function QuickOrdersFixPage() {
   };
 
   const sqlScript = `-- Honey Translation Services - Database Setup
--- Run this in your Supabase SQL Editor
+-- Run this in your Backend SQL Editor
 
 -- Create the key-value store table
 CREATE TABLE IF NOT EXISTS public.kv_store_a67f0635 (
@@ -111,11 +111,11 @@ FOR DELETE TO anon USING (true);`;
     }
   };
 
-  const handleOpenSupabase = () => {
+  const handleOpenBackend = () => {
     const projectId = window.location.hostname.includes('localhost') 
       ? 'your-project-id' 
       : window.location.hostname.split('.')[0];
-    window.open(`https://supabase.com/dashboard/project/${projectId}/sql/new`, '_blank');
+    window.open(`https://authClient.com/dashboard/project/${projectId}/sql/new`, '_blank');
   };
 
   const handleSetupDatabase = async () => {
@@ -124,7 +124,7 @@ FOR DELETE TO anon USING (true);`;
     
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup/database`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup/database`,
         {
           method: 'POST',
           headers: {
@@ -362,17 +362,17 @@ FOR DELETE TO anon USING (true);`;
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Open Supabase SQL Editor
+                    Open Backend SQL Editor
                   </h3>
                   <p className="text-gray-600 mb-3">
-                    Click the button below to open the Supabase SQL Editor in a new tab
+                    Click the button below to open the Backend SQL Editor in a new tab
                   </p>
                   <button
-                    onClick={handleOpenSupabase}
+                    onClick={handleOpenBackend}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Open SQL Editor in Supabase
+                    Open SQL Editor in Backend
                   </button>
                 </div>
               </div>
@@ -387,7 +387,7 @@ FOR DELETE TO anon USING (true);`;
                     Paste and Run
                   </h3>
                   <div className="text-gray-600 space-y-2">
-                    <p>In the Supabase SQL Editor:</p>
+                    <p>In the Backend SQL Editor:</p>
                     <ol className="list-decimal ml-5 space-y-1">
                       <li>Paste the SQL script you copied in Step 1</li>
                       <li>Click the "Run" button (or press Ctrl+Enter)</li>

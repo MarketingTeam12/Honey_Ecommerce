@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useWishlist } from '@/app/context/WishlistContext';
@@ -42,7 +42,7 @@ export function AllStartupProductsPage() {
         'https://via.placeholder.com/400/9333EA/FFFFFF?text=Startup+Package',
       );
       
-      console.log('ðŸ–¼ [AllStartupProductsPage] Product:', product.name, 'Image URL:', productImage);
+      console.log('🖼 [AllStartupProductsPage] Product:', product.name, 'Image URL:', productImage);
       
       return {
         id: product.id,

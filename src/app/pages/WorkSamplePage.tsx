@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, FileText } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import exampleImage from 'figma:asset/2b5d92b752452ee96adba1a106a3de42ffc5f274.png';
 
@@ -27,7 +27,7 @@ export function WorkSamplePage() {
         console.log('📋 Fetching work samples...');
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/work-samples`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/work-samples`,
           {
             headers: buildHeaders(),
           }

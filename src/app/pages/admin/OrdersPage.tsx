@@ -3,7 +3,7 @@ import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Copy, ChevronRight, Eye, FileText, Truck, CreditCard, Paperclip, RefreshCw, Trash2, Database, AlertTriangle, Search, Calendar, Plus, X, Check, Edit3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link, useNavigate } from 'react-router-dom';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { isSalesManager } from '@/app/utils/roleAccess';
@@ -76,7 +76,7 @@ interface StaffOption {
   label: string;
   email?: string;
   role?: string;
-  source: 'account' | 'legacy';
+  source: 'role' | 'legacy';
 }
 
 const normalize = (value?: string | null) => String(value || '').trim().toLowerCase();
@@ -99,14 +99,20 @@ const toSearchableText = (value: unknown): string => {
 
 const canSalesManagerSeeOrder = (
   order: Order,
-  user?: { id?: string; email?: string } | null,
+  user?: { id?: string; email?: string; role?: unknown } | null,
 ) => {
   if (!user) return false;
   const email = normalize(user.email);
   const userId = normalize(user.id);
   const userName = normalize((user as { name?: string }).name);
+  const userRole = normalizeRoleKey((user as { role?: unknown }).role);
   const assignedTo = normalize(order.assigned_to);
-  return !!assignedTo && (assignedTo === email || assignedTo === userId || assignedTo === userName);
+  return !!assignedTo && (
+    assignedTo === email ||
+    assignedTo === userId ||
+    assignedTo === userName ||
+    assignedTo === userRole
+  );
 };
 
 export function OrdersPage() {
@@ -154,7 +160,7 @@ export function OrdersPage() {
     window.addEventListener('newOrderNotification', handleNewOrder);
 
     const interval = setInterval(() => {
-      console.log('🔄 [OrdersPage] Auto-refreshing orders...');
+      console.log('?? [OrdersPage] Auto-refreshing orders...');
       void fetchOrders({ background: true });
     }, 15000);
     
@@ -176,7 +182,7 @@ export function OrdersPage() {
       let backendAvailable = false;
       
       try {
-        const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`;
+        const url = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
         const response = await fetch(url, {
@@ -379,7 +385,7 @@ export function OrdersPage() {
       return;
     }
 
-    const selectedManager = salesManagerOptions.find((option) => normalize(option.value) === normalize(nextValue));
+    const selectedManager = salesManagerOptions.find((option) => normalize(option.value) === normalize(nextValue) || normalize(option.label) === normalize(nextValue) || normalize(option.email) === normalize(nextValue));
     const nextLabel = selectedManager?.label || nextValue;
 
     if (!selectedManager) {
@@ -429,7 +435,8 @@ export function OrdersPage() {
   const syncSalesManagerNamesFromOrders = (currentOrders: Order[]) => {
     const derivedNames = currentOrders
       .map((order) => normalizeManagerName(order.assigned_to))
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((name) => !salesManagerOptions.some((option) => option.source === "role" && normalize(option.value) === normalize(name)));
 
     if (derivedNames.length === 0) {
       return;
@@ -707,7 +714,7 @@ export function OrdersPage() {
               ))
             ) : (
               <div className="px-3 py-2 text-xs text-gray-500">
-                No role users with Orders access found. Add a role user in Accounts and give that role Orders access.
+                No roles available for assignment yet. Create roles in Roles Management to show them here.
               </div>
             )}
           </div>
@@ -1124,7 +1131,7 @@ const syncUnsyncedOrders = async (ordersToSync: Order[]) => {
 
   await Promise.allSettled(
     ordersToSync.map(async (order) => {
-      await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
+      await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1255,7 +1262,7 @@ function roleHasOrdersAccess(roleKey: string): boolean {
 
     return moduleAccess.includes('orders') || dataAccess.some((token) => token.startsWith('orders:'));
   } catch (error) {
-    console.error('❌ [OrdersPage] Failed to check role orders access:', error);
+    console.error('? [OrdersPage] Failed to check role orders access:', error);
     return false;
   }
 }
@@ -1270,45 +1277,47 @@ function loadRoleOverrides(): Record<string, string> {
       Object.entries(parsed).map(([email, role]) => [normalize(email), normalizeRoleKey(role)])
     );
   } catch (error) {
-    console.error('❌ [OrdersPage] Failed to load role overrides:', error);
+    console.error('? [OrdersPage] Failed to load role overrides:', error);
     return {};
   }
 }
 
 function loadSalesManagerOptions(legacyNames: string[] = []): StaffOption[] {
   const options = new Map<string, StaffOption>();
-  const roleOverrides = loadRoleOverrides();
+  const roleKeys = new Set<string>();
 
   try {
-    const raw = localStorage.getItem(REGISTERED_USERS_STORAGE_KEY);
-    const users = raw ? JSON.parse(raw) : [];
+    const raw = localStorage.getItem(ROLES_STORAGE_KEY);
+    const roles = raw ? JSON.parse(raw) : [];
 
-    if (Array.isArray(users)) {
-      users.forEach((account: any) => {
-        const email = normalize(account.email);
-        if (!email) return;
+    if (Array.isArray(roles)) {
+      roles.forEach((role: any) => {
+        const roleKey = normalizeRoleKey(role.key || role.name);
+        if (!roleKey || roleKey === 'customer') return;
 
-        const role = normalizeRoleKey(roleOverrides[email] ?? account.role);
-        if (!roleHasOrdersAccess(role) || role === 'admin') return;
+        const label = normalizeManagerName(role.name) || formatRoleLabel(roleKey);
+        const optionKey = `role:${roleKey}`;
+        roleKeys.add(roleKey);
 
-        const label = normalizeManagerName(account.name) || email;
-        options.set(email, {
-          value: email,
+        options.set(optionKey, {
+          value: roleKey,
           label,
-          email,
-          role: formatRoleLabel(role),
-          source: 'account',
+          role: role.status === 'Inactive' ? `${label} (Inactive)` : label,
+          source: 'role',
         });
       });
     }
   } catch (error) {
-    console.error('❌ [OrdersPage] Failed to load assignable role users:', error);
+    console.error('? [OrdersPage] Failed to load assignable roles:', error);
   }
 
   legacyNames.forEach((name) => {
     const value = normalizeManagerName(name);
+    if (!value) return;
+
     const key = normalize(value);
-    if (!value || options.has(key)) return;
+    const roleKey = normalizeRoleKey(value);
+    if (options.has(key) || roleKeys.has(roleKey)) return;
 
     options.set(key, {
       value,
@@ -1475,6 +1484,10 @@ function getDeletedOrderIds(): Set<string> {
   }
   return new Set();
 }
+
+
+
+
 
 
 

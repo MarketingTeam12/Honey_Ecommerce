@@ -1,13 +1,14 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit, Trash2, Download, Upload } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { publicAnonKey } from '@/app/utils/backendInfo';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { useAuth } from '@/app/context/AuthContext';
 import { BackendStatusBanner } from '@/app/components/BackendStatusBanner';
 import { canAccessRoleAction } from '@/app/utils/roleAccess';
+import { API_URL } from '@/app/utils/api';
 
 interface WorkSample {
   id: string;
@@ -60,13 +61,13 @@ export function WorkSamplesPage() {
   const fetchSamples = async () => {
     try {
       setLoading(true);
-      console.log('ðŸ“‹ [WorkSamples] Fetching work samples...');
+      console.log('📋 [WorkSamples] Fetching work samples...');
       
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/work-samples`,
+        `${API_URL}/work-samples`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ export function WorkSamplesPage() {
 
       clearTimeout(timeout);
 
-      console.log('ðŸ“‹ [WorkSamples] Response status:', response.status);
+      console.log('📋 [WorkSamples] Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -92,7 +93,7 @@ export function WorkSamplesPage() {
                                response.status === 404;
         
         if (isBackendIssue) {
-          console.log('â„¹ Backend not deployed - showing demo work samples');
+          console.log('ℹ Backend not deployed - showing demo work samples');
           setBackendAvailable(false);
           
           // Load demo data for better UX
@@ -155,7 +156,7 @@ export function WorkSamplesPage() {
       }
 
       const data = await response.json();
-      console.log('ðŸ“‹ [WorkSamples] Fetched', data.samples?.length || 0, 'samples');
+      console.log('📋 [WorkSamples] Fetched', data.samples?.length || 0, 'samples');
       setSamples(data.samples || []);
       setBackendAvailable(true);
     } catch (error) {
@@ -163,7 +164,7 @@ export function WorkSamplesPage() {
       
       // Check if it's a timeout/network error
       if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('fetch'))) {
-        console.log('â„¹ [WorkSamples] Request timed out or network error - showing demo samples');
+        console.log('ℹ [WorkSamples] Request timed out or network error - showing demo samples');
         setBackendAvailable(false);
         
         // Load demo data for better UX
@@ -247,17 +248,18 @@ export function WorkSamplesPage() {
 
     try {
       setUploading(true);
-      console.log('ðŸ“¤ Uploading file:', file.name);
+      console.log('📤 Uploading file:', file.name);
 
       const formDataToSend = new FormData();
       formDataToSend.append('file', file);
+      formDataToSend.append('folder', 'work-samples');
 
       const headers = buildHeaders(accessToken);
       // Remove Content-Type for FormData - browser will set it with boundary
       delete headers['Content-Type'];
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/upload-work-sample`,
+        `${API_URL}/api/s3/upload`,
         {
           method: 'POST',
           headers,
@@ -271,7 +273,7 @@ export function WorkSamplesPage() {
       }
 
       const data = await response.json();
-      console.log('âœ… Upload successful:', data);
+      console.log('✅ Upload successful:', data);
 
       setFormData(prev => ({
         ...prev,
@@ -281,7 +283,7 @@ export function WorkSamplesPage() {
 
       alert('File uploaded successfully!');
     } catch (error) {
-      console.error('âŒ Upload error:', error);
+      console.error('❌ Upload error:', error);
       alert(error instanceof Error ? error.message : 'Failed to upload file');
     } finally {
       setUploading(false);
@@ -303,8 +305,8 @@ export function WorkSamplesPage() {
 
     try {
       const endpoint = editingSample
-        ? `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/work-samples/${editingSample.id}`
-        : `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/work-samples`;
+        ? `${API_URL}/admin/work-samples/${editingSample.id}`
+        : `${API_URL}/admin/work-samples`;
 
       const response = await fetch(endpoint, {
         method: editingSample ? 'PUT' : 'POST',
@@ -359,7 +361,7 @@ export function WorkSamplesPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/work-samples/${id}`,
+        `${API_URL}/admin/work-samples/${id}`,
         {
           method: 'DELETE',
           headers: buildHeaders(accessToken),
@@ -496,7 +498,7 @@ export function WorkSamplesPage() {
                   </label>
                   {formData.fileName && (
                     <span className="text-sm text-gray-600">
-                      âœ“ {formData.fileName}
+                      ✓ {formData.fileName}
                     </span>
                   )}
                 </div>

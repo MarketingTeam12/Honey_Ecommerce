@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Bell, Check, Trash2, Filter, Search } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'sonner';
 
@@ -38,7 +38,7 @@ function NotificationsPage() {
       setLoading(true);
       console.log('📬 [NotificationsPage] Loading notifications from backend...');
       
-      // Use publicAnonKey as fallback for Supabase infra auth in demo mode
+      // Use publicAnonKey as fallback for Backend infra auth in demo mode
       const isMock = accessToken?.startsWith('mock-token-');
       const bearerToken = (!isMock && accessToken) ? accessToken : publicAnonKey;
       const headers: Record<string, string> = {
@@ -52,7 +52,7 @@ function NotificationsPage() {
       
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications`,
           { 
             headers,
             signal: controller.signal
@@ -96,7 +96,7 @@ function NotificationsPage() {
     try {
       console.log('🔔 [NotificationsPage] Marking notification as read:', id);
       
-      // Use publicAnonKey as fallback for Supabase infra auth in demo mode
+      // Use publicAnonKey as fallback for Backend infra auth in demo mode
       const isMock = accessToken?.startsWith('mock-token-');
       const bearerToken = (!isMock && accessToken) ? accessToken : publicAnonKey;
       const headers: Record<string, string> = {
@@ -105,7 +105,7 @@ function NotificationsPage() {
       };
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/${id}/read`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/${id}/read`,
         {
           method: 'PATCH',
           headers
@@ -137,7 +137,7 @@ function NotificationsPage() {
     try {
       console.log('🔔 [NotificationsPage] Marking all notifications as read...');
       
-      // Use publicAnonKey as fallback for Supabase infra auth in demo mode
+      // Use publicAnonKey as fallback for Backend infra auth in demo mode
       const isMock = accessToken?.startsWith('mock-token-');
       const bearerToken = (!isMock && accessToken) ? accessToken : publicAnonKey;
       const headers: Record<string, string> = {
@@ -146,7 +146,7 @@ function NotificationsPage() {
       };
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/mark-all-read`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/mark-all-read`,
         {
           method: 'PATCH',
           headers
@@ -185,7 +185,7 @@ function NotificationsPage() {
       try {
         console.log('🗑️ [NotificationsPage] Deleting notification:', id);
         
-        // Use publicAnonKey as fallback for Supabase infra auth in demo mode
+        // Use publicAnonKey as fallback for Backend infra auth in demo mode
         const isMock = accessToken?.startsWith('mock-token-');
         const bearerToken = (!isMock && accessToken) ? accessToken : publicAnonKey;
         const headers: Record<string, string> = {
@@ -194,7 +194,7 @@ function NotificationsPage() {
         };
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/${id}`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/${id}`,
           {
             method: 'DELETE',
             headers
@@ -227,7 +227,7 @@ function NotificationsPage() {
       try {
         console.log('🗑️ [NotificationsPage] Deleting selected notifications:', selectedIds);
         
-        // Use publicAnonKey as fallback for Supabase infra auth in demo mode
+        // Use publicAnonKey as fallback for Backend infra auth in demo mode
         const isMock = accessToken?.startsWith('mock-token-');
         const bearerToken = (!isMock && accessToken) ? accessToken : publicAnonKey;
         const headers: Record<string, string> = {
@@ -236,7 +236,7 @@ function NotificationsPage() {
         };
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/delete-selected`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/delete-selected`,
           {
             method: 'DELETE',
             headers,

@@ -1,4 +1,4 @@
-﻿import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function Header() {
@@ -42,16 +42,16 @@ export function Header() {
               Home
             </Link>
             <button className="text-gray-700 hover:text-[#1a1f5c] transition-colors">
-              Language ▼
+              Language ?
             </button>
             <button className="text-gray-700 hover:text-[#1a1f5c] transition-colors">
-              Apostille ▼
+              Apostille ?
             </button>
             <button className="text-gray-700 hover:text-[#1a1f5c] transition-colors">
               Attestation
             </button>
             <button className="text-gray-700 hover:text-[#1a1f5c] transition-colors">
-              More ▼
+              More ?
             </button>
           </div>
         </div>

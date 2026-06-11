@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 function CustomersDebugPage() {
   const [customers, setCustomers] = useState<any[]>([]);
@@ -17,7 +17,7 @@ function CustomersDebugPage() {
       console.log('🔍 [DEBUG] Using publicAnonKey:', publicAnonKey.substring(0, 20) + '...');
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/customers`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/customers`,
         {
           headers: {
             'Content-Type': 'application/json',

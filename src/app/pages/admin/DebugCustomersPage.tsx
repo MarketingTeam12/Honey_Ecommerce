@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 export function DebugCustomersPage() {
   const [testResults, setTestResults] = useState<string[]>([]);
@@ -21,7 +21,7 @@ export function DebugCustomersPage() {
       addLog(`📍 Project ID: ${projectId}`);
       addLog(`🔑 Using publicAnonKey for authentication`);
       
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/customers`;
+      const url = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/customers`;
       addLog(`📡 Fetching from: ${url}`);
       
       const response = await fetch(url, {
@@ -149,7 +149,7 @@ export function DebugCustomersPage() {
                 <li>• <strong>Test Backend Endpoint:</strong> Checks if the /customers API is working</li>
                 <li>• <strong>Test KV Store:</strong> Verifies database connection and data retrieval</li>
                 <li>• Check the console (F12) for additional detailed logs</li>
-                <li>• If customers aren't showing, check backend logs in Supabase Functions dashboard</li>
+                <li>• If customers aren't showing, check backend logs in Backend Functions dashboard</li>
               </ul>
             </div>
           </div>

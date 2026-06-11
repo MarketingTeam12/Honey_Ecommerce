@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Terminal, CheckCircle } from 'lucide-react';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 
 export function EdgeFunctionSetupGuide() {
   const [isVisible, setIsVisible] = useState(false);
@@ -18,7 +18,7 @@ export function EdgeFunctionSetupGuide() {
     const checkBackend = async () => {
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/health`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/health`,
           { method: 'HEAD' }
         );
         
@@ -69,7 +69,7 @@ export function EdgeFunctionSetupGuide() {
         {/* Body */}
         <div className="p-5 space-y-4">
           <p className="text-gray-700">
-            To enable full backend functionality, deploy your Supabase Edge Functions:
+            To enable full backend functionality, deploy your Backend Edge Functions:
           </p>
 
           <div className="bg-gray-50 rounded-lg p-4 space-y-3">
@@ -78,9 +78,9 @@ export function EdgeFunctionSetupGuide() {
                 1
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-700 mb-1">Install Supabase CLI:</p>
+                <p className="text-sm text-gray-700 mb-1">Install Backend CLI:</p>
                 <code className="block bg-gray-900 text-green-400 p-2 rounded text-xs overflow-x-auto">
-                  npm install -g supabase
+                  npm install -g Backend
                 </code>
               </div>
             </div>
@@ -92,7 +92,7 @@ export function EdgeFunctionSetupGuide() {
               <div className="flex-1">
                 <p className="text-sm text-gray-700 mb-1">Link your project:</p>
                 <code className="block bg-gray-900 text-green-400 p-2 rounded text-xs overflow-x-auto">
-                  supabase link --project-ref {projectId}
+                  Backend link --project-ref {projectId}
                 </code>
               </div>
             </div>
@@ -104,7 +104,7 @@ export function EdgeFunctionSetupGuide() {
               <div className="flex-1">
                 <p className="text-sm text-gray-700 mb-1">Deploy the function:</p>
                 <code className="block bg-gray-900 text-green-400 p-2 rounded text-xs overflow-x-auto">
-                  supabase functions deploy make-server-a67f0635
+                  Backend functions deploy make-server-a67f0635
                 </code>
               </div>
             </div>
@@ -125,7 +125,7 @@ export function EdgeFunctionSetupGuide() {
               Got it!
             </button>
             <a
-              href="https://supabase.com/docs/guides/functions"
+              href="https://authClient.com/docs/guides/functions"
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"

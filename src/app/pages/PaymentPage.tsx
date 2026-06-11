@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Smartphone, Building, Wallet, Check, Shield, Lock } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';

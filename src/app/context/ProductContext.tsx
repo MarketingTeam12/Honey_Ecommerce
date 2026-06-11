@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { uploadImage } from '@/app/utils/supabaseStorage';
-import { projectId } from '@/utils/supabase/info';
+import { uploadImage } from '@/app/utils/backendStorage';
+import { projectId } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 
 export interface Product {
@@ -19,7 +19,7 @@ export interface Product {
   tags: string[];
   metaTitle?: string;
   metaDescription?: string;
-  images: string[]; // Stores Supabase Storage URLs
+  images: string[]; // Stores Backend Storage URLs
   createdAt: string;
   updatedAt: string;
 }
@@ -66,7 +66,7 @@ const defaultContextValue: ProductContextType = {
 
 export const ProductContext = createContext<ProductContextType>(defaultContextValue);
 
-const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+const API_URL = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
 const PRODUCTS_STORAGE_KEY = 'admin_products';
 const CATEGORIES_STORAGE_KEY = 'admin_categories';
 
@@ -92,11 +92,86 @@ function writeStoredJson(key: string, value: unknown) {
   }
 }
 
+function toNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(/,/g, '').trim());
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item || '').trim()).filter(Boolean);
+      }
+    } catch {
+      return value.trim() ? [value.trim()] : [];
+    }
+  }
+
+  return [];
+}
+
+function normalizeProduct(product: any): Product {
+  const imagesFromMetadata = toStringArray(product?.metadata?.images);
+  const images = toStringArray(product?.images);
+  return {
+    ...product,
+    id: String(product?.id || '').trim() || `product-${Date.now()}`,
+    name: String(product?.name || '').trim() || 'Unnamed Product',
+    category: String(product?.category || '').trim() || 'Uncategorized',
+    description: String(product?.description || ''),
+    status: ['active', 'draft', 'archived'].includes(String(product?.status || '').trim())
+      ? String(product.status).trim() as Product['status']
+      : 'draft',
+    price: toNumber(product?.price),
+    compareAtPrice: product?.compareAtPrice !== undefined && product?.compareAtPrice !== null
+      ? toNumber(product.compareAtPrice)
+      : undefined,
+    cost: product?.cost !== undefined && product?.cost !== null
+      ? toNumber(product.cost)
+      : undefined,
+    stock: Math.max(0, Math.trunc(toNumber(product?.stock))),
+    weight: product?.weight ? String(product.weight) : undefined,
+    sku: product?.sku ? String(product.sku) : undefined,
+    barcode: product?.barcode ? String(product.barcode) : undefined,
+    tags: Array.isArray(product?.tags) ? product.tags : [],
+    images: images.length > 0 ? images : imagesFromMetadata,
+    metaTitle: product?.metaTitle ? String(product.metaTitle) : undefined,
+    metaDescription: product?.metaDescription ? String(product.metaDescription) : undefined,
+    createdAt: product?.createdAt || new Date().toISOString(),
+    updatedAt: product?.updatedAt || new Date().toISOString(),
+  };
+}
+
+function normalizeProductList(products: any[]): Product[] {
+  return (products || []).map(normalizeProduct);
+}
+
 function createLocalProduct(productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>, existingId?: string): Product {
   const now = new Date().toISOString();
 
   return {
     ...productData,
+    price: toNumber(productData.price),
+    compareAtPrice: productData.compareAtPrice !== undefined ? toNumber(productData.compareAtPrice) : undefined,
+    cost: productData.cost !== undefined ? toNumber(productData.cost) : undefined,
+    stock: Math.max(0, Math.trunc(toNumber(productData.stock))),
+    tags: Array.isArray(productData.tags) ? productData.tags : [],
+    images: Array.isArray(productData.images) ? productData.images : [],
     id: existingId || `local-${Date.now()}`,
     createdAt: now,
     updatedAt: now,
@@ -126,7 +201,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(() =>
     typeof window === 'undefined'
       ? []
-      : readStoredJson<Product[]>(PRODUCTS_STORAGE_KEY, []),
+      : normalizeProductList(readStoredJson<Product[]>(PRODUCTS_STORAGE_KEY, [])),
   );
   const [categories, setCategories] = useState<Category[]>([
     {
@@ -219,7 +294,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         setProducts([]);
         writeStoredJson(PRODUCTS_STORAGE_KEY, []);
       } else {
-        const normalizedProducts = data.products || [];
+        const normalizedProducts = normalizeProductList(data.products || []);
         setProducts(normalizedProducts);
         writeStoredJson(PRODUCTS_STORAGE_KEY, normalizedProducts);
       }
@@ -232,7 +307,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         console.log('⚠️ Server not reachable:', error.message, '- Edge Function not deployed. App will work with limited functionality.');
       }
       // Don't set error state - just use defaults silently
-      const storedProducts = readStoredJson<Product[]>(PRODUCTS_STORAGE_KEY, []);
+      const storedProducts = normalizeProductList(readStoredJson<Product[]>(PRODUCTS_STORAGE_KEY, []));
       setProducts(storedProducts);
       setIsLoading(false);
       setHasError(false); // Don't show error to user, just use defaults
@@ -351,15 +426,16 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       
       const data = await response.json();
       console.log('✅ Product created on server:', data.product);
+      const normalizedProduct = normalizeProduct(data.product);
       
       // Add to local state
       setProducts(prev => {
-        const nextProducts = [...prev, data.product];
+        const nextProducts = [...prev, normalizedProduct];
         writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
         return nextProducts;
       });
       
-      return data.product;
+      return normalizedProduct;
     } catch (error) {
       console.error('❌ Error creating product:', error);
       if (isFetchUnavailable(error)) {
@@ -400,10 +476,11 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       
       const data = await response.json();
       console.log('✅ Product updated on server:', data.product);
+      const normalizedProduct = normalizeProduct(data.product);
       
       // Update local state
       setProducts(prev => {
-        const nextProducts = prev.map(product => product.id === id ? data.product : product);
+        const nextProducts = prev.map(product => product.id === id ? normalizedProduct : product);
         writeStoredJson(PRODUCTS_STORAGE_KEY, nextProducts);
         return nextProducts;
       });
@@ -419,6 +496,16 @@ export function ProductProvider({ children }: { children: ReactNode }) {
           ...existingProduct,
           ...productData,
           id,
+          price: toNumber(productData.price ?? existingProduct.price),
+          compareAtPrice: productData.compareAtPrice !== undefined
+            ? toNumber(productData.compareAtPrice)
+            : existingProduct.compareAtPrice,
+          cost: productData.cost !== undefined
+            ? toNumber(productData.cost)
+            : existingProduct.cost,
+          stock: productData.stock !== undefined
+            ? Math.max(0, Math.trunc(toNumber(productData.stock)))
+            : existingProduct.stock,
           updatedAt: new Date().toISOString(),
         };
 
@@ -570,7 +657,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         // Check if it's a base64 data URL or an already-uploaded URL
         if (file.startsWith('data:')) {
           // It's base64, need to upload it
-          console.log('🔄 Converting base64 to Supabase Storage URL...');
+          console.log('🔄 Converting base64 to Backend Storage URL...');
           try {
             const url = await uploadImage(file);
             if (url) {
@@ -589,7 +676,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         }
       } else {
         // Upload the file
-        console.log('📤 Uploading file to Supabase Storage...');
+        console.log('📤 Uploading file to Backend Storage...');
         try {
           const url = await uploadImage(file);
           if (url) {

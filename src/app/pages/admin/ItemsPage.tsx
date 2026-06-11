@@ -27,6 +27,19 @@ export function ItemsPage() {
   const canEditItems = canAccessRoleAction(user?.role, 'items', 'edit');
   const canDeleteItems = canAccessRoleAction(user?.role, 'items', 'delete');
 
+  const safeText = (value: unknown, fallback = '') => String(value ?? fallback).trim();
+  const safeNumber = (value: unknown, fallback = 0) => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+      const parsed = Number(value.replace(/,/g, '').trim());
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const formatPrice = (value: unknown) => `$${safeNumber(value).toFixed(2)}`;
+
   // Show server notice if no products after loading
   useEffect(() => {
     if (!isLoading && products.length === 0) {
@@ -56,27 +69,38 @@ export function ItemsPage() {
   };
 
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
-    const matchesStatus = filterStatus === 'all' || product.status === filterStatus;
-    const matchesPriceMin = filterPriceMin === '' || product.price >= parseFloat(filterPriceMin);
-    const matchesPriceMax = filterPriceMax === '' || product.price <= parseFloat(filterPriceMax);
-    const matchesStockMin = filterStockMin === '' || product.stock >= parseInt(filterStockMin);
+    const productName = safeText(product.name, 'Unnamed Product');
+    const productCategory = safeText(product.category, 'Uncategorized');
+    const productStatus = safeText(product.status, 'draft');
+    const matchesSearch = productName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || productCategory === filterCategory;
+    const matchesStatus = filterStatus === 'all' || productStatus === filterStatus;
+    const productPrice = safeNumber(product.price);
+    const productStock = safeNumber(product.stock);
+    const matchesPriceMin = filterPriceMin === '' || productPrice >= parseFloat(filterPriceMin);
+    const matchesPriceMax = filterPriceMax === '' || productPrice <= parseFloat(filterPriceMax);
+    const matchesStockMin = filterStockMin === '' || productStock >= parseInt(filterStockMin);
     
     // Debug logging for Startup category
-    if (filterCategory === 'Startup' && product.category === 'Startup') {
-      console.log('âœ… Startup product matched:', product.name, '| Category:', product.category);
+    if (filterCategory === 'Startup' && productCategory === 'Startup') {
+      console.log('âœ… Startup product matched:', productName, '| Category:', productCategory);
     }
     
     return matchesSearch && matchesCategory && matchesStatus && matchesPriceMin && matchesPriceMax && matchesStockMin;
   }).sort((a, b) => {
     const [sortKey, sortOrder] = sortBy.split('-');
     if (sortKey === 'name') {
-      return sortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      const nameA = safeText(a.name, 'Unnamed Product');
+      const nameB = safeText(b.name, 'Unnamed Product');
+      return sortOrder === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
     } else if (sortKey === 'price') {
-      return sortOrder === 'asc' ? a.price - b.price : b.price - a.price;
+      return sortOrder === 'asc'
+        ? safeNumber(a.price) - safeNumber(b.price)
+        : safeNumber(b.price) - safeNumber(a.price);
     } else if (sortKey === 'stock') {
-      return sortOrder === 'asc' ? a.stock - b.stock : b.stock - a.stock;
+      return sortOrder === 'asc'
+        ? safeNumber(a.stock) - safeNumber(b.stock)
+        : safeNumber(b.stock) - safeNumber(a.stock);
     }
     return 0;
   });
@@ -254,17 +278,17 @@ export function ItemsPage() {
                     <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500">ID: {product.id}</div>
+                          <div className="font-medium text-gray-900">{safeText(product.name, 'Unnamed Product')}</div>
+                          <div className="text-sm text-gray-500">ID: {safeText(product.id, 'unknown')}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                          {product.category}
+                          {safeText(product.category, 'Uncategorized')}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-900 font-medium">
-                        ${product.price.toFixed(2)}
+                        {formatPrice(product.price)}
                       </td>
                       <td className="px-6 py-4 text-gray-900">
                         {product.stock}
@@ -272,14 +296,14 @@ export function ItemsPage() {
                       <td className="px-6 py-4">
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            product.status === 'active'
+                            safeText(product.status, 'draft') === 'active'
                               ? 'bg-green-100 text-green-700'
-                              : product.status === 'draft'
+                              : safeText(product.status, 'draft') === 'draft'
                               ? 'bg-yellow-100 text-yellow-700'
                               : 'bg-red-100 text-red-700'
                           }`}
                         >
-                          {product.status}
+                          {safeText(product.status, 'draft')}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -434,7 +458,7 @@ export function ItemsPage() {
                       <img
                         key={index}
                         src={image}
-                        alt={`${selectedProduct.name} ${index + 1}`}
+                        alt={`${safeText(selectedProduct.name, 'Product')} ${index + 1}`}
                         className="w-full h-40 object-cover rounded-lg border border-gray-200"
                       />
                     ))}
@@ -451,7 +475,7 @@ export function ItemsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm font-medium text-gray-500 mb-1">Product Name</p>
-                    <p className="text-gray-900 font-semibold">{selectedProduct.name}</p>
+                    <p className="text-gray-900 font-semibold">{safeText(selectedProduct.name, 'Unnamed Product')}</p>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm font-medium text-gray-500 mb-1">Product ID</p>
@@ -461,22 +485,22 @@ export function ItemsPage() {
                     <p className="text-sm font-medium text-gray-500 mb-1">Category</p>
                     <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                       <Tag className="w-3 h-3 mr-1" />
-                      {selectedProduct.category}
+                      {safeText(selectedProduct.category, 'Uncategorized')}
                     </span>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <p className="text-sm font-medium text-gray-500 mb-1">Status</p>
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        selectedProduct.status === 'active'
+                        safeText(selectedProduct.status, 'draft') === 'active'
                           ? 'bg-green-100 text-green-700'
-                          : selectedProduct.status === 'draft'
+                          : safeText(selectedProduct.status, 'draft') === 'draft'
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
                       <CheckCircle className="w-3 h-3 mr-1" />
-                      {selectedProduct.status}
+                      {safeText(selectedProduct.status, 'draft')}
                     </span>
                   </div>
                 </div>
@@ -491,7 +515,7 @@ export function ItemsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 bg-green-50 rounded-lg">
                     <p className="text-sm font-medium text-gray-500 mb-1">Price</p>
-                    <p className="text-2xl font-bold text-green-700">${selectedProduct.price.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-green-700">{formatPrice(selectedProduct.price)}</p>
                   </div>
                   <div className="p-4 bg-blue-50 rounded-lg">
                     <p className="text-sm font-medium text-gray-500 mb-1">Stock Quantity</p>
@@ -552,3 +576,4 @@ export function ItemsPage() {
 }
 
 export default ItemsPage;
+

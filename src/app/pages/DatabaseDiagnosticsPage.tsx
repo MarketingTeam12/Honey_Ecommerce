@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 /**
  * Database Diagnostics Page
@@ -20,7 +20,7 @@ export default function DatabaseDiagnosticsPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/diagnostics`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/diagnostics`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export default function DatabaseDiagnosticsPage() {
     
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup-database`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup-database`,
         {
           method: 'POST',
           headers: {
@@ -107,10 +107,10 @@ export default function DatabaseDiagnosticsPage() {
               <div className="bg-blue-50 rounded-lg p-4">
                 <div className="text-sm text-blue-600 font-medium mb-1">Environment</div>
                 <div className="text-2xl font-bold text-blue-900">
-                  {diagnostics?.env?.hasSupabaseUrl && diagnostics?.env?.hasServiceRoleKey ? '✅' : '❌'}
+                  {diagnostics?.env?.hasBackendUrl && diagnostics?.env?.hasServiceRoleKey ? '✅' : '❌'}
                 </div>
                 <div className="text-xs text-blue-600 mt-1">
-                  {diagnostics?.env?.hasSupabaseUrl && diagnostics?.env?.hasServiceRoleKey 
+                  {diagnostics?.env?.hasBackendUrl && diagnostics?.env?.hasServiceRoleKey 
                     ? 'Configured' 
                     : 'Missing keys'}
                 </div>
@@ -165,7 +165,7 @@ export default function DatabaseDiagnosticsPage() {
                         </p>
                         
                         <div className="bg-gray-50 rounded p-3 font-mono text-sm">
-                          <div className="text-gray-600 mb-2">Run this SQL in Supabase SQL Editor:</div>
+                          <div className="text-gray-600 mb-2">Run this SQL in Backend SQL Editor:</div>
                           <code className="text-blue-600">
                             ALTER TABLE kv_store_a67f0635 DISABLE ROW LEVEL SECURITY;
                           </code>
@@ -174,7 +174,7 @@ export default function DatabaseDiagnosticsPage() {
                         <div className="mt-4">
                           <h5 className="font-semibold text-gray-900 mb-2">Steps to fix:</h5>
                           <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                            <li>Go to your Supabase Dashboard</li>
+                            <li>Go to your Backend Dashboard</li>
                             <li>Click on "SQL Editor" in the left sidebar</li>
                             <li>Create a new query</li>
                             <li>Copy and paste the SQL command above</li>

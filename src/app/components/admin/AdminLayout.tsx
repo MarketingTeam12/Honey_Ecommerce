@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Package, ShoppingCart, Users, TrendingUp,
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
 import { canAccessRoleFeature, hasAdminAccess, isFullAdmin } from '@/app/utils/roleAccess';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import honeyLogo from 'figma:asset/d99fd9d20cac16122a3e457a66e96224eb5ad345.png';
 import { AdminPageSkeleton } from '@/app/components/layout/PageSkeleton';
 
@@ -71,7 +71,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         const isMock = accessToken?.startsWith('mock-token-');
         const bearerToken = !isMock && accessToken ? accessToken : publicAnonKey;
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications`,
           {
             headers: {
               'Content-Type': 'application/json',

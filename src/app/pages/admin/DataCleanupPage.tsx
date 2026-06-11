@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'sonner';
 import { buildHeaders } from '@/app/utils/buildHeaders';
@@ -26,7 +26,7 @@ export function DataCleanupPage() {
       console.log('🧹 [Cleanup] Starting data cleanup...');
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/clear-all-data`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/clear-all-data`,
         {
           method: 'POST',
           headers: buildHeaders(accessToken)

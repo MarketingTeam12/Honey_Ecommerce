@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { AnimatePresence, motion } from 'motion/react';
+import Slider from 'react-slick';
+import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/app/components/ui/badge';
 import { useCurrency } from '@/app/context/CurrencyContext';
@@ -39,8 +40,7 @@ const promoTextAnimation = {
 export function PickYourLanguage() {
   const { convertPrice } = useCurrency();
   const { products: adminProducts } = useProducts();
-  const [startIndex, setStartIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const sliderRef = useRef<Slider | null>(null);
   const blockedHomeProductName = 'any language to any language';
 
   // Get Translation category products from admin (exclude sworn translations)
@@ -50,10 +50,6 @@ export function PickYourLanguage() {
                !product.name.toLowerCase().includes('sworn') &&
                product.name.toLowerCase() !== blockedHomeProductName
   );
-
-  // Debug logging
-  console.log('PickYourLanguage - All admin products:', adminProducts);
-  console.log('PickYourLanguage - Translation products:', translationProducts);
 
   // Fallback products if no admin products
   const fallbackProducts = [
@@ -117,35 +113,35 @@ export function PickYourLanguage() {
         product => product.title.toLowerCase() !== blockedHomeProductName
       );
 
-  const visibleProducts = useMemo(() => {
-    const visibleCount = 3;
-    if (products.length <= visibleCount) return products;
-
-    return Array.from({ length: visibleCount }, (_, offset) => {
-      const productIndex = (startIndex + offset) % products.length;
-      return products[productIndex];
-    });
-  }, [products, startIndex]);
-
-  const goPrev = () => {
-    if (products.length <= 3) return;
-    setStartIndex(prev => (prev - 1 + products.length) % products.length);
+  const desktopSlidesToShow = Math.min(3, products.length || 1);
+  const tabletSlidesToShow = Math.min(2, products.length || 1);
+  const sliderSettings = {
+    arrows: false,
+    dots: false,
+    infinite: products.length > desktopSlidesToShow,
+    speed: 650,
+    slidesToShow: desktopSlidesToShow,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 2200,
+    pauseOnHover: true,
+    initialSlide: 0,
+    cssEase: 'ease-in-out',
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: tabletSlidesToShow,
+        },
+      },
+      {
+        breakpoint: 640,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
   };
-
-  const goNext = () => {
-    if (products.length <= 3) return;
-    setStartIndex(prev => (prev + 1) % products.length);
-  };
-
-  useEffect(() => {
-    if (products.length <= 3 || isPaused) return;
-
-    const intervalId = window.setInterval(() => {
-      setStartIndex((prev) => (prev + 1) % products.length);
-    }, 1800);
-
-    return () => window.clearInterval(intervalId);
-  }, [products.length, isPaused]);
 
   return (
     <section className="py-12 bg-white">
@@ -159,14 +155,10 @@ export function PickYourLanguage() {
           Pick Your Language
         </motion.h2>
 
-        <div
-          className="relative"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-        >
+        <div className="relative">
           <button
             type="button"
-            onClick={goPrev}
+            onClick={() => sliderRef.current?.slickPrev()}
             aria-label="Previous language cards"
             className="hidden md:flex absolute -left-6 lg:-left-10 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white border border-gray-300 shadow-md hover:bg-gray-50"
           >
@@ -175,89 +167,83 @@ export function PickYourLanguage() {
 
           <button
             type="button"
-            onClick={goNext}
+            onClick={() => sliderRef.current?.slickNext()}
             aria-label="Next language cards"
             className="hidden md:flex absolute -right-6 lg:-right-10 top-1/2 -translate-y-1/2 z-10 h-12 w-12 items-center justify-center rounded-full bg-white border border-gray-300 shadow-md hover:bg-gray-50"
           >
             <ChevronRight className="h-6 w-6 text-gray-700" />
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
-          <AnimatePresence mode="popLayout" initial={false}>
-          {visibleProducts.map((product, index) => (
-            <motion.div
-              key={product.id}
-              layout
-              initial={{ opacity: 0, x: 30, scale: 0.98 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -30, scale: 0.98 }}
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 1.01 }}
-              transition={{ duration: 0.4, ease: 'easeInOut', delay: index * 0.05 }}
-            >
-              {/* Image Box - Only contains image */}
-              <Link to={product.route} className="group block h-full">
-                <div className="h-full bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-out hover:border-blue-500 hover:shadow-xl flex flex-col">
-                  <div className="relative w-full aspect-square overflow-hidden bg-white">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="absolute inset-0 w-full h-full object-cover object-center scale-[1.06] transition-transform duration-300 group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-7xl">{product.icon}</span>
+          <Slider ref={sliderRef} {...sliderSettings} className="max-w-6xl mx-auto">
+            {products.map((product) => (
+              <div key={product.id} className="px-3 h-full">
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.99 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  className="h-full"
+                >
+                  <Link to={product.route} className="group block h-full">
+                    <div className="h-full bg-white border border-gray-300 rounded-2xl overflow-hidden shadow-md transition-all duration-500 ease-out hover:border-blue-500 hover:shadow-xl flex flex-col">
+                      <div className="relative w-full aspect-square overflow-hidden bg-white">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.title}
+                            className="absolute inset-0 w-full h-full object-cover object-center scale-[1.06] transition-transform duration-300 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-7xl">{product.icon}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Content Below Box */}
-                  <div className="p-3 space-y-2 min-h-[130px] flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug break-words line-clamp-2">
-                      {product.title}
-                    </h3>
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <p className="text-4xl font-bold text-red-600 leading-none">
-                        {convertPrice(product.offerPrice)}
-                      </p>
-                      <p className="text-sm text-gray-500 line-through">
-                        {convertPrice(product.originalPrice)}
-                      </p>
+                      <div className="p-3 space-y-2 min-h-[130px] flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug break-words line-clamp-2">
+                          {product.title}
+                        </h3>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <p className="text-4xl font-bold text-red-600 leading-none">
+                            {convertPrice(product.offerPrice)}
+                          </p>
+                          <p className="text-sm text-gray-500 line-through">
+                            {convertPrice(product.originalPrice)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {product.tag && (
+                            <Badge className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
+                              <motion.span
+                                className="inline-block"
+                                initial={promoTextAnimation.initial}
+                                animate={promoTextAnimation.animate}
+                                transition={promoTextAnimation.transition}
+                              >
+                                {product.tag}
+                              </motion.span>
+                            </Badge>
+                          )}
+                          {getDiscountPercent(product.offerPrice, product.originalPrice) && (
+                            <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
+                              <motion.span
+                                className="inline-block"
+                                initial={promoTextAnimation.initial}
+                                animate={promoTextAnimation.animate}
+                                transition={promoTextAnimation.transition}
+                              >
+                                {getDiscountPercent(product.offerPrice, product.originalPrice)}% OFF
+                              </motion.span>
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {product.tag && (
-                        <Badge className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
-                          <motion.span
-                            className="inline-block"
-                            initial={promoTextAnimation.initial}
-                            animate={promoTextAnimation.animate}
-                            transition={promoTextAnimation.transition}
-                          >
-                            {product.tag}
-                          </motion.span>
-                        </Badge>
-                      )}
-                      {getDiscountPercent(product.offerPrice, product.originalPrice) && (
-                        <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 font-bold rounded-lg">
-                          <motion.span
-                            className="inline-block"
-                            initial={promoTextAnimation.initial}
-                            animate={promoTextAnimation.animate}
-                            transition={promoTextAnimation.transition}
-                          >
-                            {getDiscountPercent(product.offerPrice, product.originalPrice)}% OFF
-                          </motion.span>
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-          </AnimatePresence>
-          </div>
+                  </Link>
+                </motion.div>
+              </div>
+            ))}
+          </Slider>
         </div>
       </div>
     </section>

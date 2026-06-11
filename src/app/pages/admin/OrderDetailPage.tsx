@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -7,7 +7,7 @@ import {
   Paperclip, Download, X, Upload, Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { OrderManagementVisual } from '@/app/components/admin/OrderManagementVisual';
 import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
@@ -119,12 +119,12 @@ export function OrderDetailPage() {
   const fetchOrder = async () => {
     try {
       setLoading(true);
-      console.log('ðŸ“¦ [OrderDetailPage] Fetching order from backend:', orderId);
+      console.log('📦 [OrderDetailPage] Fetching order from backend:', orderId);
       
-      // CRITICAL FIX: Supabase Edge Functions require Authorization header
-      // Use publicAnonKey as Bearer token to satisfy Supabase infrastructure
-      const { publicAnonKey } = await import('@/utils/supabase/info');
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${orderId}`;
+      // CRITICAL FIX: Backend Edge Functions require Authorization header
+      // Use publicAnonKey as Bearer token to satisfy Backend infrastructure
+      const { publicAnonKey } = await import('@/app/utils/backendInfo');
+      const url = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${orderId}`;
       
       const response = await fetch(url, {
         headers: {
@@ -138,7 +138,7 @@ export function OrderDetailPage() {
         const data = await response.json();
         const fetchedOrder = data.order;
         
-        console.log('âœ… [OrderDetailPage] Order loaded from backend');
+        console.log('✅ [OrderDetailPage] Order loaded from backend');
         const localStorageOrder = loadOrderFromLocalStorage(orderId || '');
         const mergedOrder = localStorageOrder
           ? {
@@ -153,7 +153,7 @@ export function OrderDetailPage() {
           : fetchedOrder;
 
         if (localStorageOrder) {
-          console.log('â„¹ [OrderDetailPage] Merged backend order with local storage shipping details');
+          console.log('ℹ [OrderDetailPage] Merged backend order with local storage shipping details');
         }
 
         setOrder(mergedOrder);
@@ -162,13 +162,13 @@ export function OrderDetailPage() {
         setShippingCarrier(mergedOrder.shipping_carrier || '');
         setNotes(mergedOrder.notes || '');
       } else {
-        console.log('  [OrderDetailPage] Backend unavailable, checking localStorage...');
+        console.log('� [OrderDetailPage] Backend unavailable, checking localStorage...');
         
         // FALLBACK: Try to load from localStorage
         const localStorageOrder = orderId ? loadOrderFromLocalStorage(orderId) : null;
         
         if (localStorageOrder) {
-          console.log('âœ… [OrderDetailPage] Order loaded from localStorage');
+          console.log('✅ [OrderDetailPage] Order loaded from localStorage');
           setOrder(localStorageOrder);
           setNewStatus(localStorageOrder.status);
           setTrackingNumber(localStorageOrder.tracking_number || '');
@@ -180,19 +180,19 @@ export function OrderDetailPage() {
             duration: 5000
           });
         } else {
-          console.error('âŒ [OrderDetailPage] Order not found in backend or localStorage');
+          console.error('❌ [OrderDetailPage] Order not found in backend or localStorage');
           toast.error('Order not found');
           navigate('/admin/sales/orders');
         }
       }
     } catch (error) {
-      console.error('âŒ [OrderDetailPage] Error loading order:', error);
+      console.error('❌ [OrderDetailPage] Error loading order:', error);
       
       // FALLBACK: Try to load from localStorage on error
       const localStorageOrder = orderId ? loadOrderFromLocalStorage(orderId) : null;
       
       if (localStorageOrder) {
-        console.log('âœ… [OrderDetailPage] Order loaded from localStorage (after error)');
+        console.log('✅ [OrderDetailPage] Order loaded from localStorage (after error)');
         setOrder(localStorageOrder);
         setNewStatus(localStorageOrder.status);
         setTrackingNumber(localStorageOrder.tracking_number || '');
@@ -220,9 +220,9 @@ export function OrderDetailPage() {
     try {
       setUpdating(true);
       
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/status`;
+      const url = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${order.id}/status`;
       
-      console.log('ðŸ“¦ [OrderDetailPage] Updating order status to:', newStatus);
+      console.log('📦 [OrderDetailPage] Updating order status to:', newStatus);
       
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -246,7 +246,7 @@ export function OrderDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('âœ… [OrderDetailPage] Order status updated:', data);
+        console.log('✅ [OrderDetailPage] Order status updated:', data);
         
         setOrder(data.order);
         setShowStatusModal(false);
@@ -263,19 +263,19 @@ export function OrderDetailPage() {
                                errorData.message?.includes('Missing authorization header');
         
         if (isBackendIssue) {
-          console.log('â„¹ Backend not deployed - order updates unavailable');
-          toast.error('Backend not deployed. Order updates require Supabase Edge Functions.');
+          console.log('ℹ Backend not deployed - order updates unavailable');
+          toast.error('Backend not deployed. Order updates require Backend Edge Functions.');
         } else {
-          console.log('â„¹ Failed to update order:', errorData);
+          console.log('ℹ Failed to update order:', errorData);
           toast.error('Failed to update order');
         }
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('â„¹ Order update request timed out');
+        console.log('ℹ Order update request timed out');
         toast.error('Request timed out. Please try again.');
       } else {
-        console.log('â„¹ Error updating order:', error.message);
+        console.log('ℹ Error updating order:', error.message);
         toast.error('Failed to update order');
       }
     } finally {
@@ -292,9 +292,9 @@ export function OrderDetailPage() {
     try {
       setUpdating(true);
       
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/notes`;
+      const url = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${order.id}/notes`;
       
-      console.log('ðŸ“ [OrderDetailPage] Updating order notes');
+      console.log('📝 [OrderDetailPage] Updating order notes');
       
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -316,7 +316,7 @@ export function OrderDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('âœ… [OrderDetailPage] Order notes updated:', data);
+        console.log('✅ [OrderDetailPage] Order notes updated:', data);
         
         setOrder(data.order);
         setShowNotesModal(false);
@@ -333,19 +333,19 @@ export function OrderDetailPage() {
                                errorData.message?.includes('Missing authorization header');
         
         if (isBackendIssue) {
-          console.log('â„¹ Backend not deployed - note updates unavailable');
-          toast.error('Backend not deployed. Order note updates require Supabase Edge Functions.');
+          console.log('ℹ Backend not deployed - note updates unavailable');
+          toast.error('Backend not deployed. Order note updates require Backend Edge Functions.');
         } else {
-          console.log('â„¹ Failed to update notes:', errorData);
+          console.log('ℹ Failed to update notes:', errorData);
           toast.error('Failed to update notes');
         }
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('â„¹ Order note update request timed out');
+        console.log('ℹ Order note update request timed out');
         toast.error('Request timed out. Please try again.');
       } else {
-        console.log('â„¹ Error updating notes:', error.message);
+        console.log('ℹ Error updating notes:', error.message);
         toast.error('Failed to update notes');
       }
     } finally {
@@ -360,22 +360,22 @@ export function OrderDetailPage() {
     }
 
     try {
-      console.log('ðŸ“„ [OrderDetailPage] Generating invoice PDF for order:', order.order_number);
+      console.log('📄 [OrderDetailPage] Generating invoice PDF for order:', order.order_number);
       
       // Generate and download invoice PDF
       await generateInvoicePDF(order);
       
       toast.success('Invoice PDF downloaded successfully');
-      console.log('âœ… [OrderDetailPage] Invoice PDF downloaded:', order.order_number);
+      console.log('✅ [OrderDetailPage] Invoice PDF downloaded:', order.order_number);
     } catch (error) {
-      console.error('âŒ [OrderDetailPage] Failed to download invoice PDF:', error);
+      console.error('❌ [OrderDetailPage] Failed to download invoice PDF:', error);
       toast.error('Failed to generate invoice PDF');
     }
   };
 
   const handleDownloadDocument = async (file: UploadedFile, itemName: string) => {
     try {
-      console.log('ðŸ“„ [OrderDetailPage] Downloading document:', file.name);
+      console.log('📄 [OrderDetailPage] Downloading document:', file.name);
       
       // Check if file has data
       if (!file.data) {
@@ -411,9 +411,9 @@ export function OrderDetailPage() {
       window.URL.revokeObjectURL(url);
       
       toast.success(`Document downloaded successfully as ${file.name.split('.').pop()?.toUpperCase()} format`);
-      console.log('âœ… [OrderDetailPage] Document downloaded:', filename);
+      console.log('✅ [OrderDetailPage] Document downloaded:', filename);
     } catch (error) {
-      console.error('âŒ [OrderDetailPage] Failed to download document:', error);
+      console.error('❌ [OrderDetailPage] Failed to download document:', error);
       toast.error('Failed to download document');
     }
   };
@@ -632,7 +632,7 @@ export function OrderDetailPage() {
       const timeout = setTimeout(() => controller.abort(), COMPLETED_FILE_SUBMIT_TIMEOUT_MS);
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/completed-file`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${order.id}/completed-file`,
         {
           method: 'PATCH',
           headers: {
@@ -733,7 +733,7 @@ export function OrderDetailPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${order.id}/download-completed-file`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${order.id}/download-completed-file`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -1694,7 +1694,7 @@ const loadOrderFromLocalStorage = (orderId: string): Order | null => {
     const foundOrder = allOrders.find(o => o.id === orderId);
     
     if (foundOrder) {
-      console.log('ðŸ“¦ [OrderDetailPage] Found order in localStorage:', foundOrder.order_number);
+      console.log('📦 [OrderDetailPage] Found order in localStorage:', foundOrder.order_number);
       return foundOrder;
     }
     

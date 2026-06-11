@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { User, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { getSupabaseClient } from '@/app/utils/supabaseClient';
-import { projectId } from '@/utils/supabase/info';
+import { getAuthClient } from '@/app/utils/authClient';
+import { projectId } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 
 export function MyProfilePage() {
@@ -43,7 +43,7 @@ export function MyProfilePage() {
 
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/auth/me`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/auth/me`,
           {
             headers: buildHeaders(accessToken)
           }
@@ -105,7 +105,7 @@ export function MyProfilePage() {
     try {
       const name = `${formData.firstName} ${formData.lastName}`.trim();
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/auth/profile`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/auth/profile`,
         {
           method: 'PUT',
           headers: buildHeaders(accessToken),
@@ -165,10 +165,10 @@ export function MyProfilePage() {
     setIsUpdatingPassword(true);
     
     try {
-      const supabase = getSupabaseClient();
+      const authClient = getAuthClient();
       
       // First verify the old password by signing in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await authClient.auth.signInWithPassword({
         email: user?.email || '',
         password: passwordData.oldPassword,
       });
@@ -180,7 +180,7 @@ export function MyProfilePage() {
       }
       
       // Update the password
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error: updateError } = await authClient.auth.updateUser({
         password: passwordData.newPassword
       });
       

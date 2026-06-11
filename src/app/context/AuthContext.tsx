@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/app/utils/supabaseClient';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { authClient } from '@/app/utils/authClient';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { hasAdminAccess } from '@/app/utils/roleAccess';
 
@@ -220,19 +220,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is logged in on mount
     checkUser();
 
-    // Always set up Supabase listener, but with strict guards to protect mock auth
-    console.log('📡 Setting up Supabase auth listener with mock auth protection');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔐 Supabase auth state changed:', event, 'Has session:', !!session);
+    // Always set up Backend listener, but with strict guards to protect mock auth
+    console.log('📡 Setting up Backend auth listener with mock auth protection');
+    const { data: { subscription } } = authClient.auth.onAuthStateChange((event, session) => {
+      console.log('🔐 Backend auth state changed:', event, 'Has session:', !!session);
       
-      // If a real Supabase session exists, it must take precedence over mock auth state.
+      // If a real Backend session exists, it must take precedence over mock auth state.
       const currentMockAuth = localStorage.getItem('is_mock_auth') === 'true' || !!localStorage.getItem('mock_user');
       if (currentMockAuth && !session?.user) {
-        console.log('⚠️ In mock auth mode with no real session - ignoring Supabase auth change');
+        console.log('⚠️ In mock auth mode with no real session - ignoring Backend auth change');
         return;
       }
       if (currentMockAuth && session?.user) {
-        console.log('🔄 Real Supabase session detected - clearing mock auth state');
+        console.log('🔄 Real Backend session detected - clearing mock auth state');
         localStorage.removeItem('mock_user');
         localStorage.removeItem('is_mock_auth');
         localStorage.removeItem('demo_access_token');
@@ -240,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       if (session?.user) {
-        console.log('✅ Supabase session found, fetching profile');
+        console.log('✅ Backend session found, fetching profile');
         setIsMockAuth(false);
         localStorage.removeItem('is_mock_auth'); // Clear mock auth flag
         
@@ -259,10 +259,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // CRITICAL: Before clearing auth state, verify we're not in mock mode
         const stillMockAuth = localStorage.getItem('is_mock_auth') === 'true' || !!localStorage.getItem('mock_user');
         if (stillMockAuth) {
-          console.log('⚠️ Mock auth detected - preserving session despite no Supabase session');
+          console.log('⚠️ Mock auth detected - preserving session despite no Backend session');
           return;
         }
-        console.log('❌ No Supabase session, clearing auth state');
+        console.log('❌ No Backend session, clearing auth state');
         setUser(null);
         setAccessToken(null);
       }
@@ -273,26 +273,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []); // Empty dependency array - only run once on mount
   
-  const handleGoogleOAuthCallback = async (supabaseUser: any, token: string) => {
-    // Show logged-in state immediately from Supabase session data.
+  const handleGoogleOAuthCallback = async (BackendUser: any, token: string) => {
+    // Show logged-in state immediately from Backend session data.
     const fallbackUser = {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
-      name: supabaseUser.user_metadata?.full_name ||
-            supabaseUser.user_metadata?.name ||
-            supabaseUser.email?.split('@')[0] ||
+      id: BackendUser.id,
+      email: BackendUser.email || '',
+      name: BackendUser.user_metadata?.full_name ||
+            BackendUser.user_metadata?.name ||
+            BackendUser.email?.split('@')[0] ||
             'User',
-      role: resolveUserRole(supabaseUser.email, 'customer')
+      role: resolveUserRole(BackendUser.email, 'customer')
     };
     setUser(fallbackUser);
     setAccessToken(token);
     setIsMockAuth(false);
 
     try {
-      console.log('🔐 [OAuth] Processing Google OAuth callback for user:', supabaseUser.email);
+      console.log('🔐 [OAuth] Processing Google OAuth callback for user:', BackendUser.email);
       
       // Check if user profile already exists in backend
-      const functionsUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+      const functionsUrl = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
       
       // First, try to get existing profile
       const profileResponse = await fetch(`${functionsUrl}/auth/me`, {
@@ -309,13 +309,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('📝 [OAuth] Creating new profile for Google user');
         
         // Extract name from Google user metadata
-        const name = supabaseUser.user_metadata?.full_name || 
-                    supabaseUser.user_metadata?.name || 
-                    supabaseUser.email?.split('@')[0] || 
+        const name = BackendUser.user_metadata?.full_name || 
+                    BackendUser.user_metadata?.name || 
+                    BackendUser.email?.split('@')[0] || 
                     'User';
         
         // Phone will be 'N/A' initially - user can update later
-        const phone = supabaseUser.user_metadata?.phone || 'N/A';
+        const phone = BackendUser.user_metadata?.phone || 'N/A';
         
         // Create user profile via backend
         const createResponse = await fetch(`${functionsUrl}/auth/google-signup`, {
@@ -325,12 +325,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...buildHeaders(token)
           },
           body: JSON.stringify({
-            userId: supabaseUser.id,
-            email: supabaseUser.email,
+            userId: BackendUser.id,
+            email: BackendUser.email,
             name: name,
             phone: phone,
             source: 'Google OAuth',
-            avatar: supabaseUser.user_metadata?.avatar_url
+            avatar: BackendUser.user_metadata?.avatar_url
           })
         });
         
@@ -342,10 +342,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // If backend creation fails, use local profile
           console.warn('⚠️ [OAuth] Could not create backend profile, using local');
           userProfile = {
-            id: supabaseUser.id,
-            email: supabaseUser.email,
+            id: BackendUser.id,
+            email: BackendUser.email,
             name: name,
-            role: resolveUserRole(supabaseUser.email, 'customer')
+            role: resolveUserRole(BackendUser.email, 'customer')
           };
         }
       }
@@ -362,7 +362,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccessToken(token);
       setIsMockAuth(false);
       upsertRegisteredUserRecord(userObj, {
-        phone: supabaseUser.user_metadata?.phone || 'N/A',
+        phone: BackendUser.user_metadata?.phone || 'N/A',
         source: 'Google OAuth',
         lastLoginAt: new Date().toISOString(),
       });
@@ -372,13 +372,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('❌ [OAuth] Error processing Google callback:', error);
       // Fallback: create local user object
       const userObj = {
-        id: supabaseUser.id,
-        email: supabaseUser.email,
-        name: supabaseUser.user_metadata?.full_name || 
-              supabaseUser.user_metadata?.name || 
-              supabaseUser.email?.split('@')[0] || 
+        id: BackendUser.id,
+        email: BackendUser.email,
+        name: BackendUser.user_metadata?.full_name || 
+              BackendUser.user_metadata?.name || 
+              BackendUser.email?.split('@')[0] || 
               'User',
-        role: resolveUserRole(supabaseUser.email, 'customer')
+        role: resolveUserRole(BackendUser.email, 'customer')
       };
       setUser(userObj);
       setAccessToken(token);
@@ -392,10 +392,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkUser = async () => {
     try {
-      // Real Supabase session should always win over any old mock localStorage.
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      // Real Backend session should always win over any old mock localStorage.
+      const { data: { session: currentSession } } = await authClient.auth.getSession();
       if (currentSession?.user) {
-        console.log('Real Supabase session detected during checkUser:', currentSession.user.email);
+        console.log('Real Backend session detected during checkUser:', currentSession.user.email);
         localStorage.removeItem('mock_user');
         localStorage.removeItem('is_mock_auth');
         localStorage.removeItem('demo_access_token');
@@ -447,7 +447,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           setLoading(false);
           console.log('✅ Mock user session restored successfully');
-          return; // Exit early - don't check Supabase
+          return; // Exit early - don't check Backend
         } catch (e) {
           console.error('Failed to parse mock user from localStorage:', e);
           // Clear corrupted data
@@ -457,13 +457,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      console.log('🔍 No mock user found, checking Supabase session...');
-      // Only check Supabase if no mock user exists
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔍 No mock user found, checking Backend session...');
+      // Only check Backend if no mock user exists
+      const { data: { session } } = await authClient.auth.getSession();
       
       if (session?.user) {
-        console.log('✅ Supabase session found:', session.user.email);
-        // Clear mock auth flag for real Supabase sessions
+        console.log('✅ Backend session found:', session.user.email);
+        // Clear mock auth flag for real Backend sessions
         localStorage.removeItem('is_mock_auth');
         setIsMockAuth(false);
         
@@ -476,7 +476,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await fetchUserProfile(session.user.id, session.access_token);
         }
       } else {
-        console.log('ℹ️ No authentication found (neither mock nor Supabase)');
+        console.log('ℹ️ No authentication found (neither mock nor Backend)');
         setIsMockAuth(false);
       }
     } catch (error) {
@@ -492,7 +492,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('🔑 Token preview:', token.substring(0, 30) + '...');
       
       // First, always get the current session to ensure we have a fresh token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await authClient.auth.getSession();
       
       if (!session?.user) {
         console.error('❌ No valid session found');
@@ -501,7 +501,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Use session data directly instead of calling backend
       // This avoids token validation issues
-      console.log('✅ Using user data from Supabase session');
+      console.log('✅ Using user data from Backend session');
       const userObj = {
         id: session.user.id,
         email: session.user.email || '',
@@ -512,13 +512,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userObj);
       setAccessToken(session.access_token);
       upsertRegisteredUserRecord(userObj, {
-        source: session.user.app_metadata?.provider === 'google' ? 'Google OAuth' : 'Supabase',
+        source: session.user.app_metadata?.provider === 'google' ? 'Google OAuth' : 'Backend',
         lastLoginAt: new Date().toISOString(),
       });
       
       // Optionally try to sync with backend for persistence (non-blocking)
       try {
-        const functionsUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+        const functionsUrl = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
         fetch(`${functionsUrl}/auth/me`, {
           headers: buildHeaders(session.access_token)
         }).then(response => {
@@ -543,29 +543,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Login attempt started for:', email);
 
       // Fast path: try local/demo authentication first so saved app users
-      // do not wait on a Supabase network round-trip every time they sign in.
+      // do not wait on a Backend network round-trip every time they sign in.
       const localLoginResult = await mockLogin(email, password);
       if (localLoginResult.success) {
         return localLoginResult;
       }
 
-      // Fall back to Supabase authentication if the local/demo path does not match.
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Fall back to Backend authentication if the local/demo path does not match.
+      const { data, error } = await authClient.auth.signInWithPassword({
         email,
         password
       });
 
-      console.log('Supabase auth response:', { error: error?.message, hasSession: !!data?.session });
+      console.log('Backend auth response:', { error: error?.message, hasSession: !!data?.session });
 
       if (error) {
         // Fallback to mock authentication for demo/testing
-        console.log('Supabase auth failed, using mock authentication');
+        console.log('Backend auth failed, using mock authentication');
         return mockLogin(email, password);
       }
 
       if (data.session) {
-        console.log('Supabase session found, fetching profile');
-        // Clear mock auth flags for real Supabase login
+        console.log('Backend session found, fetching profile');
+        // Clear mock auth flags for real Backend login
         localStorage.removeItem('mock_user');
         localStorage.removeItem('is_mock_auth');
         setIsMockAuth(false);
@@ -588,7 +588,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // No error but no session - fallback to mock
-      console.log('No Supabase session, falling back to mock authentication');
+      console.log('No Backend session, falling back to mock authentication');
       return mockLogin(email, password);
     } catch (error) {
       console.error('Login error:', error);
@@ -623,7 +623,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           console.log('🔐 Fetching real JWT token for demo admin...');
           const response = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/demo-token`,
+            `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/demo-token`,
             {
               headers: {
                 'Content-Type': 'application/json',
@@ -712,7 +712,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('📡 [AuthContext] Sending signup request to backend...');
       const response = await fetchWithTimeout(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/auth/signup`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/auth/signup`,
         {
           method: 'POST',
           headers: buildHeaders(),
@@ -767,11 +767,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // If we have a real session, use it and clear mock auth
         if (data.session?.access_token) {
-          console.log('✅ [AuthContext] Using real Supabase session');
+          console.log('✅ [AuthContext] Using real Backend session');
           setAccessToken(data.session.access_token);
           setIsMockAuth(false);
           localStorage.removeItem('mock_user');
           localStorage.removeItem('is_mock_auth');
+          localStorage.setItem('honey_access_token', data.session.access_token);
+          localStorage.setItem('honey_auth_user', JSON.stringify(data.session.user || userObj));
         } else {
           // Fallback to mock token
           console.log('⚠️ [AuthContext] No session token, using mock auth');
@@ -884,7 +886,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      await authClient.auth.signOut();
       setUser(null);
       setAccessToken(null);
       setIsMockAuth(false); // Clear mock auth flag
@@ -893,15 +895,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('mock_user');
       localStorage.removeItem('is_mock_auth');
       localStorage.removeItem('demo_access_token');
+      localStorage.removeItem('honey_access_token');
+      localStorage.removeItem('honey_auth_user');
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if Supabase fails, clear local state
+      // Even if Backend fails, clear local state
       setUser(null);
       setAccessToken(null);
       setIsMockAuth(false); // Clear mock auth flag
       localStorage.removeItem('mock_user');
       localStorage.removeItem('is_mock_auth');
       localStorage.removeItem('demo_access_token');
+      localStorage.removeItem('honey_access_token');
+      localStorage.removeItem('honey_auth_user');
     }
   };
 
@@ -915,7 +921,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('demo_access_token');
       setIsMockAuth(false);
       
-      const { data, error } = await supabase.auth.signInWithOAuth(
+      const { data, error } = await authClient.auth.signInWithOAuth(
         {
           provider: 'google',
           options: {

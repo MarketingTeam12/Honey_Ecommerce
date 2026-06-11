@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Check, Upload, MessageCircle, Minus, Plus, Heart, Share2, ShoppingCart as ShoppingCartIcon } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -278,7 +278,7 @@ export function SwornTranslationPage() {
             <div className="space-y-3 border-t pt-6">
               <div className="flex items-start gap-2">
                 <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">The pricing shown is applicable per page â€“ please update the page count as needed for accurate billing.</span>
+                <span className="text-gray-700">The pricing shown is applicable per page – please update the page count as needed for accurate billing.</span>
               </div>
               <div className="flex items-start gap-2">
                 <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -492,7 +492,7 @@ export function SwornTranslationPage() {
           {/* Processing Time */}
           <div className="bg-white rounded-lg border-2 border-gray-200 p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Processing Time</h2>
-            <p className="text-gray-700">For documents containing 1â€“6 pages, sworn translation takes <span className="font-bold">4â€“5 working days</span></p>
+            <p className="text-gray-700">For documents containing 1–6 pages, sworn translation takes <span className="font-bold">4–5 working days</span></p>
             <p className="text-sm text-gray-600 mt-2">(Excluding Sundays and public holidays)</p>
           </div>
 

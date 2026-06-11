@@ -6,7 +6,7 @@ import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useProducts } from '@/app/context/ProductContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { canAccessRoleAction } from '@/app/utils/roleAccess';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface Language {
   id: string;
@@ -65,7 +65,7 @@ export function AddEditItemPage() {
     metaDescription: ''
   });
 
-  const [images, setImages] = useState<File[]>([]);
+  const [pendingImages, setPendingImages] = useState<{ file: File; previewUrl: string }[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -114,6 +114,7 @@ export function AddEditItemPage() {
           metaDescription: product.metaDescription || ''
         });
         setImagePreviews(product.images);
+        setPendingImages([]);
       }
     }
   }, [id, isEdit, getProduct]);
@@ -121,7 +122,7 @@ export function AddEditItemPage() {
   const fetchAllLanguages = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -143,7 +144,7 @@ export function AddEditItemPage() {
   const fetchAllDocumentTypes = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/document-types`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/document-types`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -171,7 +172,7 @@ export function AddEditItemPage() {
   const fetchProductConfig = async (productId: string) => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/product-config/${productId}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/product-config/${productId}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -194,7 +195,7 @@ export function AddEditItemPage() {
   const saveProductConfig = async (productId: string) => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/product-config/${productId}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/product-config/${productId}`,
         {
           method: 'POST',
           headers: {
@@ -220,7 +221,7 @@ export function AddEditItemPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages`,
         {
           method: 'POST',
           headers: {
@@ -254,7 +255,7 @@ export function AddEditItemPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages`,
         {
           method: 'POST',
           headers: {
@@ -288,7 +289,7 @@ export function AddEditItemPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/document-types`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/document-types`,
         {
           method: 'POST',
           headers: {
@@ -314,7 +315,7 @@ export function AddEditItemPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages/${langId}/${type}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages/${langId}/${type}`,
         {
           method: 'DELETE',
           headers: {
@@ -338,7 +339,7 @@ export function AddEditItemPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/document-types/${docTypeId}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/document-types/${docTypeId}`,
         {
           method: 'DELETE',
           headers: {
@@ -393,16 +394,13 @@ export function AddEditItemPage() {
     const filesToAdd = files.slice(0, remainingSlots);
 
     if (filesToAdd.length > 0) {
-      setImages([...images, ...filesToAdd]);
-      
-      // Create previews
-      filesToAdd.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreviews(prev => [...prev, reader.result as string]);
-        };
-        reader.readAsDataURL(file);
-      });
+      const nextUploads = filesToAdd.map((file) => ({
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+
+      setPendingImages((prev) => [...prev, ...nextUploads]);
+      setImagePreviews((prev) => [...prev, ...nextUploads.map((item) => item.previewUrl)]);
       
       toast.success(`${filesToAdd.length} image(s) uploaded successfully!`);
     } else {
@@ -411,7 +409,12 @@ export function AddEditItemPage() {
   };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    const previewUrl = imagePreviews[index];
+    if (previewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+      setPendingImages((prev) => prev.filter((item) => item.previewUrl !== previewUrl));
+    }
+
     setImagePreviews(imagePreviews.filter((_, i) => i !== index));
     toast.info('Image removed');
   };
@@ -446,14 +449,16 @@ export function AddEditItemPage() {
         return;
       }
 
-      // Upload images to Supabase Storage BEFORE saving product
-      console.log('ðŸ“¤ Uploading images to Supabase Storage...');
+      // Upload images to Backend Storage BEFORE saving product
+      console.log('ðŸ“¤ Uploading images to Backend Storage...');
       toast.info('Uploading images...');
       
-      const uploadedImageUrls = await uploadImages(imagePreviews);
+      const existingImageUrls = imagePreviews.filter((preview) => /^https?:\/\//i.test(preview));
+      const uploadedImageUrls = await uploadImages(pendingImages.map((item) => item.file));
+      const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls];
       
-      console.log('âœ… Images uploaded successfully:', uploadedImageUrls);
-      toast.success(`${uploadedImageUrls.length} image(s) uploaded!`);
+      console.log('âœ… Images uploaded successfully:', finalImageUrls);
+      toast.success(`${finalImageUrls.length} image(s) ready!`);
 
       const productData = {
         name: formData.name,
@@ -468,10 +473,10 @@ export function AddEditItemPage() {
         status: formData.status,
         metaTitle: formData.metaTitle,
         metaDescription: formData.metaDescription,
-        images: uploadedImageUrls // Use Supabase Storage URLs instead of base64
+        images: finalImageUrls // Use Backend Storage URLs instead of local previews
       };
 
-      console.log('ðŸ’¾ Saving product with Supabase Storage URLs:', {
+      console.log('ðŸ’¾ Saving product with Backend Storage URLs:', {
         isEdit,
         productName: productData.name,
         imageCount: productData.images.length,
@@ -488,6 +493,7 @@ export function AddEditItemPage() {
       
       // Wait a moment for the toast to show
       await new Promise(resolve => setTimeout(resolve, 500));
+      pendingImages.forEach((item) => URL.revokeObjectURL(item.previewUrl));
       
       // Navigate back to items page
       navigate('/admin/items');
@@ -1080,3 +1086,4 @@ export function AddEditItemPage() {
 }
 
 export default AddEditItemPage;
+

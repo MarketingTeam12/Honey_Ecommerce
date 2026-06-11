@@ -3,7 +3,7 @@ import { ShoppingCart, TrendingUp, DollarSign, Clock, Package, Eye, Truck, Check
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { EnhancedOrderRow } from '@/app/components/admin/EnhancedOrderRow';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { isSalesManager } from '@/app/utils/roleAccess';
@@ -234,7 +234,7 @@ export function SalesPage() {
     try {
       setLoading(true);
       console.log('📦 [SalesPage] Fetching all orders from backend...');
-      console.log('📦 [SalesPage] API URL:', `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`);
+      console.log('📦 [SalesPage] API URL:', `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`);
       
       // Add timeout to prevent hanging
       const controller = new AbortController();
@@ -245,7 +245,7 @@ export function SalesPage() {
       
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`,
           {
             headers: buildHeaders(accessToken),
             signal: controller.signal
@@ -417,7 +417,7 @@ export function SalesPage() {
         const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${statusUpdateModal.id}/status`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${statusUpdateModal.id}/status`,
           {
             method: 'PATCH',
             headers: buildHeaders(accessToken),

@@ -1,10 +1,10 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Lock, CreditCard, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { useCurrency } from '@/app/context/CurrencyContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { toast } from 'sonner';
 
 export function PaymentSummaryPage() {
@@ -69,7 +69,7 @@ export function PaymentSummaryPage() {
   const fetchOrderDetails = async (orderId: string) => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${orderId}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${orderId}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export function PaymentSummaryPage() {
     try {
       // Create Razorpayment link
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/zoho/create`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/zoho/create`,
         {
           method: 'POST',
           headers: {
@@ -129,7 +129,7 @@ export function PaymentSummaryPage() {
 
       if (data.success && data.paymentUrl) {
         // Redirect to Razorpay\'s hosted checkout page
-        console.log('ðŸ”— Redirecting to Razorpayment URL:', data.paymentUrl);
+        console.log('🔗 Redirecting to Razorpayment URL:', data.paymentUrl);
         window.location.href = data.paymentUrl;
       } else {
         throw new Error(data.error || 'Failed to create payment link');
@@ -153,7 +153,7 @@ export function PaymentSummaryPage() {
   }
 
   const totalAmount = parseFloat(orderDetails.total_amount);
-  const currencySymbol = orderDetails.currency === 'INR' ? '₹' : '$';
+  const currencySymbol = orderDetails.currency === 'INR' ? '?' : '$';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">

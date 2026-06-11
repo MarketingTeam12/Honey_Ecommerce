@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit2, FileText, Tag, ChevronRight, X, Percent, DollarSign, Calendar, Users, Info } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
@@ -99,7 +99,7 @@ export function NewCheckoutReviewPage() {
 
   const loadAvailableCoupons = () => {
     const activeCoupons = couponService.getActiveCoupons();
-    console.log('ðŸ“¦ [CheckoutReview] Loaded active coupons:', activeCoupons);
+    console.log('📦 [CheckoutReview] Loaded active coupons:', activeCoupons);
     setAvailableCoupons(activeCoupons);
   };
 
@@ -926,7 +926,7 @@ export function NewCheckoutReviewPage() {
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
               <p className="text-sm text-gray-600 text-center">
-                ðŸ’¡ Tip: Coupons are automatically validated based on your cart total and eligibility
+                💡 Tip: Coupons are automatically validated based on your cart total and eligibility
               </p>
             </div>
           </div>

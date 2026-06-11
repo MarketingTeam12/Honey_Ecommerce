@@ -1,14 +1,17 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Suspense, lazy } from "react";
 import AdminUpload from "@/app/components/AdminUpload";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
-import { initializeStorageBucket } from "@/app/utils/supabaseStorage";
-import { initializeDemoToken } from "@/app/utils/buildHeaders";
+import { initializeStorageBucket } from "@/app/utils/backendStorage";
+import {
+  // initializeDemoToken,
+} from "@/app/utils/buildHeaders";
 import {
   projectId,
   publicAnonKey,
-} from "@/utils/supabase/info";
+} from "@/app/utils/backendInfo";
+
 
 // Import contexts
 import { AuthProvider } from "@/app/context/AuthContext";
@@ -123,71 +126,31 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log("ðŸš€ App initialization started...");
+        console.log("🚀 App initialization started...");
 
         // Initialize storage bucket (non-blocking)
         initializeStorageBucket()
           .then(({ success }) => {
             if (success) {
-              console.log("âœ… Storage bucket initialized");
+              console.log("✅ Storage bucket initialized");
             }
           })
           .catch((err) => {
             console.log(
-              "â„¹ Storage bucket initialization failed (non-critical):",
+              "ℹ Storage bucket initialization failed (non-critical):",
               err,
             );
           });
 
-        // Initialize demo token for mock authentication - Make this non-blocking
-        initializeDemoToken()
-          .then(() => {
-            console.log("âœ… Demo authentication ready");
-          })
-          .catch(async (error) => {
-            // Silently handle backend deployment issues
-            if (error.message === "Backend not available") {
-              // Backend not deployed - this is expected, don't spam console
-              return;
-            }
+        // Supabase/Edge-function demo auth initialization removed.
 
-            // For other errors, try to create demo users
-            try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-              const response = await fetch(
-                `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/init-demo-users`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    apikey: publicAnonKey,
-                    Authorization: `Bearer ${publicAnonKey}`,
-                  },
-                  signal: controller.signal,
-                },
-              );
-
-              clearTimeout(timeoutId);
-
-              if (response.ok) {
-                const data = await response.json();
-                if (data.success) {
-                  console.log("âœ… Demo users created");
-                  await initializeDemoToken().catch(() => {});
-                }
-              }
-            } catch (initError: any) {
-              // Silently fail - backend not deployed
-            }
-          });
 
         // Mark app as ready immediately - don't wait for demo initialization
-        console.log("âœ… App ready!");
+        console.log("✅ App ready!");
         setAppReady(true);
       } catch (error) {
-        console.error("âŒ App initialization error:", error);
+        console.error("❌ App initialization error:", error);
         setInitError(
           error instanceof Error
             ? error.message
@@ -217,7 +180,7 @@ function App() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <div className="text-red-600 text-4xl mb-4"> </div>
+          <div className="text-red-600 text-4xl mb-4">�</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Initialization Error
           </h1>

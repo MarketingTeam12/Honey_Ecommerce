@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Plus, Tag, ChevronRight, Trash2, Edit2 } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
@@ -236,7 +236,7 @@ export function NewCheckoutAddressPage() {
       if (selectedAddressId === addressId) {
         setSelectedAddressId('');
       }
-      console.log(`ðŸ—‘ [NewCheckoutAddressPage] Address removed: ${addressId}`);
+      console.log(`🗑 [NewCheckoutAddressPage] Address removed: ${addressId}`);
     }
   };
 
@@ -260,7 +260,7 @@ export function NewCheckoutAddressPage() {
     setEditingAddressId(address.id);
     setShowAddressForm(true);
     setSelectedCountryCode(countryCodes.find(c => c.code === address.phoneCountryCode) || countryCodes[0]);
-    console.log(`âœ [NewCheckoutAddressPage] Editing address: ${address.id}`);
+    console.log(`✏ [NewCheckoutAddressPage] Editing address: ${address.id}`);
   };
 
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -292,7 +292,7 @@ export function NewCheckoutAddressPage() {
   const handleSaveAddress = (e: React.FormEvent) => {
     e.preventDefault(); // Prevent page refresh
     
-    console.log('ðŸ“ [NewCheckoutAddressPage] Validating new address...');
+    console.log('📍 [NewCheckoutAddressPage] Validating new address...');
     
     // Comprehensive validation
     const errors: {[key: string]: string} = {};
@@ -359,11 +359,11 @@ export function NewCheckoutAddressPage() {
       // Display first error
       const firstError = Object.values(errors)[0];
       alert('Validation Error: ' + firstError);
-      console.log('âŒ [NewCheckoutAddressPage] Validation failed:', errors);
+      console.log('❌ [NewCheckoutAddressPage] Validation failed:', errors);
       return;
     }
 
-    console.log('âœ… [NewCheckoutAddressPage] Validation passed...');
+    console.log('✅ [NewCheckoutAddressPage] Validation passed...');
 
     // Normalize user-entered city/state names for consistent storage
     const formattedCity = toProperCase(newAddressForm.city.trim());
@@ -387,7 +387,7 @@ export function NewCheckoutAddressPage() {
 
       setAddresses(addresses.map(addr => addr.id === editingAddressId ? updatedAddress : addr));
       setSelectedAddressId(editingAddressId);
-      console.log('âœ… [NewCheckoutAddressPage] Address updated successfully:', updatedAddress);
+      console.log('✅ [NewCheckoutAddressPage] Address updated successfully:', updatedAddress);
       alert('Address updated successfully!');
       setEditingAddressId(null);
     } else {
@@ -406,14 +406,14 @@ export function NewCheckoutAddressPage() {
         isDefault: addresses.length === 0 // First address becomes default
       };
 
-      console.log('âœ… [NewCheckoutAddressPage] New address created:', newAddress);
+      console.log('✅ [NewCheckoutAddressPage] New address created:', newAddress);
 
       // Add to addresses list
       setAddresses([...addresses, newAddress]);
       
       // Auto-select the newly added address
       setSelectedAddressId(newAddress.id);
-      console.log('âœ… [NewCheckoutAddressPage] Address saved successfully');
+      console.log('✅ [NewCheckoutAddressPage] Address saved successfully');
       alert('Address added successfully!');
     }
     

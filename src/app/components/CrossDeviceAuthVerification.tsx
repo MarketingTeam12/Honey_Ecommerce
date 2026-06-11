@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
 import { CheckCircle, XCircle, Smartphone, Monitor, Globe, RefreshCw, Info } from 'lucide-react';
-import { supabase } from '@/app/utils/supabaseClient';
+import { authClient } from '@/app/utils/authClient';
 
 interface SessionInfo {
   deviceType: string;
@@ -71,8 +71,8 @@ export function CrossDeviceAuthVerification() {
     try {
       setVerificationStatus('checking');
 
-      // Check Supabase session
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // Check Backend session
+      const { data: { session }, error } = await authClient.auth.getSession();
 
       if (error) {
         console.error('Session check error:', error);
@@ -102,7 +102,7 @@ export function CrossDeviceAuthVerification() {
   const refreshSession = async () => {
     try {
       setVerificationStatus('checking');
-      const { data, error } = await supabase.auth.refreshSession();
+      const { data, error } = await authClient.auth.refreshSession();
       
       if (error) {
         console.error('Session refresh error:', error);
@@ -195,7 +195,7 @@ export function CrossDeviceAuthVerification() {
             <ul className="text-sm text-blue-800 space-y-1">
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">•</span>
-                <span>Your account is stored securely in Supabase's cloud database</span>
+                <span>Your account is stored securely in Backend's cloud database</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-blue-600 mt-1">•</span>

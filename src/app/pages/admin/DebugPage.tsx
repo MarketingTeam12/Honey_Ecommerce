@@ -134,7 +134,7 @@ export function DebugPage() {
                     🚨 CRITICAL: {productsWithBase64.length} product(s) have base64 images!
                   </p>
                   <p className="text-sm text-red-700 mt-1">
-                    This is causing the storage quota issue. These products should use Supabase Storage URLs instead.
+                    This is causing the storage quota issue. These products should use Backend Storage URLs instead.
                   </p>
                   <ul className="text-sm text-red-700 mt-2 list-disc list-inside">
                     {productsWithBase64.map(p => (

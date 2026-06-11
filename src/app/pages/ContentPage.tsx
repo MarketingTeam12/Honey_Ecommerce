@@ -1,4 +1,4 @@
-﻿import { motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useLocation } from 'react-router-dom';
 import { FileText, Shield, HelpCircle, DollarSign, Scale, Info } from 'lucide-react';
 
@@ -400,15 +400,15 @@ export function ContentPage() {
               <p className="text-gray-600 mb-6">per document</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600">✓</span>
                   <span className="text-gray-700">MEA apostille included</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600">✓</span>
                   <span className="text-gray-700">Translation + Apostille</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600">✓</span>
                   <span className="text-gray-700">7-10 days turnaround</span>
                 </li>
               </ul>
@@ -420,15 +420,15 @@ export function ContentPage() {
               <p className="text-gray-600 mb-6">per document</p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600">✓</span>
                   <span className="text-gray-700">Embassy attestation</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600">✓</span>
                   <span className="text-gray-700">HRD, MEA, Embassy</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-600">âœ“</span>
+                  <span className="text-green-600">✓</span>
                   <span className="text-gray-700">10-15 days turnaround</span>
                 </li>
               </ul>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, Copy, Database, Download, Upload, AlertTriangle, Trash2, RefreshCw, XCircle, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { copyToClipboard } from '@/app/utils/clipboard';
 
 export default function OrdersSetupPage() {
@@ -21,7 +21,7 @@ export default function OrdersSetupPage() {
     
     try {
       // Check if database table exists by trying to fetch orders
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`, {
+      const response = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${publicAnonKey}`,
@@ -98,7 +98,7 @@ CREATE POLICY "Anon delete" ON public.kv_store_a67f0635 FOR DELETE TO anon USING
     for (const order of localStorageOrders) {
       try {
         // Save each order to the backend
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
+        const response = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/create-order`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -279,12 +279,12 @@ CREATE POLICY "Anon delete" ON public.kv_store_a67f0635 FOR DELETE TO anon USING
                     2
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-2">Open Supabase SQL Editor</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2">Open Backend SQL Editor</h3>
                     <p className="text-gray-600 text-sm mb-3">
-                      Go to your Supabase project dashboard and open the SQL Editor
+                      Go to your Backend project dashboard and open the SQL Editor
                     </p>
                     <a
-                      href={`https://supabase.com/dashboard/project/${projectId}/sql/new`}
+                      href={`https://authClient.com/dashboard/project/${projectId}/sql/new`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2"

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, User, Key, Shield, ChevronDown, Menu, X, ShoppingCart, Heart, Package, MapPin, MessageSquare } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
 import honeyLogo from '@/assets/honey-log.png';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { startupProducts } from '@/app/data/startupProductsList';
 import { getFirstValidImage } from '@/app/utils/imageUtils';
 import { hasAdminAccess } from '@/app/utils/roleAccess';

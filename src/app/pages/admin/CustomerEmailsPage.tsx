@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Search, Copy, CheckCircle, RefreshCw, Download, Calendar, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { useAuth } from '@/app/context/AuthContext';
 
@@ -21,7 +21,7 @@ export function CustomerEmailsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'month'>('all');
 
-  const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+  const API_URL = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
 
   useEffect(() => {
     fetchEmails();
@@ -63,7 +63,7 @@ export function CustomerEmailsPage() {
         
         if (isBackendIssue) {
           console.log('ℹ️ Backend not deployed - subscriber emails unavailable');
-          toast.error('Backend not deployed. Please deploy the Supabase Edge Functions.');
+          toast.error('Backend not deployed. Please deploy the Backend Edge Functions.');
           setEmails([]);
           return;
         }
@@ -82,7 +82,7 @@ export function CustomerEmailsPage() {
     } catch (error: any) {
       if (error.name === 'AbortError') {
         console.log('ℹ️ Subscriber emails request timed out (backend not responding)');
-        toast.error('Backend timeout. Please ensure Supabase Edge Functions are deployed.');
+        toast.error('Backend timeout. Please ensure Backend Edge Functions are deployed.');
         setEmails([]);
       } else {
         console.error('❌ Error fetching emails:', error);

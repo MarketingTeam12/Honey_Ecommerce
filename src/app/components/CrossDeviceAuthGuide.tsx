@@ -13,7 +13,7 @@ export function CrossDeviceAuthGuide() {
             How It Works
           </h3>
           <p className="text-gray-700 leading-relaxed">
-            Honey Translation Services uses cloud-based authentication powered by Supabase. When you create an account, 
+            Honey Translation Services uses cloud-based authentication powered by authClient. When you create an account, 
             your credentials are securely stored in the cloud, allowing you to access your account from any device, 
             anywhere in the world.
           </p>
@@ -170,7 +170,7 @@ export function CrossDeviceAuthGuide() {
               <div>
                 <h4 className="font-medium text-green-900 mb-1">Secure & Private</h4>
                 <p className="text-sm text-green-800">
-                  All authentication is handled by Supabase with industry-standard encryption. Your password is never stored in plain text.
+                  All authentication is handled by Backend with industry-standard encryption. Your password is never stored in plain text.
                 </p>
               </div>
             </div>

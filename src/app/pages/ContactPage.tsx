@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { motion } from 'motion/react';
 import { Phone, Mail, Send } from 'lucide-react';
 import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/phoneValidation';
@@ -97,7 +97,7 @@ export function ContactPage() {
     }
     
     try {
-      const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+      const API_URL = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
       
       const response = await fetch(`${API_URL}/customer-queries`, {
         method: 'POST',

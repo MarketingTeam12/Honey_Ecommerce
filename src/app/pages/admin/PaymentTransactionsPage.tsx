@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, TrendingUp, CheckCircle, XCircle, Clock, Search, Filter } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface Transaction {
   payment_id: string;
@@ -34,7 +34,7 @@ export function PaymentTransactionsPage() {
       
       // Fetch transactions from all orders
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/orders`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/orders`,
         {
           headers: {
             'Content-Type': 'application/json'

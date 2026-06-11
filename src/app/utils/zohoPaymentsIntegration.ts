@@ -1,11 +1,11 @@
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 
 /**
  * Zoho Payments Integration
  * Exclusive payment gateway for Honey Translation Services
  */
 
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+const API_BASE = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
 const LOCAL_BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 const ZOHO_WIDGET_SCRIPT_ID = 'zoho-zpayments-script';
 const ZOHO_WIDGET_SCRIPT_SRC = 'https://static.zohocdn.com/zpay/zpay-js/v1/zpayments.js';

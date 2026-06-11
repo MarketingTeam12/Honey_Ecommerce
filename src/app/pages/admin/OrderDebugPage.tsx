@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 
 export function OrderDebugPage() {
@@ -21,7 +21,7 @@ export function OrderDebugPage() {
     // 1. Fetch from backend /orders endpoint
     try {
       console.log('🔍 [Debug] Fetching from /orders endpoint...');
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`, {
+      const response = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`, {
         headers: buildHeaders()
       });
       
@@ -41,7 +41,7 @@ export function OrderDebugPage() {
     // 2. Fetch from debug endpoint
     try {
       console.log('🔍 [Debug] Fetching from /debug/orders endpoint...');
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/debug/orders`, {
+      const response = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/debug/orders`, {
         headers: buildHeaders()
       });
       
@@ -90,7 +90,7 @@ export function OrderDebugPage() {
       try {
         console.log('📤 [Debug] Syncing order to backend:', order.order_number);
         
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
+        const response = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/create-order`, {
           method: 'POST',
           headers: buildHeaders(),
           body: JSON.stringify({

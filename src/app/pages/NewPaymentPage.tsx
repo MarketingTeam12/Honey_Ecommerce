@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -8,13 +8,13 @@ import {
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { useCurrency } from '@/app/context/CurrencyContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 const LOCAL_BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'YOUR_RAZORPAY_KEY_ID';
 const RAZORPAY_CHECKOUT_SCRIPT_ID = 'razorpay-checkout-script';
 const RAZORPAY_CHECKOUT_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
-const RAZORPAY_ORDER_API = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/razorpay/create-order`;
+const RAZORPAY_ORDER_API = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/razorpay/create-order`;
 
 const buildPublicFunctionHeaders = () => ({
   'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ export function NewPaymentPage() {
 
   const verifyPayment = async (payload: PaymentVerificationPayload) => {
     try {
-      const verifyResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/verify`, {
+      const verifyResponse = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/verify`, {
         method: 'POST',
         headers: buildPublicFunctionHeaders(),
         body: JSON.stringify(payload),
@@ -528,7 +528,7 @@ export function NewPaymentPage() {
       let paymentCreateResponse: PaymentCreateOrderResponse | null = null;
 
       try {
-        const backendResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
+        const backendResponse = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/create-order`, {
           method: 'POST',
           headers: buildPublicFunctionHeaders(),
           body: JSON.stringify({

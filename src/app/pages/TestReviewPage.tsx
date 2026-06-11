@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/app/context/AuthContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
@@ -53,14 +53,14 @@ export default function TestReviewPage() {
         addResult('success', '✅ Mock token detected (expected for demo)');
         addResult('info', `📋 Token format: ${accessToken}`);
       } else {
-        addResult('info', '🔐 Real Supabase token detected');
+        addResult('info', '🔐 Real Backend token detected');
       }
       
       // Test 2.5: Test authentication endpoint directly
       addResult('info', '🧪 Testing authentication endpoint...');
       try {
         const authTestResponse = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/auth/test`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/auth/test`,
           {
             method: 'POST',
             headers: buildHeaders(accessToken),
@@ -90,7 +90,7 @@ export default function TestReviewPage() {
         reviewText: 'This is a test review to verify the authentication system is working properly.'
       };
       
-      const requestUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/reviews`;
+      const requestUrl = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/reviews`;
       const authHeaderValue = `Bearer ${accessToken}`;
       
       addResult('info', `📍 Request URL: ${requestUrl}`);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Star, Check, X, Eye, EyeOff, Search, Filter, Trash2 } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface Review {
   id: string;
@@ -39,7 +39,7 @@ export function ItemReviewsPage() {
       if (accessToken && !accessToken.startsWith('mock-token-')) {
         try {
           const response = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/reviews`,
+            `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/reviews`,
             {
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
@@ -185,7 +185,7 @@ export function ItemReviewsPage() {
         };
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
           {
             method: 'PUT',
             headers,
@@ -220,7 +220,7 @@ export function ItemReviewsPage() {
         };
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
           {
             method: 'PUT',
             headers,
@@ -255,7 +255,7 @@ export function ItemReviewsPage() {
         };
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
           {
             method: 'PUT',
             headers,
@@ -290,7 +290,7 @@ export function ItemReviewsPage() {
     if (accessToken && !accessToken.startsWith('mock-token-')) {
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/reviews/${reviewId}`,
           {
             method: 'DELETE',
             headers: {

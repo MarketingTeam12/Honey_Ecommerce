@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, MouseEvent, useMemo } from 'react';
+import { useState, useEffect, useRef, MouseEvent, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -16,7 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/pop
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { Check, Heart, ChevronLeft, ChevronRight, Upload, Minus, Plus, MessageCircle, Share2 } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { toast } from 'sonner';
 import googlePayIcon from 'figma:asset/02347af70453dbcedcb242f3af1712a1a954b2f1.png';
 import mastercardIcon from 'figma:asset/23e6e86ee8f55bfcbc0611bfe54a4aa7beca2f55.png';
@@ -275,18 +275,18 @@ function renderFormattedDescription(description: string) {
           return <div key={`blank-${index}`} className="h-2" />;
         }
 
-        const bulletMatch = trimmed.match(/^[-•*]\s+(.*)$/);
+        const bulletMatch = trimmed.match(/^[-�*]\s+(.*)$/);
         const numberedMatch = trimmed.match(/^(\d+)[.)]\s+(.*)$/);
         const isHeading =
           /^[A-Z0-9\s&/().,-]+$/.test(trimmed) &&
           trimmed.length > 3 &&
           trimmed.length <= 60 &&
-          !trimmed.includes('₹');
+          !trimmed.includes('?');
 
         if (bulletMatch) {
           return (
             <div key={`bullet-${index}`} className="flex items-start gap-2">
-              <span className="mt-1.5 text-gray-500">•</span>
+              <span className="mt-1.5 text-gray-500">�</span>
               <span className="flex-1">{renderFormattedInlineText(bulletMatch[1])}</span>
             </div>
           );
@@ -319,7 +319,7 @@ function renderFormattedDescription(description: string) {
 // 1. STANDARD TRANSLATION PRICING (Original: ?2,000)
 const STANDARD_TRANSLATION_ORIGINAL = 2000;
 
-// English â†’ Foreign Language
+// English → Foreign Language
 const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -336,7 +336,7 @@ const ENGLISH_TO_FOREIGN: { [key: string]: number } = {
   'indonesian': 800,
 };
 
-// Foreign Language â†’ English
+// Foreign Language → English
 const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'dutch': 900,
   'arabic': 900,
@@ -354,7 +354,7 @@ const FOREIGN_TO_ENGLISH: { [key: string]: number } = {
   'indonesian': 900,
 };
 
-// English ’ Indian Language (Most are ?600, with exceptions)
+// English � Indian Language (Most are ?600, with exceptions)
 const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -373,7 +373,7 @@ const ENGLISH_TO_INDIAN: { [key: string]: number } = {
   'sanskrit': 600,
 };
 
-// Indian Language â†’ English (Same prices as above)
+// Indian Language → English (Same prices as above)
 const INDIAN_TO_ENGLISH: { [key: string]: number } = {
   'assamese': 600,
   'bengali': 600,
@@ -524,7 +524,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Use productKey if provided, otherwise generate from title (for backward compatibility)
   const productId = productKey || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   
-  console.log('ðŸ”‘ ProductTemplate - productKey:', productKey, 'productId:', productId);
+  console.log('🔑 ProductTemplate - productKey:', productKey, 'productId:', productId);
   
   // Check if product is in wishlist
   const inWishlist = isInWishlist(productId);
@@ -609,7 +609,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   // Pre-fill form if in edit mode
   useEffect(() => {
     if (isEditMode && editCartItem) {
-      console.log('ðŸ“ Edit mode detected, pre-filling form with:', editCartItem);
+      console.log('📝 Edit mode detected, pre-filling form with:', editCartItem);
       
       if (editCartItem.sourceLanguage) {
         setSourceLanguages(
@@ -643,7 +643,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset images to default when productId or data.images changes
   useEffect(() => {
-    console.log('ðŸ”„ Product changed, resetting images to default:', productId);
+    console.log('🔄 Product changed, resetting images to default:', productId);
     setProductImages(normalizeProductImages(data.images, data.title));
     setSelectedImage(0);
     setImagesLoaded(false);
@@ -651,7 +651,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
   // Reset all form fields when product changes
   useEffect(() => {
-    console.log('ðŸ”„ Product changed, resetting all form fields:', productId);
+    console.log('🔄 Product changed, resetting all form fields:', productId);
     setSourceLanguages([]);
     setTargetLanguages([]);
     setSourceLanguageSearch('');
@@ -740,12 +740,12 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
         // Normalize productId to lowercase for consistency
         const normalizedProductId = productId.toLowerCase();
         
-        console.log('ðŸ“¸ Fetching images for product:', normalizedProductId);
+        console.log('📸 Fetching images for product:', normalizedProductId);
         
         // Add cache-busting parameter to force fresh data
         const cacheBuster = Date.now();
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/products/${normalizedProductId}/images?t=${cacheBuster}`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/products/${normalizedProductId}/images?t=${cacheBuster}`,
           {
             headers: {
               'Cache-Control': 'no-cache'
@@ -755,21 +755,21 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('ðŸ“¦ Received images data:', data);
+          console.log('📦 Received images data:', data);
           
           if (data.images && Array.isArray(data.images)) {
             const validDbImages = normalizeProductImages(data.images, data.title);
-            console.log('âœ… Valid images found:', validDbImages.length);
+            console.log('✅ Valid images found:', validDbImages.length);
             
             if (validDbImages.length > 0) {
-              console.log('ðŸ”„ Updating product images from database');
+              console.log('🔄 Updating product images from database');
               setProductImages(validDbImages);
             } else {
-              console.log('  No valid images in database, using default images');
+              console.log('� No valid images in database, using default images');
             }
           }
         } else {
-          console.error('âŒ Failed to fetch images, status:', response.status);
+          console.error('❌ Failed to fetch images, status:', response.status);
         }
       } catch (error) {
         console.log(' Using default product images:', error);
@@ -1116,7 +1116,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
   };
 
   // Debug logging for startup packages
-  console.log('ðŸ“¦ ProductTemplate Debug:', {
+  console.log('📦 ProductTemplate Debug:', {
     title: data.title,
     type: data.type,
     isStartup: data.type === 'startup',
@@ -1154,7 +1154,7 @@ export function ProductTemplate({ data, productKey }: ProductTemplateProps) {
           ? COMMERCIAL_DOCUMENT_OPTIONS
           : [];
   
-  console.log('ðŸ” Document Type Visibility Check:', {
+  console.log('🔍 Document Type Visibility Check:', {
     productType: data.type,
     isNotStartup: data.type !== 'startup',
     hasDocTypes: !!data.documentTypes,

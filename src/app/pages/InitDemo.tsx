@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
 export default function InitDemo() {
@@ -18,13 +18,13 @@ export default function InitDemo() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/init-demo-users`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/init-demo-users`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'apikey': publicAnonKey,
-            'Authorization': `Bearer ${publicAnonKey}`, // Required by Supabase Edge Functions
+            'Authorization': `Bearer ${publicAnonKey}`, // Required by Backend Edge Functions
           },
         }
       );

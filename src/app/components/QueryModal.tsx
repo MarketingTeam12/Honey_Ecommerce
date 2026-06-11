@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, MessageSquare, User, Phone, Mail, Send, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { sanitizePhoneForCountry, validatePhoneForCountry } from '@/app/utils/phoneValidation';
 
 interface QueryModalProps {
@@ -55,7 +55,7 @@ export function QueryModal({ isOpen, onClose }: QueryModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
 
-  const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+  const API_URL = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
   const selectedCountry = countries.find(country => country.code === formData.country) || countries[0];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

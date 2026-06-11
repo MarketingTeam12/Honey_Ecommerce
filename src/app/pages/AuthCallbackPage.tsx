@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/app/utils/supabaseClient';
+import { authClient } from '@/app/utils/authClient';
 
 export function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -15,15 +15,15 @@ export function AuthCallbackPage() {
         const code = url.searchParams.get('code');
 
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          const { error } = await authClient.auth.exchangeCodeForSession(code);
           if (error) {
             console.error('[OAuth Callback] exchangeCodeForSession failed:', error);
           }
         }
 
-        let sessionData: Awaited<ReturnType<typeof supabase.auth.getSession>>['data'] | null = null;
+        let sessionData: Awaited<ReturnType<typeof authClient.auth.getSession>>['data'] | null = null;
         for (let attempt = 0; attempt < 6; attempt += 1) {
-          const { data, error } = await supabase.auth.getSession();
+          const { data, error } = await authClient.auth.getSession();
           if (error) {
             console.error('[OAuth Callback] getSession failed:', error);
           }

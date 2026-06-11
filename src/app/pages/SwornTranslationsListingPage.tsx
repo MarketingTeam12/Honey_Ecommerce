@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useProducts } from '@/app/context/ProductContext';

@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle, ExternalLink, Loader2, RefreshCw } from 'lu
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
-import { projectId } from '/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 
 interface BucketStatus {
   name: string;
@@ -32,7 +32,7 @@ export default function StorageSetup() {
     
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/storage/check-buckets`
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/storage/check-buckets`
       );
       
       if (!response.ok) {
@@ -60,7 +60,7 @@ export default function StorageSetup() {
             Storage Setup Status
           </h1>
           <p className="text-gray-600">
-            Check if your Supabase Storage buckets are configured correctly
+            Check if your Backend Storage buckets are configured correctly
           </p>
         </div>
 
@@ -203,12 +203,12 @@ export default function StorageSetup() {
                   <li>
                     Open your{' '}
                     <a
-                      href="https://supabase.com/dashboard"
+                      href="https://authClient.com/dashboard"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline inline-flex items-center gap-1"
                     >
-                      Supabase Dashboard
+                      Backend Dashboard
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </li>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Users, Search, Eye, Mail, Phone, Calendar, RefreshCw, X, MapPin, ShoppingBag } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 
 interface Customer {
@@ -60,7 +60,7 @@ export function InventoryPage() {
       console.log('🔄 [InventoryPage] Fetching customers from database...');
       console.log('🔑 [InventoryPage] Current accessToken:', accessToken ? accessToken.substring(0, 20) + '...' : 'Not available');
       
-      // Smart token detection: use publicAnonKey as fallback for Supabase infra auth
+      // Smart token detection: use publicAnonKey as fallback for Backend infra auth
       const isMockToken = accessToken?.startsWith('mock-token-');
       const bearerToken = (!isMockToken && accessToken) ? accessToken : publicAnonKey;
       const headers: Record<string, string> = {
@@ -71,7 +71,7 @@ export function InventoryPage() {
       console.log('🔐 [InventoryPage] Using token type:', isMockToken ? 'publicAnonKey (mock detected)' : (accessToken ? 'User token' : 'publicAnonKey (no token)'));
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/customers`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/customers`,
         { headers }
       );
 

@@ -1,9 +1,9 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { ProductTemplate } from '@/app/components/product/ProductTemplate';
 import { productDataMap } from '@/app/data/productData';
 import { useProducts } from '@/app/context/ProductContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { useAuth } from '@/app/context/AuthContext';
 import { normalizeProductImages } from '@/app/utils/imageUtils';
@@ -104,15 +104,15 @@ export function ProductPage() {
         // Fetch all data in parallel for faster loading
         const [configResponse, languagesResponse, docTypesResponse] = await Promise.all([
           fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/product-config/${id}`,
+            `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/product-config/${id}`,
             { headers }
           ),
           fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages`,
+            `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages`,
             { headers }
           ),
           fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/document-types`,
+            `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/document-types`,
             { headers }
           )
         ]);

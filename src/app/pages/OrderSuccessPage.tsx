@@ -1,7 +1,7 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Download, MessageCircle, Package, ShoppingBag, FileText, Loader2, Receipt, Calendar, CreditCard, Mail, User } from 'lucide-react';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'sonner';
 import { generateInvoicePDF } from '@/app/utils/generateInvoicePDF';
@@ -63,9 +63,9 @@ export function OrderSuccessPage() {
 
   const verifyZohoPayment = async () => {
     try {
-      console.log('ðŸ” Verifying Razorpayment...');
+      console.log('🔍 Verifying Razorpayment...');
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/zoho/verify`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/zoho/verify`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -78,7 +78,7 @@ export function OrderSuccessPage() {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log('âœ… Razorpayment verified:', data);
+        console.log('✅ Razorpayment verified:', data);
         if (data.verified) {
           // Refresh order details to get updated payment status
           fetchOrderDetails();
@@ -92,7 +92,7 @@ export function OrderSuccessPage() {
   const fetchOrderDetails = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${orderId}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${orderId}`,
         {
           headers: {
             'Content-Type': 'application/json'
@@ -118,7 +118,7 @@ export function OrderSuccessPage() {
       return rawPath;
     }
     const trimmed = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
-    return `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635${trimmed}`;
+    return `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635${trimmed}`;
   };
 
   const downloadFromUrl = async (rawPath: string) => {
@@ -208,7 +208,7 @@ export function OrderSuccessPage() {
   const orderTotal = order?.total_amount 
     ? parseFloat(order.total_amount)
     : 0;
-  const currencySymbol = order?.currency === 'INR' ? '₹' : '$';
+  const currencySymbol = order?.currency === 'INR' ? '?' : '$';
   const paymentMethodLabel =
     gateway === 'razorpay' || order?.payment_method === 'razorpay'
       ? 'Razorpay'

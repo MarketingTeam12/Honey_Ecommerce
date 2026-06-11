@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   AlertCircle, 
@@ -14,9 +14,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
-import { supabase } from '@/app/utils/supabaseClient';
+import { authClient } from '@/app/utils/authClient';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 
 interface OrderItem {
@@ -76,7 +76,7 @@ export function MyOrdersPage() {
 
   const formatCurrencyAmount = (amount: unknown) => {
     const numericAmount = typeof amount === 'number' ? amount : parseFloat(String(amount || '0'));
-    return `₹${numericAmount.toLocaleString('en-IN', {
+    return `?${numericAmount.toLocaleString('en-IN', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -114,9 +114,9 @@ export function MyOrdersPage() {
     if (user) {
       fetchOrders();
       
-      // ðŸ”„ Silent background polling every 3 seconds for faster real-time updates
+      // 🔄 Silent background polling every 3 seconds for faster real-time updates
       const interval = setInterval(() => {
-        console.log('ðŸ”„ [MyOrdersPage] Background polling for status updates...');
+        console.log('🔄 [MyOrdersPage] Background polling for status updates...');
         fetchOrders(true); // Pass true to indicate this is a background fetch
       }, 3000); // Poll every 3 seconds for faster updates (reduced from 5 seconds)
       
@@ -134,28 +134,28 @@ export function MyOrdersPage() {
       }
       
       if (isBackgroundFetch) {
-        console.log('ðŸ”„ [MyOrdersPage] Silent background fetch - no loading spinner');
+        console.log('🔄 [MyOrdersPage] Silent background fetch - no loading spinner');
       } else {
-        console.log('ðŸ“¦ [MyOrdersPage] Initial fetch - showing loading spinner');
+        console.log('📦 [MyOrdersPage] Initial fetch - showing loading spinner');
       }
       
-      console.log('ðŸ“¦ [MyOrdersPage] Fetching orders for user:', user?.email);
-      console.log('ðŸ“¦ [MyOrdersPage] User ID:', user?.id);
-      console.log('ðŸ“¦ [MyOrdersPage] Access Token:', accessToken ? 'Present' : 'Missing');
+      console.log('📦 [MyOrdersPage] Fetching orders for user:', user?.email);
+      console.log('📦 [MyOrdersPage] User ID:', user?.id);
+      console.log('📦 [MyOrdersPage] Access Token:', accessToken ? 'Present' : 'Missing');
       
       let token = accessToken;
       
-      // ðŸ” For real Supabase users (not mock users), refresh the session to get a fresh token
+      // 🔐 For real Backend users (not mock users), refresh the session to get a fresh token
       if (token && !token.startsWith('mock-token-')) {
         try {
-          console.log('”„ [MyOrdersPage] Refreshing Supabase session for fresh token...');
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          console.log('�� [MyOrdersPage] Refreshing Backend session for fresh token...');
+          const { data: { session }, error: sessionError } = await authClient.auth.getSession();
           
           if (session?.access_token) {
             token = session.access_token;
-            console.log('… [MyOrdersPage] Got fresh token from session');
+            console.log('� [MyOrdersPage] Got fresh token from session');
           } else {
-            console.log('  [MyOrdersPage] No session found, using existing token');
+            console.log('� [MyOrdersPage] No session found, using existing token');
           }
         } catch (sessionError) {
           console.log(' [MyOrdersPage] Session refresh error:', sessionError);
@@ -169,20 +169,20 @@ export function MyOrdersPage() {
       if (token) {
         try {
           if (!isBackgroundFetch) {
-            console.log('ðŸ“¡ [MyOrdersPage] Fetching from backend...');
-            console.log('ðŸ“¡ [MyOrdersPage] Backend URL:', `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/my-orders`);
-            console.log('ðŸ“¡ [MyOrdersPage] User token type:', token.startsWith('mock-token-') ? 'DEMO USER (mock-token)' : 'REAL USER (supabase token)');
+            console.log('📡 [MyOrdersPage] Fetching from backend...');
+            console.log('📡 [MyOrdersPage] Backend URL:', `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/my-orders`);
+            console.log('📡 [MyOrdersPage] User token type:', token.startsWith('mock-token-') ? 'DEMO USER (mock-token)' : 'REAL USER (Backend token)');
           }
           
           // Add timeout to prevent hanging
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
           
-          // ðŸ”¥ Add cache-busting timestamp to prevent browser from returning stale cached data
+          // 🔥 Add cache-busting timestamp to prevent browser from returning stale cached data
           const cacheBuster = `?t=${Date.now()}`;
           
           const response = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/my-orders${cacheBuster}`,
+            `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/my-orders${cacheBuster}`,
             {
               headers: buildHeaders(token),
               signal: controller.signal
@@ -196,9 +196,9 @@ export function MyOrdersPage() {
             backendOrders = data.orders || [];
             
             if (isBackgroundFetch) {
-              console.log(`ðŸ”„ [Background] Loaded ${backendOrders.length} orders - updating silently`);
+              console.log(`🔄 [Background] Loaded ${backendOrders.length} orders - updating silently`);
             } else {
-              console.log(`âœ… [MyOrdersPage] Loaded ${backendOrders.length} orders from backend`);
+              console.log(`✅ [MyOrdersPage] Loaded ${backendOrders.length} orders from backend`);
             }
             
             // Log status changes
@@ -209,43 +209,43 @@ export function MyOrdersPage() {
               }
               
               // ALWAYS log each order's status for debugging
-              console.log(`” [Order ${idx + 1}/${backendOrders.length}] ID:`, order.id);
-              console.log(`   “‹ Order Number:`, order.order_number);
-              console.log(`   “ Status:`, order.status);
-              console.log(`   “¦ Tracking:`, order.tracking_number || 'NOT SET');
+              console.log(`�� [Order ${idx + 1}/${backendOrders.length}] ID:`, order.id);
+              console.log(`   �� Order Number:`, order.order_number);
+              console.log(`   � Status:`, order.status);
+              console.log(`   �� Tracking:`, order.tracking_number || 'NOT SET');
               console.log(`    Carrier:`, order.shipping_carrier || 'NOT SET');
               console.log(`    Updated:`, order.updated_at);
               console.log(`   ---`);
             });
           } else {
             const errorText = await response.text();
-            console.log('  [MyOrdersPage] Backend fetch failed, status:', response.status);
-            console.log('  [MyOrdersPage] Error response:', errorText);
+            console.log('� [MyOrdersPage] Backend fetch failed, status:', response.status);
+            console.log('� [MyOrdersPage] Error response:', errorText);
             backendFailed = true;
           }
         } catch (backendError: any) {
           if (backendError.name === 'AbortError') {
-            console.log('  [MyOrdersPage] Backend request timed out');
+            console.log('� [MyOrdersPage] Backend request timed out');
           } else {
-            console.log('  [MyOrdersPage] Backend error:', backendError);
+            console.log('� [MyOrdersPage] Backend error:', backendError);
           }
           backendFailed = true;
         }
       } else {
-        console.log('  [MyOrdersPage] No token available - this should not happen for logged in users');
-        console.log('  [MyOrdersPage] User object:', user);
+        console.log('� [MyOrdersPage] No token available - this should not happen for logged in users');
+        console.log('� [MyOrdersPage] User object:', user);
         backendFailed = true;
       }
       
       // Get localStorage orders for merging/fallback
-      console.log('¦ [MyOrdersPage] Checking localStorage...');
+      console.log('� [MyOrdersPage] Checking localStorage...');
       const localOrders = localStorage.getItem('user_orders');
       let parsedLocalOrders: Order[] = [];
       
       if (localOrders) {
         try {
           const allLocalOrders = JSON.parse(localOrders);
-          console.log('¦ [MyOrdersPage] Total orders in localStorage:', allLocalOrders.length);
+          console.log('� [MyOrdersPage] Total orders in localStorage:', allLocalOrders.length);
           
           // Filter orders for the current user
           parsedLocalOrders = allLocalOrders.filter((order: any) => 
@@ -254,12 +254,12 @@ export function MyOrdersPage() {
             order.user_id === user?.id
           );
           
-          console.log('¦ [MyOrdersPage] User orders in localStorage:', parsedLocalOrders.length);
+          console.log('� [MyOrdersPage] User orders in localStorage:', parsedLocalOrders.length);
         } catch (e) {
-          console.log('¦ [MyOrdersPage] Error parsing localStorage:', e);
+          console.log('� [MyOrdersPage] Error parsing localStorage:', e);
         }
       } else {
-        console.log('¦ [MyOrdersPage] No localStorage data found');
+        console.log('� [MyOrdersPage] No localStorage data found');
       }
       
       // MERGE backend and localStorage orders (backend takes priority, but include localStorage-only orders)
@@ -269,7 +269,7 @@ export function MyOrdersPage() {
       // Add localStorage orders that are NOT in backend
       for (const localOrder of parsedLocalOrders) {
         if (!backendOrderIds.has(localOrder.id)) {
-          console.log(`ðŸ“‹ [MyOrdersPage] Adding localStorage-only order: ${localOrder.order_number}`);
+          console.log(`📋 [MyOrdersPage] Adding localStorage-only order: ${localOrder.order_number}`);
           mergedOrders.push(localOrder);
         }
       }
@@ -292,7 +292,7 @@ export function MyOrdersPage() {
       if (isBackgroundFetch) {
         console.log('[Background] Orders updated silently - no page reload');
       } else {
-        console.log('¯ [MyOrdersPage] Orders loaded and merged from backend + localStorage');
+        console.log('� [MyOrdersPage] Orders loaded and merged from backend + localStorage');
       }
     } catch (error) {
       console.error(' [MyOrdersPage] Error fetching orders:', error);
@@ -331,7 +331,7 @@ export function MyOrdersPage() {
       const token = accessToken;
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${orderId}/download-completed-file`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${orderId}/download-completed-file`,
         {
           headers: buildHeaders(token)
         }
@@ -461,7 +461,7 @@ export function MyOrdersPage() {
 
     // Handle cancelled orders
     if (order.status.toLowerCase() === 'cancelled') {
-      console.log('ðŸ”´ [Tracking Steps] Order is cancelled');
+      console.log('🔴 [Tracking Steps] Order is cancelled');
       return [
         steps[0], // Order Placed
         {
@@ -476,7 +476,7 @@ export function MyOrdersPage() {
 
     // Log which steps are completed
     steps.forEach((step, idx) => {
-      console.log(`  Step ${idx + 1}: ${step.status} - ${step.completed ? 'âœ… Completed' : 'â³ Pending'}`);
+      console.log(`  Step ${idx + 1}: ${step.status} - ${step.completed ? '✅ Completed' : '⏳ Pending'}`);
     });
 
     return steps;
@@ -490,7 +490,7 @@ export function MyOrdersPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Please Sign In</h2>
           <p className="text-gray-600 mb-4">You need to be logged in to view your orders.</p>
           <Link to="/signin" className="text-blue-600 hover:underline">
-            Sign In’
+            Sign In�
           </Link>
         </div>
       </div>

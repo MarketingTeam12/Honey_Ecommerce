@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { RefreshCw, Database, HardDrive, AlertCircle, CheckCircle } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface DebugOrderInfo {
   id: string;
@@ -44,7 +44,7 @@ export function DebugOrdersPage() {
     // Load from backend
     try {
       console.log('📡 [DEBUG] Fetching from backend...');
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/debug/orders`;
+      const url = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/debug/orders`;
       console.log('📡 [DEBUG] URL:', url);
 
       const response = await fetch(url, {
@@ -145,7 +145,7 @@ export function DebugOrdersPage() {
               {backendOrders.length}
             </p>
             <p className={`text-sm mt-1 ${backendSuccess ? 'text-green-700' : 'text-gray-500'}`}>
-              {backendSuccess ? 'Connected to Supabase' : 'Backend unavailable'}
+              {backendSuccess ? 'Connected to Backend' : 'Backend unavailable'}
             </p>
           </div>
 
@@ -259,7 +259,7 @@ export function DebugOrdersPage() {
           <h3 className="font-semibold text-gray-900 mb-3">📋 How to Use This Page</h3>
           <div className="space-y-2 text-sm text-gray-700">
             <p>• <strong>localStorage Orders</strong>: Orders saved in your browser (temporary, device-specific)</p>
-            <p>• <strong>Backend Orders</strong>: Orders saved in Supabase database (permanent, cross-device)</p>
+            <p>• <strong>Backend Orders</strong>: Orders saved in Backend database (permanent, cross-device)</p>
             <p>• <strong>Sync Status</strong>: Shows if localStorage and backend are in sync</p>
             <p className="mt-4 text-blue-700">
               ✅ <strong>If synced</strong>: New orders are being saved to both locations correctly

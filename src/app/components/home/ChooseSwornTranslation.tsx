@@ -1,4 +1,4 @@
-﻿import { Badge } from '@/app/components/ui/badge';
+import { Badge } from '@/app/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useProducts } from '@/app/context/ProductContext';
@@ -97,7 +97,7 @@ export function ChooseSwornTranslation() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-6xl">ðŸ“„</span>
+                      <span className="text-6xl">📄</span>
                     </div>
                   )}
                 </div>

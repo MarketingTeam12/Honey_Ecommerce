@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { AlertTriangle, CheckCircle, XCircle, RefreshCw, Database, Server, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface DiagnosticResult {
   name: string;
@@ -47,7 +47,7 @@ export function DiagnosticPage() {
   const checkServerStatus = async (): Promise<DiagnosticResult> => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup/status`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup/status`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -85,7 +85,7 @@ export function DiagnosticPage() {
   const checkDatabaseStatus = async (): Promise<DiagnosticResult> => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup/status`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup/status`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -138,7 +138,7 @@ export function DiagnosticPage() {
   const checkOrdersEndpoint = async (): Promise<DiagnosticResult> => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`,
         {
           headers: {
             'Authorization': `Bearer ${publicAnonKey}`,
@@ -248,7 +248,7 @@ export function DiagnosticPage() {
       return {
         name: 'Environment Config',
         status: 'success',
-        message: 'Supabase configuration is valid',
+        message: 'Backend configuration is valid',
         details: {
           projectId: projectId,
           anonKeyLength: publicAnonKey.length
@@ -258,8 +258,8 @@ export function DiagnosticPage() {
       return {
         name: 'Environment Config',
         status: 'error',
-        message: 'Supabase environment variables missing',
-        error: 'Check /utils/supabase/info.tsx',
+        message: 'Backend environment variables missing',
+        error: 'Check @/app/utils/backendInfo.tsx',
         details: {
           projectId: hasProjectId ? 'OK' : 'MISSING',
           anonKey: hasAnonKey ? 'OK' : 'MISSING'
@@ -274,7 +274,7 @@ export function DiagnosticPage() {
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup/database`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup/database`,
         {
           method: 'POST',
           headers: {
@@ -379,7 +379,7 @@ export function DiagnosticPage() {
                   </h2>
                   <p className="text-red-800 text-lg font-semibold mb-4">
                     {hasTableError 
-                      ? 'The database table "kv_store_a67f0635" does NOT exist in your Supabase database.'
+                      ? 'The database table "kv_store_a67f0635" does NOT exist in your Backend database.'
                       : 'Multiple errors detected. Check details below.'}
                   </p>
                   
@@ -460,10 +460,10 @@ export function DiagnosticPage() {
                   💡 Tip: Check Server Logs
                 </h3>
                 <p className="text-sm text-blue-800 mb-2">
-                  For more detailed error messages, check your Supabase Edge Function logs:
+                  For more detailed error messages, check your Backend Edge Function logs:
                 </p>
                 <ol className="text-sm text-blue-800 space-y-1 ml-5 list-decimal">
-                  <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="underline font-medium">Supabase Dashboard</a></li>
+                  <li>Go to <a href="https://authClient.com/dashboard" target="_blank" rel="noopener noreferrer" className="underline font-medium">Backend Dashboard</a></li>
                   <li>Click "Edge Functions" in the left sidebar</li>
                   <li>Click on "make-server-a67f0635"</li>
                   <li>Click the "Logs" tab</li>

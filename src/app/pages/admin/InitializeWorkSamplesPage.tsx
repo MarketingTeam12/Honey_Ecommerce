@@ -1,9 +1,9 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, PlayCircle, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { useAuth } from '@/app/context/AuthContext';
 import { BackendStatusBanner } from '@/app/components/BackendStatusBanner';
@@ -39,10 +39,10 @@ export function InitializeWorkSamplesPage() {
       setError(null);
       setResult(null);
 
-      console.log('ðŸŽ¬ Initializing work samples...');
+      console.log('🎬 Initializing work samples...');
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/init-work-samples-inline`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/init-work-samples-inline`,
         {
           method: 'POST',
           headers: buildHeaders(accessToken),
@@ -58,7 +58,7 @@ export function InitializeWorkSamplesPage() {
                                response.status === 401;
         
         if (isBackendIssue) {
-          throw new Error('Backend not available. Please ensure Supabase Edge Functions are deployed and configured correctly.');
+          throw new Error('Backend not available. Please ensure Backend Edge Functions are deployed and configured correctly.');
         }
         
         let errorData;
@@ -71,17 +71,17 @@ export function InitializeWorkSamplesPage() {
       }
 
       const data: InitResponse = await response.json();
-      console.log('âœ… Initialization complete:', data);
+      console.log('✅ Initialization complete:', data);
       setResult(data);
     } catch (err) {
-      console.error('âŒ Initialization error:', err);
+      console.error('❌ Initialization error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize work samples';
       setError(errorMessage);
       
       // Also log helpful information
       if (errorMessage.includes('Backend not available')) {
-        console.error('ðŸ’¡ [Initialization] To fix this:');
-        console.error('   1. Ensure Supabase Edge Functions are deployed');
+        console.error('💡 [Initialization] To fix this:');
+        console.error('   1. Ensure Backend Edge Functions are deployed');
         console.error('   2. Check that environment variables are set correctly');
         console.error('   3. Verify the project ID and anon key are correct');
       }
@@ -155,9 +155,9 @@ export function InitializeWorkSamplesPage() {
                     <div className="bg-white rounded p-3 text-sm text-gray-700">
                       <p className="font-semibold mb-2">Troubleshooting steps:</p>
                       <ol className="list-decimal list-inside space-y-1">
-                        <li>Verify Supabase Edge Functions are deployed</li>
-                        <li>Check environment variables (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY)</li>
-                        <li>Confirm the project ID matches your Supabase project</li>
+                        <li>Verify Backend Edge Functions are deployed</li>
+                        <li>Check environment variables (Backend_URL, Backend_SERVICE_ROLE_KEY, Backend_ANON_KEY)</li>
+                        <li>Confirm the project ID matches your Backend project</li>
                         <li>Check browser console for detailed error logs</li>
                       </ol>
                     </div>
@@ -209,9 +209,9 @@ export function InitializeWorkSamplesPage() {
                       >
                         <span className="font-medium">{item.title || item.id}</span>
                         <span className="text-xs uppercase tracking-wide">
-                          {item.status === 'created' ? 'âœ“ Created' : 
-                           item.status === 'already_exists' ? 'â—‹ Exists' : 
-                           'âœ— Error'}
+                          {item.status === 'created' ? '✓ Created' : 
+                           item.status === 'already_exists' ? '○ Exists' : 
+                           '✗ Error'}
                         </span>
                       </div>
                     ))}

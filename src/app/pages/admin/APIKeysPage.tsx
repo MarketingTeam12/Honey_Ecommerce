@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { Save, Key, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
@@ -66,7 +66,7 @@ export function APIKeysPage() {
       const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/api-keys`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/api-keys`,
         {
           headers: buildHeaders(accessToken),
           signal: controller.signal
@@ -138,7 +138,7 @@ export function APIKeysPage() {
       setError(null);
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/api-keys`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/api-keys`,
         {
           method: 'POST',
           headers: buildHeaders(accessToken),

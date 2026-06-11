@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Send, AlertCircle, CheckCircle, ThumbsUp, ThumbsDown, Edit2, Check, X, BadgeCheck } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 
 interface Review {
@@ -249,7 +249,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
       }
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/reviews/${productId}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/reviews/${productId}`,
         {
           headers: buildHeaders(accessToken),
         }
@@ -359,7 +359,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
       }
 
       // Otherwise try to submit to backend
-      const requestUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/reviews`;
+      const requestUrl = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/reviews`;
       const requestBody = {
         productId,
         productName,
@@ -548,7 +548,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
       }
 
       // Otherwise update on backend
-      const requestUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/reviews/${editingReviewId}`;
+      const requestUrl = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/reviews/${editingReviewId}`;
       const requestBody = {
         productId,
         productName,
@@ -765,7 +765,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
       // Otherwise use backend
       console.log('📤 Sending vote to backend...');
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/reviews/${reviewId}/vote`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/reviews/${reviewId}/vote`,
         {
           method: 'POST',
           headers: buildHeaders(accessToken),

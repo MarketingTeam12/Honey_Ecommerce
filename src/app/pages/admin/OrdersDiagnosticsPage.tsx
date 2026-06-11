@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { RefreshCw, Database, HardDrive, AlertCircle, CheckCircle, XCircle, Copy, ExternalLink } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'sonner';
 
@@ -47,7 +47,7 @@ export function OrdersDiagnosticsPage() {
       // 2. Check backend /orders endpoint
       console.log('🔍 [Diagnostics] Checking backend /orders endpoint...');
       try {
-        const backendUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`;
+        const backendUrl = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`;
         const backendResponse = await fetch(backendUrl, {
           headers: {
             'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ export function OrdersDiagnosticsPage() {
       // 3. Check debug endpoint
       console.log('🔍 [Diagnostics] Checking debug /orders endpoint...');
       try {
-        const debugUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/debug/orders`;
+        const debugUrl = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/debug/orders`;
         const debugResponse = await fetch(debugUrl, {
           headers: {
             'Content-Type': 'application/json',
@@ -339,7 +339,7 @@ export function OrdersDiagnosticsPage() {
                         but 0 in the backend database. This means the KV store table might be missing or orders failed to save.
                       </div>
                       <div className="mt-2 font-semibold">Action Required:</div>
-                      <div className="mt-1">Run this SQL in Supabase SQL Editor:</div>
+                      <div className="mt-1">Run this SQL in Backend SQL Editor:</div>
                       <pre className="mt-2 p-2 bg-yellow-100 rounded text-xs">
 CREATE TABLE IF NOT EXISTS kv_store_a67f0635 (
   key TEXT NOT NULL PRIMARY KEY,
@@ -371,7 +371,7 @@ CREATE TABLE IF NOT EXISTS kv_store_a67f0635 (
                     <div className="bg-red-50 border border-red-200 rounded p-3">
                       <div className="font-semibold text-red-900">❌ Backend Connection Issue</div>
                       <div className="text-red-800 mt-1">
-                        The backend is not responding correctly. Check Supabase Edge Functions deployment and logs.
+                        The backend is not responding correctly. Check Backend Edge Functions deployment and logs.
                       </div>
                     </div>
                   )}

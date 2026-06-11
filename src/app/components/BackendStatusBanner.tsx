@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, ExternalLink, Server, X } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 type BannerStatus = 'checking' | 'online' | 'partial' | 'offline' | 'dismissed';
 
 type BackendState = {
   local: boolean;
-  supabase: boolean;
+  Backend: boolean;
 };
 
 const LOCAL_BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
@@ -15,7 +15,7 @@ export function BackendStatusBanner() {
   const [backendStatus, setBackendStatus] = useState<BannerStatus>('checking');
   const [backendState, setBackendState] = useState<BackendState>({
     local: false,
-    supabase: false,
+    Backend: false,
   });
   const [showBanner, setShowBanner] = useState(true);
 
@@ -39,13 +39,13 @@ export function BackendStatusBanner() {
     }
   };
 
-  const checkSupabaseBackend = async () => {
+  const checkBackendBackend = async () => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup/status`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup/status`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
@@ -64,17 +64,17 @@ export function BackendStatusBanner() {
 
   const checkBackendStatus = async () => {
     try {
-      const [localOnline, supabaseOnline] = await Promise.all([
+      const [localOnline, BackendOnline] = await Promise.all([
         checkLocalBackend(),
-        checkSupabaseBackend(),
+        checkBackendBackend(),
       ]);
 
       setBackendState({
         local: localOnline,
-        supabase: supabaseOnline,
+        Backend: BackendOnline,
       });
 
-      if (supabaseOnline) {
+      if (BackendOnline) {
         setBackendStatus('online');
         return;
       }
@@ -123,18 +123,18 @@ export function BackendStatusBanner() {
 
   let title = 'Backend Not Reachable';
   let description =
-    `Neither the local backend (${LOCAL_BACKEND_BASE}) nor the Supabase Edge Function is reachable right now. ` +
+    `Neither the local backend (${LOCAL_BACKEND_BASE}) nor the Backend Edge Function is reachable right now. ` +
     'Payment and admin features that depend on backend APIs will not work until at least one backend is available.';
 
   if (isPartial && backendState.local) {
-    title = 'Supabase Admin Backend Unavailable';
+    title = 'Backend Admin Backend Unavailable';
     description =
       `Your local backend at ${LOCAL_BACKEND_BASE} is reachable, so the Zoho widget flow can still work. ` +
-      'The Supabase admin backend is not reachable right now, so some admin pages may fail.';
-  } else if (isPartial && backendState.supabase) {
+      'The Backend admin backend is not reachable right now, so some admin pages may fail.';
+  } else if (isPartial && backendState.Backend) {
     title = 'Local Payment Backend Unavailable';
     description =
-      `Your Supabase backend is reachable, but the local payment backend at ${LOCAL_BACKEND_BASE} is not reachable right now. ` +
+      `Your Backend backend is reachable, but the local payment backend at ${LOCAL_BACKEND_BASE} is not reachable right now. ` +
       'Zoho widget checkout from the local flow will fail until the local backend is running.';
   }
 
@@ -155,13 +155,13 @@ export function BackendStatusBanner() {
                 Open Backend Guide
               </a>
               <a
-                href="https://supabase.com/docs/guides/functions/deploy"
+                href="https://authClient.com/docs/guides/functions/deploy"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`inline-flex items-center gap-2 px-4 py-2 ${secondaryButtonClass} font-semibold rounded-lg transition-colors text-sm`}
               >
                 <ExternalLink className="w-4 h-4" />
-                Supabase Docs
+                Backend Docs
               </a>
             </div>
           </div>

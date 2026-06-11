@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Search, AlertCircle, CheckCircle, Users, Database } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 export function FindMissingCustomersPage() {
   const [searchNames, setSearchNames] = useState('sasisha, swetha, madhan, pavi, sai');
@@ -52,7 +52,7 @@ export function FindMissingCustomersPage() {
       // Step 2: Check backend /customers endpoint
       console.log('🔍 Step 2: Checking backend /customers endpoint...');
       const customersResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/customers`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/customers`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export function FindMissingCustomersPage() {
         }]);
       }
       
-      // Step 3: Check if users exist in Supabase Auth (via our backend)
+      // Step 3: Check if users exist in Backend Auth (via our backend)
       console.log('🔍 Step 3: Summary of findings...');
       
       const summary = names.map(name => {

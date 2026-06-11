@@ -3,7 +3,7 @@ import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { CreditCard, Save, Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { toast } from 'sonner';
@@ -42,7 +42,7 @@ export function PaymentSettingsPage() {
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/api-keys`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/api-keys`,
         {
           headers: buildHeaders(accessToken),
           signal: controller.signal
@@ -90,7 +90,7 @@ export function PaymentSettingsPage() {
 
       // Save Razorpay
       const paymentsResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/api-keys`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/api-keys`,
         {
           method: 'POST',
           headers: buildHeaders(accessToken),
@@ -111,7 +111,7 @@ export function PaymentSettingsPage() {
       // Save Zoho Books if configured
       if (zohoBooks.client_id && zohoBooks.client_secret) {
         const booksResponse = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/api-keys`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/api-keys`,
           {
             method: 'POST',
             headers: buildHeaders(accessToken),
@@ -147,7 +147,7 @@ export function PaymentSettingsPage() {
       
       // Create a test payment to verify credentials
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/zoho/create`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/zoho/create`,
         {
           method: 'POST',
           headers: {

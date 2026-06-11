@@ -1,8 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useProducts } from '@/app/context/ProductContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { Clock, AlertCircle, XCircle, DollarSign, Package, BarChart3, TrendingUp, ShoppingCart, Users, Database, ExternalLink } from 'lucide-react';
 
@@ -153,14 +153,14 @@ export function AdminDashboard() {
     checkStorageStatus();
 
     const handleNewOrder = () => {
-      console.log('🔔 [Dashboard] New order notification received, refreshing dashboard...');
+      console.log('?? [Dashboard] New order notification received, refreshing dashboard...');
       void loadDashboardData();
     };
 
     window.addEventListener('newOrderNotification', handleNewOrder);
 
     const interval = setInterval(() => {
-      console.log('🔄 [Dashboard] Auto-refreshing dashboard metrics...');
+      console.log('?? [Dashboard] Auto-refreshing dashboard metrics...');
       void loadDashboardData();
     }, 15000);
 
@@ -174,7 +174,7 @@ export function AdminDashboard() {
   const checkStorageStatus = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/storage/check-buckets`
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/storage/check-buckets`
       );
       if (response.ok) {
         const data = await response.json();
@@ -189,7 +189,7 @@ export function AdminDashboard() {
     try {
       // Keep UI interactive while data refreshes in background
       
-      console.log('📊 [Dashboard] Fetching dashboard data...');
+      console.log('?? [Dashboard] Fetching dashboard data...');
       
       // Add timeout to prevent hanging requests
       const controller = new AbortController();
@@ -197,7 +197,7 @@ export function AdminDashboard() {
       
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`,
           {
             headers: {
               'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ export function AdminDashboard() {
 
         clearTimeout(timeoutId);
 
-        console.log('📊 [Dashboard] Response status:', response.status);
+        console.log('?? [Dashboard] Response status:', response.status);
 
         if (!response.ok) {
           throw new Error('Orders endpoint unavailable');
@@ -240,14 +240,14 @@ export function AdminDashboard() {
             : [],
           outOfStockItems: []
         });
-        console.log(`✅ [Dashboard] Loaded ${mergedOrders.length} orders from backend/localStorage`);
+        console.log(`? [Dashboard] Loaded ${mergedOrders.length} orders from backend/localStorage`);
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         
         if (fetchError.name === 'AbortError') {
-          console.log('⚠ [Dashboard] Request timed out - using fallback data');
+          console.log('? [Dashboard] Request timed out - using fallback data');
         } else {
-          console.log('⚠ [Dashboard] Fetch error:', fetchError.message);
+          console.log('? [Dashboard] Fetch error:', fetchError.message);
         }
 
         const localOrders = loadOrdersFromLocalStorage();
@@ -274,7 +274,7 @@ export function AdminDashboard() {
       }
     } catch (error) {
       // Set local fallback data - no error shown to user
-      console.log('ℹ [Dashboard] Using local fallback mode (backend not available)');
+      console.log('? [Dashboard] Using local fallback mode (backend not available)');
       const localOrders = loadOrdersFromLocalStorage();
       const orderStats = getOrdersStats(localOrders);
       setDashboardData({
@@ -355,7 +355,7 @@ export function AdminDashboard() {
                     Storage Setup Required
                   </h3>
                   <p className="text-sm text-orange-800 mb-2">
-                    Storage buckets need to be created manually in your Supabase Dashboard to enable file uploads.
+                    Storage buckets need to be created manually in your Backend Dashboard to enable file uploads.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Link
@@ -365,14 +365,14 @@ export function AdminDashboard() {
                       View Setup Guide
                       <ExternalLink className="w-3 h-3" />
                     </Link>
-                    <span className="text-gray-400">â€¢</span>
+                    <span className="text-gray-400">•</span>
                     <a
-                      href="https://supabase.com/dashboard"
+                      href="https://authClient.com/dashboard"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm font-medium text-orange-700 hover:text-orange-900 underline"
                     >
-                      Open Supabase Dashboard
+                      Open Backend Dashboard
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>

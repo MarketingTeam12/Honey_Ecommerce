@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { TrendingUp, Users, DollarSign, Package, Download, Calendar, Award, ShoppingCart } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { isSalesManager } from '@/app/utils/roleAccess';
@@ -133,7 +133,7 @@ export function ReportsPage() {
       try {
         console.log('📡 [ReportsPage] Fetching orders from backend...');
         
-        // Smart token detection: use publicAnonKey as fallback for Supabase infra auth
+        // Smart token detection: use publicAnonKey as fallback for Backend infra auth
         const isMockToken = accessToken?.startsWith('mock-token-');
         const bearerToken = (!isMockToken && accessToken) ? accessToken : publicAnonKey;
         const headers: Record<string, string> = {
@@ -144,7 +144,7 @@ export function ReportsPage() {
         console.log('🔐 [ReportsPage] Using token type:', isMockToken ? 'publicAnonKey (mock detected)' : (accessToken ? 'User token' : 'publicAnonKey (no token)'));
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders`,
           { headers }
         );
 
@@ -339,7 +339,7 @@ export function ReportsPage() {
     try {
       console.log('👥 [ReportsPage] Fetching customer count...');
       
-      // Smart token detection: use publicAnonKey as fallback for Supabase infra auth
+      // Smart token detection: use publicAnonKey as fallback for Backend infra auth
       const isMockToken = accessToken?.startsWith('mock-token-');
       const custBearerToken = (!isMockToken && accessToken) ? accessToken : publicAnonKey;
       const custHeaders: Record<string, string> = {
@@ -350,7 +350,7 @@ export function ReportsPage() {
       console.log('🔐 [ReportsPage] Using token type:', isMockToken ? 'publicAnonKey (mock detected)' : (accessToken ? 'User token' : 'publicAnonKey (no token)'));
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/customers`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/customers`,
         { headers: custHeaders }
       );
 

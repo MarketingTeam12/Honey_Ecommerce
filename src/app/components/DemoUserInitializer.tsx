@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 
 /**
- * DemoUserInitializer - Auto-initializes demo users in Supabase
+ * DemoUserInitializer - Auto-initializes demo users in Backend
  * This component runs once on app startup to ensure demo credentials work
  */
 export function DemoUserInitializer() {
@@ -28,7 +28,7 @@ export function DemoUserInitializer() {
         }, 10000); // 10 second timeout
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/init-demo-users`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/init-demo-users`,
           {
             method: 'POST',
             headers: buildHeaders(null),

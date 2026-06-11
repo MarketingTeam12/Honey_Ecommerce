@@ -1,9 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, AlertCircle, Building, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { incrementCouponUsage } from '@/app/services/couponService';
 
@@ -67,14 +67,14 @@ export function BankGatewayPage() {
             const maxRetries = 3;
             
             // Always send to backend (both demo and real users) so admin can see all orders
-            console.log('ðŸ“¡ [BankGateway] Sending order to backend for cross-device sync...');
+            console.log('📡 [BankGateway] Sending order to backend for cross-device sync...');
             
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
               try {
-                console.log(`ðŸ“¡ [BankGateway] Attempt ${attempt}/${maxRetries} - Sending order to backend...`);
+                console.log(`📡 [BankGateway] Attempt ${attempt}/${maxRetries} - Sending order to backend...`);
                 
                 // Omit Authorization header for demo mode compatibility
-                const orderResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
+                const orderResponse = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/create-order`, {
                   method: 'POST',
                   headers: buildHeaders(accessToken),
                   body: JSON.stringify({
@@ -99,38 +99,38 @@ export function BankGatewayPage() {
                 });
 
                 if (orderResponse.ok) {
-                  console.log('âœ… [BankGateway] Order saved to backend successfully!');
+                  console.log('✅ [BankGateway] Order saved to backend successfully!');
                   backendSaveSuccess = true;
                   break;
                 } else {
-                  console.error(`âŒ [BankGateway] Backend save failed (Attempt ${attempt}/${maxRetries}):`, orderResponse.status);
+                  console.error(`❌ [BankGateway] Backend save failed (Attempt ${attempt}/${maxRetries}):`, orderResponse.status);
                   if (attempt < maxRetries) {
-                    console.log(`â³ [BankGateway] Retrying in ${attempt} second(s)...`);
+                    console.log(`⏳ [BankGateway] Retrying in ${attempt} second(s)...`);
                     await new Promise(resolve => setTimeout(resolve, attempt * 1000));
                   }
                 }
               } catch (backendError) {
-                console.error(`âŒ [BankGateway] Exception on attempt ${attempt}/${maxRetries}:`, backendError);
+                console.error(`❌ [BankGateway] Exception on attempt ${attempt}/${maxRetries}:`, backendError);
                 
                 // Log detailed error information
                 if (backendError instanceof TypeError && backendError.message === 'Failed to fetch') {
-                  console.error('ðŸ”´ [BankGateway] Network error - backend may not be deployed or CORS issue');
-                  console.error('ðŸ”´ [BankGateway] This is expected in development/preview mode');
-                  console.error('ðŸ”´ [BankGateway] Order is saved locally and will work for demo purposes');
+                  console.error('🔴 [BankGateway] Network error - backend may not be deployed or CORS issue');
+                  console.error('🔴 [BankGateway] This is expected in development/preview mode');
+                  console.error('🔴 [BankGateway] Order is saved locally and will work for demo purposes');
                 }
                 
                 if (attempt < maxRetries) {
-                  console.log(`â³ [BankGateway] Retrying in ${attempt} second(s)...`);
+                  console.log(`⏳ [BankGateway] Retrying in ${attempt} second(s)...`);
                   await new Promise(resolve => setTimeout(resolve, attempt * 1000));
                 }
               }
             }
             
             if (!backendSaveSuccess) {
-              console.error('  [BankGateway] Order failed to save to backend after all retries!');
-              console.warn('  Order may not sync across devices.');
+              console.error('� [BankGateway] Order failed to save to backend after all retries!');
+              console.warn('� Order may not sync across devices.');
             } else {
-              console.log('ðŸŽ‰ [BankGateway] Order successfully saved to backend for cross-device sync!');
+              console.log('🎉 [BankGateway] Order successfully saved to backend for cross-device sync!');
             }
           })();
           
@@ -170,7 +170,7 @@ export function BankGatewayPage() {
           
           // Increment coupon usage if a coupon was applied
           if (order.coupon_code) {
-            console.log('ðŸŽ« [BankGateway] Incrementing coupon usage for:', order.coupon_code);
+            console.log('🎫 [BankGateway] Incrementing coupon usage for:', order.coupon_code);
             incrementCouponUsage(order.coupon_code);
           }
           
@@ -178,10 +178,10 @@ export function BankGatewayPage() {
           localStorage.removeItem('pending_order');
           clearCart();
           
-          console.log('âœ… [BankGateway] Order completed successfully:', order.order_number);
+          console.log('✅ [BankGateway] Order completed successfully:', order.order_number);
         }
       } catch (e) {
-        console.error('âŒ [BankGateway] Failed to save order:', e);
+        console.error('❌ [BankGateway] Failed to save order:', e);
       }
       
       const timer = setTimeout(() => {
@@ -199,7 +199,7 @@ export function BankGatewayPage() {
           localStorage.setItem('pending_order', JSON.stringify(order));
         }
       } catch (e) {
-        console.error('âŒ [BankGateway] Failed to update order status:', e);
+        console.error('❌ [BankGateway] Failed to update order status:', e);
       }
       
       const timer = setTimeout(() => {

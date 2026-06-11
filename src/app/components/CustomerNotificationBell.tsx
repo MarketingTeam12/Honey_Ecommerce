@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, Package, CheckCircle, Truck, Gift, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 
 interface Notification {
@@ -109,7 +109,7 @@ export function CustomerNotificationBell() {
     
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/customer`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/customer`,
         {
           headers: buildHeaders(accessToken)
         }
@@ -138,7 +138,7 @@ export function CustomerNotificationBell() {
     
     try {
       await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/create`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/create`,
         {
           method: 'POST',
           headers: buildHeaders(accessToken),
@@ -163,7 +163,7 @@ export function CustomerNotificationBell() {
       // Update backend
       if (accessToken) {
         await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/${notificationId}/read`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/${notificationId}/read`,
           {
             method: 'PATCH',
             headers: buildHeaders(accessToken)
@@ -184,7 +184,7 @@ export function CustomerNotificationBell() {
       // Update backend
       if (accessToken) {
         await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/notifications/mark-all-read`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/notifications/mark-all-read`,
           {
             method: 'PATCH',
             headers: buildHeaders(accessToken)

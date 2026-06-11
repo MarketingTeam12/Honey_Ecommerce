@@ -1,4 +1,0 @@
-[functions.make-server-a67f0635]
-enabled = true
-verify_jwt = false
-entrypoint = "./functions/server/index.tsx"

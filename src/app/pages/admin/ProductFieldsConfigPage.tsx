@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/ta
 import { Checkbox } from '@/app/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Badge } from '@/app/components/ui/badge';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 
 interface Language {
@@ -74,7 +74,7 @@ export function ProductFieldsConfigPage() {
   const fetchLanguages = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ export function ProductFieldsConfigPage() {
   const fetchDocumentTypes = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/document-types`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/document-types`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ export function ProductFieldsConfigPage() {
   const fetchProducts = async () => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/products`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/products`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export function ProductFieldsConfigPage() {
   const fetchProductConfig = async (productId: string) => {
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/product-config/${productId}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/product-config/${productId}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export function ProductFieldsConfigPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages`,
         {
           method: 'POST',
           headers: {
@@ -195,7 +195,7 @@ export function ProductFieldsConfigPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/languages/${id}/${type}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/languages/${id}/${type}`,
         {
           method: 'DELETE',
           headers: {
@@ -227,7 +227,7 @@ export function ProductFieldsConfigPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/document-types`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/document-types`,
         {
           method: 'POST',
           headers: {
@@ -261,7 +261,7 @@ export function ProductFieldsConfigPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/document-types/${id}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/document-types/${id}`,
         {
           method: 'DELETE',
           headers: {
@@ -293,7 +293,7 @@ export function ProductFieldsConfigPage() {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/product-config/${selectedProduct}`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/product-config/${selectedProduct}`,
         {
           method: 'POST',
           headers: {

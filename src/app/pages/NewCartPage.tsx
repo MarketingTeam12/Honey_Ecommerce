@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, Edit, Tag, X } from 'lucide-react';
 import { useCurrency } from '@/app/context/CurrencyContext';
 import { useCart } from '@/app/context/CartContext';
@@ -41,7 +41,7 @@ export function NewCartPage() {
 
   const loadAvailableCoupons = () => {
     const activeCoupons = couponService.getActiveCoupons();
-    console.log('ðŸ“¦ [NewCartPage] Loaded active coupons:', activeCoupons);
+    console.log('📦 [NewCartPage] Loaded active coupons:', activeCoupons);
     setAvailableCoupons(activeCoupons);
   };
 

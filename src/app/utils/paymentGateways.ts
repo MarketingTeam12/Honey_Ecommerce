@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 export interface PaymentGatewayKeys {
   zoho_payments?: {
@@ -20,7 +20,7 @@ export interface PaymentGatewayKeys {
 export async function getPaymentGatewayKeys(): Promise<PaymentGatewayKeys> {
   try {
     const response = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/admin/api-keys`,
+      `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/admin/api-keys`,
       {
         headers: {
           'Content-Type': 'application/json'

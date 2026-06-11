@@ -1,9 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Lock, AlertCircle, Smartphone, Wallet, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useAuth } from '@/app/context/AuthContext';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 import { buildHeaders } from '@/app/utils/buildHeaders';
 import { incrementCouponUsage } from '@/app/services/couponService';
 
@@ -15,10 +15,10 @@ const walletColors = {
 };
 
 const walletLogos = {
-  'Paytm': 'ðŸ’³',
-  'Amazon Pay': 'ðŸ›’',
-  'PhonePe': 'ðŸ“±',
-  'Mobikwik': 'ðŸ’°'
+  'Paytm': '💳',
+  'Amazon Pay': '🛒',
+  'PhonePe': '📱',
+  'Mobikwik': '💰'
 };
 
 export function WalletGatewayPage() {
@@ -41,7 +41,7 @@ export function WalletGatewayPage() {
   const [processing, setProcessing] = useState(false);
 
   const walletColor = walletColors[walletName as keyof typeof walletColors] || 'from-blue-600 to-blue-700';
-  const walletLogo = walletLogos[walletName as keyof typeof walletLogos] || 'ðŸ’³';
+  const walletLogo = walletLogos[walletName as keyof typeof walletLogos] || '💳';
 
   // Auto-redirect after success/failure
   useEffect(() => {
@@ -63,14 +63,14 @@ export function WalletGatewayPage() {
             const maxRetries = 3;
             
             // Always send to backend (both demo and real users) so admin can see all orders
-            console.log('ðŸ“¡ [WalletGateway] Sending order to backend for cross-device sync...');
+            console.log('📡 [WalletGateway] Sending order to backend for cross-device sync...');
             
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
               try {
-                console.log(`ðŸ“¡ [WalletGateway] Attempt ${attempt}/${maxRetries} - Sending order to backend...`);
+                console.log(`📡 [WalletGateway] Attempt ${attempt}/${maxRetries} - Sending order to backend...`);
                 
                 // Always use publicAnonKey for all users since endpoint doesn't require auth
-                const orderResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/payment/create-order`, {
+                const orderResponse = await fetch(`https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/payment/create-order`, {
                   method: 'POST',
                   headers: buildHeaders(accessToken),
                   body: JSON.stringify({
@@ -95,28 +95,28 @@ export function WalletGatewayPage() {
                 });
 
                 if (orderResponse.ok) {
-                  console.log('âœ… [WalletGateway] Order saved to backend successfully!');
+                  console.log('✅ [WalletGateway] Order saved to backend successfully!');
                   backendSaveSuccess = true;
                   break;
                 } else {
-                  console.error(`âŒ [WalletGateway] Backend save failed (Attempt ${attempt}/${maxRetries}):`, orderResponse.status);
+                  console.error(`❌ [WalletGateway] Backend save failed (Attempt ${attempt}/${maxRetries}):`, orderResponse.status);
                   if (attempt < maxRetries) {
-                    console.log(`â³ [WalletGateway] Retrying in ${attempt} second(s)...`);
+                    console.log(`⏳ [WalletGateway] Retrying in ${attempt} second(s)...`);
                     await new Promise(resolve => setTimeout(resolve, attempt * 1000));
                   }
                 }
               } catch (backendError) {
-                console.error(`âŒ [WalletGateway] Exception on attempt ${attempt}/${maxRetries}:`, backendError);
+                console.error(`❌ [WalletGateway] Exception on attempt ${attempt}/${maxRetries}:`, backendError);
                 
                 // Log detailed error information
                 if (backendError instanceof TypeError && backendError.message === 'Failed to fetch') {
-                  console.error('ðŸ”´ [WalletGateway] Network error - backend may not be deployed or CORS issue');
-                  console.error('ðŸ”´ [WalletGateway] This is expected in development/preview mode');
-                  console.error('ðŸ”´ [WalletGateway] Order is saved locally and will work for demo purposes');
+                  console.error('🔴 [WalletGateway] Network error - backend may not be deployed or CORS issue');
+                  console.error('🔴 [WalletGateway] This is expected in development/preview mode');
+                  console.error('🔴 [WalletGateway] Order is saved locally and will work for demo purposes');
                 }
                 
                 if (attempt < maxRetries) {
-                  console.log(`â³ [WalletGateway] Retrying in ${attempt} second(s)...`);
+                  console.log(`⏳ [WalletGateway] Retrying in ${attempt} second(s)...`);
                   await new Promise(resolve => setTimeout(resolve, attempt * 1000));
                 }
               }
@@ -126,7 +126,7 @@ export function WalletGatewayPage() {
               console.error(' [WalletGateway] Order failed to save to backend after all retries!');
               console.warn(' Order may not sync across devices.');
             } else {
-              console.log('ðŸŽ‰ [WalletGateway] Order successfully saved to backend for cross-device sync!');
+              console.log('🎉 [WalletGateway] Order successfully saved to backend for cross-device sync!');
             }
           })();
           
@@ -166,7 +166,7 @@ export function WalletGatewayPage() {
           
           // Increment coupon usage if a coupon was applied
           if (order.coupon_code) {
-            console.log('ðŸŽ« [WalletGateway] Incrementing coupon usage for:', order.coupon_code);
+            console.log('🎫 [WalletGateway] Incrementing coupon usage for:', order.coupon_code);
             incrementCouponUsage(order.coupon_code);
           }
           
@@ -174,10 +174,10 @@ export function WalletGatewayPage() {
           localStorage.removeItem('pending_order');
           clearCart();
           
-          console.log('âœ… [WalletGateway] Order completed successfully:', order.order_number);
+          console.log('✅ [WalletGateway] Order completed successfully:', order.order_number);
         }
       } catch (e) {
-        console.error('âŒ [WalletGateway] Failed to save order:', e);
+        console.error('❌ [WalletGateway] Failed to save order:', e);
       }
       
       const timer = setTimeout(() => {
@@ -195,7 +195,7 @@ export function WalletGatewayPage() {
           localStorage.setItem('pending_order', JSON.stringify(order));
         }
       } catch (e) {
-        console.error('âŒ [WalletGateway] Failed to update order status:', e);
+        console.error('❌ [WalletGateway] Failed to update order status:', e);
       }
       
       const timer = setTimeout(() => {

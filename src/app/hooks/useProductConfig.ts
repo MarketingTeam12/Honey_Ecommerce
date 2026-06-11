@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface Language {
   id: string;
@@ -47,7 +47,7 @@ export function useProductConfig(productId: string) {
       
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/product-config/${productId}`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/product-config/${productId}`,
           {
             headers: {
               Authorization: `Bearer ${publicAnonKey}`,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 /**
  * DatabaseSetup Component
@@ -25,7 +25,7 @@ export default function DatabaseSetup() {
 
         // Run diagnostics first
         const diagResponse = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/diagnostics`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/diagnostics`,
           {
             headers: {
               'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export default function DatabaseSetup() {
             // Auto-attempt setup
             console.log('🔧 [DatabaseSetup] Attempting automatic setup...');
             const setupResponse = await fetch(
-              `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/setup-database`,
+              `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/setup-database`,
               {
                 method: 'POST',
                 headers: {

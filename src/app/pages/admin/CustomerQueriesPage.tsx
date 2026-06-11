@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Search, Eye, Trash2, Mail, Phone, User, Calendar, CheckCircle, Clock, Archive, RefreshCw, Download, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface CustomerQuery {
   id: string;
@@ -25,7 +25,7 @@ function CustomerQueriesPage() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'month'>('all');
   const [expandedQuery, setExpandedQuery] = useState<string | null>(null);
 
-  const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+  const API_URL = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
 
   useEffect(() => {
     fetchQueries();
@@ -67,7 +67,7 @@ function CustomerQueriesPage() {
         
         if (isBackendIssue) {
           console.log('ℹ️ Backend not deployed - customer queries unavailable');
-          toast.error('Backend not deployed. Please deploy the Supabase Edge Functions.');
+          toast.error('Backend not deployed. Please deploy the Backend Edge Functions.');
           setQueries([]);
           return;
         }
@@ -86,7 +86,7 @@ function CustomerQueriesPage() {
     } catch (error: any) {
       if (error.name === 'AbortError') {
         console.log('ℹ️ Customer queries request timed out (backend not responding)');
-        toast.error('Backend timeout. Please ensure Supabase Edge Functions are deployed.');
+        toast.error('Backend timeout. Please ensure Backend Edge Functions are deployed.');
         setQueries([]);
       } else {
         console.error('❌ Error fetching queries:', error);

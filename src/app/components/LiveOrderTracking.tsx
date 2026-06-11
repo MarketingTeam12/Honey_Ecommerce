@@ -15,7 +15,7 @@ import {
   Activity,
   RefreshCw,
 } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { toast } from 'sonner';
 
 interface TrackingStage {
@@ -126,7 +126,7 @@ export function LiveOrderTracking({
       const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${orderId}/tracking`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${orderId}/tracking`,
         {
           headers: {
             'Content-Type': 'application/json',

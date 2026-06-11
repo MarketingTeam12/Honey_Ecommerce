@@ -1,10 +1,10 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { OrderManagementVisual } from '@/app/components/admin/OrderManagementVisual';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 import { useAuth } from '@/app/context/AuthContext';
 
 export function OrderManagementDemoPage() {
@@ -136,7 +136,7 @@ export function OrderManagementDemoPage() {
                 <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
                   <h4 className="font-semibold text-purple-900 mb-2">Backend</h4>
                   <ul className="text-xs text-purple-700 space-y-1">
-                    <li>- Supabase Edge Functions</li>
+                    <li>- Backend Edge Functions</li>
                     <li>- KV Store (JSONB)</li>
                     <li>- RESTful API</li>
                     <li>- PATCH /orders/:id/status</li>

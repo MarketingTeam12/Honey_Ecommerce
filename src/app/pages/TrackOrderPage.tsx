@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Package, Mail, Phone, Search, MapPin, Clock, CheckCircle2, Truck, AlertCircle, XCircle, Download, FileText, UserCheck, Edit3, Check, Activity } from 'lucide-react';
-import { projectId, publicAnonKey } from '@/utils/supabase/info';
+import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -129,7 +129,7 @@ export function TrackOrderPage() {
     const interval = window.setInterval(async () => {
       try {
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${orderDetails.id}/tracking`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${orderDetails.id}/tracking`,
           {
             headers: {
               'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ export function TrackOrderPage() {
     // Call backend API with localStorage fallback
     setIsLoading(true);
     try {
-      console.log('ðŸ“¦ [TrackOrder] Tracking by order number:', orderNumber);
+      console.log('📦 [TrackOrder] Tracking by order number:', orderNumber);
       
       // Determine if input is email or phone
       const isEmail = emailOrPhone.includes('@');
@@ -192,7 +192,7 @@ export function TrackOrderPage() {
         const timeout = setTimeout(() => controller.abort(), 5000);
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/track`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/track`,
           {
             method: 'POST',
             headers: {
@@ -212,7 +212,7 @@ export function TrackOrderPage() {
         const data = await response.json();
         
         if (data.success && data.order) {
-          console.log('âœ… [TrackOrder] Order found in backend:', data.order);
+          console.log('✅ [TrackOrder] Order found in backend:', data.order);
           {
             const localMatch = getLocalOrderByIdentity(data.order);
             foundOrder = localMatch ? { ...data.order, ...localMatch } : data.order;
@@ -230,7 +230,7 @@ export function TrackOrderPage() {
       
       // FALLBACK: Search in localStorage if not found in backend
       if (!foundOrder) {
-        console.log('ðŸ” [TrackOrder] Searching localStorage...');
+        console.log('🔍 [TrackOrder] Searching localStorage...');
         
         // Search in both user_orders and honey_translation_orders
         const storageKeys = ['user_orders', 'honey_translation_orders'];
@@ -240,7 +240,7 @@ export function TrackOrderPage() {
           if (localOrders) {
             try {
               const orders = JSON.parse(localOrders);
-              console.log(`ðŸ“¦ [TrackOrder] Checking ${orders.length} orders in ${key}`);
+              console.log(`📦 [TrackOrder] Checking ${orders.length} orders in ${key}`);
               
               // Find matching order
               const matchedOrder = orders.find((order: any) => {
@@ -258,12 +258,12 @@ export function TrackOrderPage() {
               });
               
               if (matchedOrder) {
-                console.log(`âœ… [TrackOrder] Order found in ${key}:`, matchedOrder);
+                console.log(`✅ [TrackOrder] Order found in ${key}:`, matchedOrder);
                 foundOrder = matchedOrder;
                 break;
               }
             } catch (e) {
-              console.log(`  [TrackOrder] Error parsing ${key}:`, e);
+              console.log(`� [TrackOrder] Error parsing ${key}:`, e);
             }
           }
         }
@@ -273,12 +273,12 @@ export function TrackOrderPage() {
         setOrderDetails(foundOrder);
         toast.success('Order found successfully!');
       } else {
-        console.log('âŒ [TrackOrder] Order not found in backend or localStorage');
+        console.log('❌ [TrackOrder] Order not found in backend or localStorage');
         setNotFound(true);
         toast.error('Order not found. Please check your details.');
       }
     } catch (error) {
-      console.error('âŒ [TrackOrder] Error:', error);
+      console.error('❌ [TrackOrder] Error:', error);
       toast.error('Failed to track order. Please try again.');
       setNotFound(true);
     } finally {
@@ -307,7 +307,7 @@ export function TrackOrderPage() {
     // Call backend API with localStorage fallback
     setIsLoading(true);
     try {
-      console.log('ðŸ“¦ [TrackOrder] Tracking by tracking number:', trackingNumber);
+      console.log('📦 [TrackOrder] Tracking by tracking number:', trackingNumber);
       let foundOrder: OrderDetails | null = null;
       
       // PRIORITY 1: Try backend first
@@ -316,7 +316,7 @@ export function TrackOrderPage() {
         const timeout = setTimeout(() => controller.abort(), 5000);
         
         const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/track`,
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/track`,
           {
             method: 'POST',
             headers: {
@@ -362,7 +362,7 @@ export function TrackOrderPage() {
           if (localOrders) {
             try {
               const orders = JSON.parse(localOrders);
-              console.log(`ðŸ“¦ [TrackOrder] Checking ${orders.length} orders in ${key}`);
+              console.log(`📦 [TrackOrder] Checking ${orders.length} orders in ${key}`);
               
               // Find matching order by tracking number
               const matchedOrder = orders.find((order: any) => 
@@ -375,7 +375,7 @@ export function TrackOrderPage() {
                 break;
               }
             } catch (e) {
-              console.log(`  [TrackOrder] Error parsing ${key}:`, e);
+              console.log(`� [TrackOrder] Error parsing ${key}:`, e);
             }
           }
         }
@@ -385,12 +385,12 @@ export function TrackOrderPage() {
         setOrderDetails(foundOrder);
         toast.success('Order found successfully!');
       } else {
-        console.log('âŒ [TrackOrder] Order not found in backend or localStorage');
+        console.log('❌ [TrackOrder] Order not found in backend or localStorage');
         setNotFound(true);
         toast.error('Order not found. Please check your tracking number.');
       }
     } catch (error) {
-      console.error('âŒ [TrackOrder] Error:', error);
+      console.error('❌ [TrackOrder] Error:', error);
       toast.error('Failed to track order. Please try again.');
       setNotFound(true);
     } finally {
@@ -558,7 +558,7 @@ export function TrackOrderPage() {
     try {
       setDownloadingFinalFile(true);
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635/orders/${orderDetails.id}/download-completed-file`,
+        `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/orders/${orderDetails.id}/download-completed-file`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -1007,7 +1007,7 @@ export function TrackOrderPage() {
                                 <p className="text-xs text-blue-600 mt-1 animate-pulse">In Progress</p>
                               )}
                               {isCompleted && (
-                                <p className="text-xs text-green-600 mt-1">âœ“ Completed</p>
+                                <p className="text-xs text-green-600 mt-1">✓ Completed</p>
                               )}
                             </div>
                           </div>

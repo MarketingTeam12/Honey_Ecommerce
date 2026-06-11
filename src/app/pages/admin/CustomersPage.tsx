@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Eye, Search } from 'lucide-react';
@@ -262,9 +262,9 @@ function CustomersPage() {
       setCustomerStatuses(
         Object.fromEntries(customerList.map((customer) => [customer.email, customer.status])) as Record<string, CustomerStatus>
       );
-      console.log('✅ [CustomersPage] Loaded', customerList.length, 'customers');
+      console.log('? [CustomersPage] Loaded', customerList.length, 'customers');
     } catch (error) {
-      console.error('❌ [CustomersPage] Error loading customers:', error);
+      console.error('? [CustomersPage] Error loading customers:', error);
       setCustomers([]);
     } finally {
       setLoading(false);
@@ -364,7 +364,7 @@ function CustomersPage() {
               <div>
                 <p className="text-sm text-orange-600 font-medium">Total Revenue</p>
                 <p className="text-2xl font-bold text-orange-900 mt-1">
-                  ₹{customers.reduce((sum, c) => sum + c.totalSpent, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ?{customers.reduce((sum, c) => sum + c.totalSpent, 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <User className="w-10 h-10 text-orange-600 opacity-50" />

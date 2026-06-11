@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
 import { Phone, Mail, Send } from 'lucide-react';
-import { projectId } from '@/utils/supabase/info';
+import { projectId } from '@/app/utils/backendInfo';
 
 function ContactUsPage() {
   const [formData, setFormData] = useState({
@@ -26,7 +26,7 @@ function ContactUsPage() {
     setIsSubmitting(true);
     
     try {
-      const API_URL = `https://${projectId}.supabase.co/functions/v1/make-server-a67f0635`;
+      const API_URL = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
       
       const response = await fetch(`${API_URL}/customer-queries`, {
         method: 'POST',
