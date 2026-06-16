@@ -17,10 +17,21 @@ export function normalizeImageSource(image: ImageSourceLike): string {
 
   if (!urlStr) return '';
 
+  // Handle relative proxy paths like /api/s3/files/uploads%2F...
   if (urlStr.startsWith('/api/s3/files/')) {
     return `${API_URL}${urlStr}`;
   }
+
+  // Handle any full URL that contains /api/s3/files/ (including localhost URLs)
+  // Extract the key and rebuild with current API_URL
+  if (urlStr.includes('/api/s3/files/')) {
+    const key = urlStr.split('/api/s3/files/')[1];
+    if (key) {
+      return `${API_URL}/api/s3/files/${key}`;
+    }
+  }
   
+  // Handle direct S3 URLs
   if (urlStr.includes('amazonaws.com')) {
     try {
       const urlObj = new URL(urlStr);
@@ -63,7 +74,7 @@ export function normalizeProductImages(
   return images
     .map((image) => {
       if (typeof image === 'string') {
-        const normalized = image.trim();
+        const normalized = normalizeImageSource(image);
         return normalized ? { url: normalized, alt: fallbackAlt } : null;
       }
 

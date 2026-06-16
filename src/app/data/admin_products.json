@@ -1,25 +1,26 @@
 [
   {
-    "id": "product_1781601364078_efce6c9c",
-    "name": "Any Indian Language to English",
-    "slug": "any-indian-language-to-english",
+    "id": "product_1781602436654_3156ac09",
+    "name": "Any Indian Langauge to English",
+    "slug": "any-indian-langauge-to-english",
     "category": "Translation",
     "price": 400,
     "old_price": null,
     "stock": 1,
     "status": "active",
-    "image_url": "/api/s3/files/uploads%2F1781601416772-91c2e80f52143172-any-indian-to-english.png",
+    "image_url": "/api/s3/files/uploads%2F1781602434701-f34a737255a952e8-any-indian-to-english.png",
     "images": [
-      "/api/s3/files/uploads%2F1781601416772-91c2e80f52143172-any-indian-to-english.png",
-      "/api/s3/files/uploads%2F1781601417522-b8268834aca8b16e-punjabi---eng-tar_page-0001.jpg",
-      "/api/s3/files/uploads%2F1781601417723-c653d09232038f10-punjabi---eng-tar_page-0002.jpg"
+      "/api/s3/files/uploads%2F1781602434701-f34a737255a952e8-any-indian-to-english.png",
+      "/api/s3/files/uploads%2F1781602435922-23631daf32ebbe0e-punjabi---eng-tar_page-0001.jpg",
+      "/api/s3/files/uploads%2F1781602436275-b14d074146aaea80-punjabi---eng-tar_page-0002.jpg"
     ],
     "description": null,
     "metadata": {
-      "name": "Any Indian Language to English",
+      "name": "Any Indian Langauge to English",
       "category": "Translation",
       "description": "",
       "price": 400,
+      "compareAtPrice": 500,
       "sku": "",
       "barcode": "",
       "stock": 1,
@@ -28,12 +29,12 @@
       "metaTitle": "",
       "metaDescription": "",
       "images": [
-        "/api/s3/files/uploads%2F1781601416772-91c2e80f52143172-any-indian-to-english.png",
-        "/api/s3/files/uploads%2F1781601417522-b8268834aca8b16e-punjabi---eng-tar_page-0001.jpg",
-        "/api/s3/files/uploads%2F1781601417723-c653d09232038f10-punjabi---eng-tar_page-0002.jpg"
+        "/api/s3/files/uploads%2F1781602434701-f34a737255a952e8-any-indian-to-english.png",
+        "/api/s3/files/uploads%2F1781602435922-23631daf32ebbe0e-punjabi---eng-tar_page-0001.jpg",
+        "/api/s3/files/uploads%2F1781602436275-b14d074146aaea80-punjabi---eng-tar_page-0002.jpg"
       ]
     },
-    "createdAt": "2026-06-16T09:16:04.078Z",
-    "updatedAt": "2026-06-16T09:16:57.858Z"
+    "createdAt": "2026-06-16T09:33:56.655Z",
+    "updatedAt": "2026-06-16T09:33:56.655Z"
   }
 ]
