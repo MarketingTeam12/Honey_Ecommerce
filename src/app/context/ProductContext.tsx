@@ -66,7 +66,7 @@ const defaultContextValue: ProductContextType = {
 
 export const ProductContext = createContext<ProductContextType>(defaultContextValue);
 
-const API_URL = `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635`;
+import { API_URL } from '@/app/utils/api';
 const PRODUCTS_STORAGE_KEY = 'admin_products';
 const CATEGORIES_STORAGE_KEY = 'admin_categories';
 

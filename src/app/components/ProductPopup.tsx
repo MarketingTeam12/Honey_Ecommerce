@@ -76,27 +76,20 @@ export function ProductPopup() {
         )
       );
 
-      categoryProducts.forEach(product => {
-        // Only include products that have at least one image
-        // AND exclude products with external/Unsplash images (prevent random images on refresh)
+        categoryProducts.forEach(product => {
+        // Only include products that have at least one image.
         if (product.images && product.images.length > 0) {
           const firstImage = getFirstValidImage(product.images);
           if (!firstImage) {
             return;
           }
-          // Skip if image is an Unsplash URL or other external URL
-          // Only show products with proper uploaded/stored images
-          const isExternalImage = firstImage.startsWith('http://') || firstImage.startsWith('https://');
-          
-          if (!isExternalImage) {
-            filteredProducts.push({
-              id: product.id,
-              name: product.name,
-              category: product.category || key,
-              imageUrl: firstImage, // Use first image from images array
-              productUrl: `/product/${product.id}`,
-            });
-          }
+          filteredProducts.push({
+            id: product.id,
+            name: product.name,
+            category: product.category || key,
+            imageUrl: firstImage,
+            productUrl: `/product/${product.id}`,
+          });
         }
       });
     });

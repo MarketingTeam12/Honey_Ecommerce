@@ -80,17 +80,59 @@ export function ProductPage() {
   const { getProduct } = useProducts();
   const { user } = useAuth();
   const [productConfig, setProductConfig] = useState<ProductConfig | null>(null);
+  const [liveProduct, setLiveProduct] = useState<any | null>(null);
   const [allSourceLanguages, setAllSourceLanguages] = useState<Language[]>([]);
   const [allTargetLanguages, setAllTargetLanguages] = useState<Language[]>([]);
   const [allDocumentTypes, setAllDocumentTypes] = useState<DocumentType[]>([]);
   
-  // Get product from admin context
-  const adminProduct = getProduct(id || '');
+  // Prefer the live backend product, then fall back to the in-memory cache.
+  const cachedProduct = getProduct(id || '');
   
   // Scroll to top when product changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
+
+  useEffect(() => {
+    if (!id) {
+      setLiveProduct(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(
+          `https://${projectId}.authClient.co/functions/v1/make-server-a67f0635/products/${encodeURIComponent(id)}?t=${Date.now()}`,
+          {
+            headers: {
+              'Cache-Control': 'no-cache',
+              Pragma: 'no-cache',
+            },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        setLiveProduct(data.product || data);
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.warn('Failed to fetch live product data:', error);
+        }
+      }
+    };
+
+    void fetchProduct();
+
+    return () => controller.abort();
+  }, [id]);
+
+  const adminProduct = liveProduct || cachedProduct;
   
   // Fetch product configuration in the background (non-blocking)
   useEffect(() => {
