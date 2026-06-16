@@ -5,16 +5,33 @@ export interface ImageObjectLike {
 
 export type ImageSourceLike = string | ImageObjectLike | null | undefined;
 
+import { API_URL } from '@/app/utils/api';
+
 export function normalizeImageSource(image: ImageSourceLike): string {
+  let urlStr = '';
   if (typeof image === 'string') {
-    return image.trim();
+    urlStr = image.trim();
+  } else if (image && typeof image === 'object' && typeof image.url === 'string') {
+    urlStr = image.url.trim();
   }
 
-  if (image && typeof image === 'object' && typeof image.url === 'string') {
-    return image.url.trim();
+  if (!urlStr) return '';
+
+  if (urlStr.startsWith('/api/s3/files/')) {
+    return `${API_URL}${urlStr}`;
+  }
+  
+  if (urlStr.includes('amazonaws.com')) {
+    try {
+      const urlObj = new URL(urlStr);
+      const key = decodeURIComponent(urlObj.pathname.replace(/^\/+/, ''));
+      return `${API_URL}/api/s3/files/${encodeURIComponent(key)}`;
+    } catch {
+      return urlStr;
+    }
   }
 
-  return '';
+  return urlStr;
 }
 
 export function getFirstValidImage(

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Filter, Edit, Trash2, Eye, RefreshCw, X, DollarSign, Package, Tag, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -6,6 +6,7 @@ import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useAuth } from '@/app/context/AuthContext';
 import { useProducts } from '@/app/context/ProductContext';
 import { canAccessRoleAction } from '@/app/utils/roleAccess';
+import { normalizeImageSource } from '@/app/utils/imageUtils';
 
 export function ItemsPage() {
   const { user } = useAuth();
@@ -457,7 +458,7 @@ export function ItemsPage() {
                     {selectedProduct.images.map((image: string, index: number) => (
                       <img
                         key={index}
-                        src={image}
+                        src={normalizeImageSource(image)}
                         alt={`${safeText(selectedProduct.name, 'Product')} ${index + 1}`}
                         className="w-full h-40 object-cover rounded-lg border border-gray-200"
                       />

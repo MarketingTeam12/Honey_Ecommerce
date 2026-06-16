@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, Image as ImageIcon, X, Plus, Trash2, GripVertical, Languages, FileText } from 'lucide-react';
 import { toast } from 'sonner';
@@ -6,6 +6,8 @@ import { AdminLayout } from '@/app/components/admin/AdminLayout';
 import { useProducts } from '@/app/context/ProductContext';
 import { useAuth } from '@/app/context/AuthContext';
 import { canAccessRoleAction } from '@/app/utils/roleAccess';
+import { uploadMultipleImages, deleteProductImage } from '@/app/utils/backendStorage';
+import { normalizeImageSource } from '@/app/utils/imageUtils';
 import { projectId, publicAnonKey } from '@/app/utils/backendInfo';
 
 interface Language {
@@ -580,7 +582,7 @@ export function AddEditItemPage() {
                 {imagePreviews.map((preview, index) => (
                   <div key={index} className="relative group">
                     <img
-                      src={preview}
+                      src={preview.startsWith('data:') || preview.startsWith('blob:') ? preview : normalizeImageSource(preview)}
                       alt={`Preview ${index + 1}`}
                       className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
                     />

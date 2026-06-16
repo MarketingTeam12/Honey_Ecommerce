@@ -1,26 +1,25 @@
 [
   {
-    "id": "product_1781599364718_f069f228",
-    "name": "Any Indian Language to English ",
+    "id": "product_1781601364078_efce6c9c",
+    "name": "Any Indian Language to English",
     "slug": "any-indian-language-to-english",
     "category": "Translation",
     "price": 400,
     "old_price": null,
     "stock": 1,
     "status": "active",
-    "image_url": "https://honey-ecommerce.s3.ap-south-1.amazonaws.com/uploads/1781599363708-3215cf5a4cdc1d61-any-indian-to-english.png",
+    "image_url": "/api/s3/files/uploads%2F1781601416772-91c2e80f52143172-any-indian-to-english.png",
     "images": [
-      "https://honey-ecommerce.s3.ap-south-1.amazonaws.com/uploads/1781599363708-3215cf5a4cdc1d61-any-indian-to-english.png",
-      "https://honey-ecommerce.s3.ap-south-1.amazonaws.com/uploads/1781599364290-a524b9f38ab1d9eb-punjabi---eng-tar_page-0001.jpg",
-      "https://honey-ecommerce.s3.ap-south-1.amazonaws.com/uploads/1781599364484-11eb6342f43e9ded-punjabi---eng-tar_page-0002.jpg"
+      "/api/s3/files/uploads%2F1781601416772-91c2e80f52143172-any-indian-to-english.png",
+      "/api/s3/files/uploads%2F1781601417522-b8268834aca8b16e-punjabi---eng-tar_page-0001.jpg",
+      "/api/s3/files/uploads%2F1781601417723-c653d09232038f10-punjabi---eng-tar_page-0002.jpg"
     ],
     "description": null,
     "metadata": {
-      "name": "Any Indian Language to English ",
+      "name": "Any Indian Language to English",
       "category": "Translation",
       "description": "",
       "price": 400,
-      "compareAtPrice": 500,
       "sku": "",
       "barcode": "",
       "stock": 1,
@@ -29,12 +28,12 @@
       "metaTitle": "",
       "metaDescription": "",
       "images": [
-        "https://honey-ecommerce.s3.ap-south-1.amazonaws.com/uploads/1781599363708-3215cf5a4cdc1d61-any-indian-to-english.png",
-        "https://honey-ecommerce.s3.ap-south-1.amazonaws.com/uploads/1781599364290-a524b9f38ab1d9eb-punjabi---eng-tar_page-0001.jpg",
-        "https://honey-ecommerce.s3.ap-south-1.amazonaws.com/uploads/1781599364484-11eb6342f43e9ded-punjabi---eng-tar_page-0002.jpg"
+        "/api/s3/files/uploads%2F1781601416772-91c2e80f52143172-any-indian-to-english.png",
+        "/api/s3/files/uploads%2F1781601417522-b8268834aca8b16e-punjabi---eng-tar_page-0001.jpg",
+        "/api/s3/files/uploads%2F1781601417723-c653d09232038f10-punjabi---eng-tar_page-0002.jpg"
       ]
     },
-    "createdAt": "2026-06-16T08:42:44.718Z",
-    "updatedAt": "2026-06-16T08:42:44.718Z"
+    "createdAt": "2026-06-16T09:16:04.078Z",
+    "updatedAt": "2026-06-16T09:16:57.858Z"
   }
 ]
